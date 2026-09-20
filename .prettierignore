@@ -3,3 +3,8 @@ dist
 .next
 coverage
 pnpm-lock.yaml
+
+# Generados: los produce una herramienta y la CI comprueba que están al día.
+# Si Prettier los reformatea, deja de coincidir con lo que genera el script.
+docs/api/openapi.json
+apps/api/drizzle/

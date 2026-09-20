@@ -19,7 +19,9 @@
     "/health": {
       "get": {
         "summary": "Sonda de salud",
-        "tags": ["system"],
+        "tags": [
+          "system"
+        ],
         "responses": {
           "200": {
             "description": "Default Response"
@@ -30,7 +32,9 @@
     "/auth/challenge": {
       "post": {
         "summary": "Pide un reto para firmar con la wallet",
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -43,7 +47,9 @@
                     "pattern": "^G[A-Z2-7]{55}$"
                   }
                 },
-                "required": ["address"],
+                "required": [
+                  "address"
+                ],
                 "additionalProperties": false
               }
             }
@@ -69,7 +75,11 @@
                       "format": "date-time"
                     }
                   },
-                  "required": ["challenge", "challengeId", "expiresAt"],
+                  "required": [
+                    "challenge",
+                    "challengeId",
+                    "expiresAt"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -81,7 +91,9 @@
     "/auth/verify": {
       "post": {
         "summary": "Verifica la firma del reto y devuelve un token de sesión",
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -98,7 +110,10 @@
                     "minLength": 1
                   }
                 },
-                "required": ["challengeId", "signature"],
+                "required": [
+                  "challengeId",
+                  "signature"
+                ],
                 "additionalProperties": false
               }
             }
@@ -127,11 +142,17 @@
                           "pattern": "^G[A-Z2-7]{55}$"
                         }
                       },
-                      "required": ["id", "address"],
+                      "required": [
+                        "id",
+                        "address"
+                      ],
                       "additionalProperties": false
                     }
                   },
-                  "required": ["token", "user"],
+                  "required": [
+                    "token",
+                    "user"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -143,7 +164,9 @@
     "/auth/dev-login": {
       "post": {
         "summary": "Solo en desarrollo: inicia sesión sin firma",
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -155,7 +178,9 @@
                     "type": "string"
                   }
                 },
-                "required": ["address"],
+                "required": [
+                  "address"
+                ],
                 "additionalProperties": false
               }
             }
@@ -184,11 +209,17 @@
                           "pattern": "^G[A-Z2-7]{55}$"
                         }
                       },
-                      "required": ["id", "address"],
+                      "required": [
+                        "id",
+                        "address"
+                      ],
                       "additionalProperties": false
                     }
                   },
-                  "required": ["token", "user"],
+                  "required": [
+                    "token",
+                    "user"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -200,7 +231,9 @@
     "/account/balances": {
       "get": {
         "summary": "Saldos de la cuenta del usuario",
-        "tags": ["account"],
+        "tags": [
+          "account"
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -220,7 +253,10 @@
                         "properties": {
                           "asset": {
                             "type": "string",
-                            "enum": ["XLM", "USDC_TEST"]
+                            "enum": [
+                              "XLM",
+                              "USDC_TEST"
+                            ]
                           },
                           "total": {
                             "type": "string",
@@ -231,12 +267,19 @@
                             "pattern": "^\\d+(\\.\\d{1,7})?$"
                           }
                         },
-                        "required": ["asset", "total", "available"],
+                        "required": [
+                          "asset",
+                          "total",
+                          "available"
+                        ],
                         "additionalProperties": false
                       }
                     }
                   },
-                  "required": ["address", "balances"],
+                  "required": [
+                    "address",
+                    "balances"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -248,7 +291,9 @@
     "/account/delegation/prepare": {
       "post": {
         "summary": "XDR sin firmar para añadir el signer delegado del agente",
-        "tags": ["account"],
+        "tags": [
+          "account"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -260,7 +305,9 @@
                     "type": "string"
                   }
                 },
-                "required": ["agentPublicKey"],
+                "required": [
+                  "agentPublicKey"
+                ],
                 "additionalProperties": false
               }
             }
@@ -282,7 +329,10 @@
                       "pattern": "^G[A-Z2-7]{55}$"
                     }
                   },
-                  "required": ["xdr", "agentPublicKey"],
+                  "required": [
+                    "xdr",
+                    "agentPublicKey"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -294,7 +344,9 @@
     "/transactions": {
       "get": {
         "summary": "Historial de transacciones",
-        "tags": ["account"],
+        "tags": [
+          "account"
+        ],
         "parameters": [
           {
             "schema": {
@@ -330,7 +382,10 @@
                           },
                           "direction": {
                             "type": "string",
-                            "enum": ["IN", "OUT"]
+                            "enum": [
+                              "IN",
+                              "OUT"
+                            ]
                           },
                           "counterparty": {
                             "type": "string",
@@ -338,7 +393,10 @@
                           },
                           "asset": {
                             "type": "string",
-                            "enum": ["XLM", "USDC_TEST"]
+                            "enum": [
+                              "XLM",
+                              "USDC_TEST"
+                            ]
                           },
                           "amount": {
                             "type": "string",
@@ -366,7 +424,9 @@
                       }
                     }
                   },
-                  "required": ["transactions"],
+                  "required": [
+                    "transactions"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -378,7 +438,9 @@
     "/destinations": {
       "get": {
         "summary": "Lista los objetivos y contactos registrados",
-        "tags": ["destinations"],
+        "tags": [
+          "destinations"
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -402,7 +464,11 @@
                           },
                           "kind": {
                             "type": "string",
-                            "enum": ["GOAL", "CONTACT", "EMERGENCY_FUND"]
+                            "enum": [
+                              "GOAL",
+                              "CONTACT",
+                              "EMERGENCY_FUND"
+                            ]
                           },
                           "label": {
                             "type": "string",
@@ -421,7 +487,10 @@
                           },
                           "targetAsset": {
                             "type": "string",
-                            "enum": ["XLM", "USDC_TEST"],
+                            "enum": [
+                              "XLM",
+                              "USDC_TEST"
+                            ],
                             "nullable": true,
                             "default": null
                           },
@@ -438,12 +507,21 @@
                             "format": "date-time"
                           }
                         },
-                        "required": ["id", "userId", "kind", "label", "address", "createdAt"],
+                        "required": [
+                          "id",
+                          "userId",
+                          "kind",
+                          "label",
+                          "address",
+                          "createdAt"
+                        ],
                         "additionalProperties": false
                       }
                     }
                   },
-                  "required": ["destinations"],
+                  "required": [
+                    "destinations"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -453,7 +531,9 @@
       },
       "post": {
         "summary": "Registra un objetivo o contacto nuevo",
-        "tags": ["destinations"],
+        "tags": [
+          "destinations"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -463,7 +543,11 @@
                 "properties": {
                   "kind": {
                     "type": "string",
-                    "enum": ["GOAL", "CONTACT", "EMERGENCY_FUND"]
+                    "enum": [
+                      "GOAL",
+                      "CONTACT",
+                      "EMERGENCY_FUND"
+                    ]
                   },
                   "label": {
                     "type": "string",
@@ -481,7 +565,10 @@
                   },
                   "targetAsset": {
                     "type": "string",
-                    "enum": ["XLM", "USDC_TEST"],
+                    "enum": [
+                      "XLM",
+                      "USDC_TEST"
+                    ],
                     "nullable": true
                   },
                   "trusted": {
@@ -489,7 +576,11 @@
                     "default": false
                   }
                 },
-                "required": ["kind", "label", "address"],
+                "required": [
+                  "kind",
+                  "label",
+                  "address"
+                ],
                 "additionalProperties": false
               }
             }
@@ -516,7 +607,11 @@
                         },
                         "kind": {
                           "type": "string",
-                          "enum": ["GOAL", "CONTACT", "EMERGENCY_FUND"]
+                          "enum": [
+                            "GOAL",
+                            "CONTACT",
+                            "EMERGENCY_FUND"
+                          ]
                         },
                         "label": {
                           "type": "string",
@@ -535,7 +630,10 @@
                         },
                         "targetAsset": {
                           "type": "string",
-                          "enum": ["XLM", "USDC_TEST"],
+                          "enum": [
+                            "XLM",
+                            "USDC_TEST"
+                          ],
                           "nullable": true,
                           "default": null
                         },
@@ -552,11 +650,20 @@
                           "format": "date-time"
                         }
                       },
-                      "required": ["id", "userId", "kind", "label", "address", "createdAt"],
+                      "required": [
+                        "id",
+                        "userId",
+                        "kind",
+                        "label",
+                        "address",
+                        "createdAt"
+                      ],
                       "additionalProperties": false
                     }
                   },
-                  "required": ["destination"],
+                  "required": [
+                    "destination"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -568,7 +675,9 @@
     "/proposals": {
       "get": {
         "summary": "Lista las propuestas del usuario, de la más reciente a la más antigua",
-        "tags": ["proposals"],
+        "tags": [
+          "proposals"
+        ],
         "parameters": [
           {
             "schema": {
@@ -631,7 +740,9 @@
                               "properties": {
                                 "type": {
                                   "type": "string",
-                                  "enum": ["PAYMENT"]
+                                  "enum": [
+                                    "PAYMENT"
+                                  ]
                                 },
                                 "destinationId": {
                                   "type": "string",
@@ -639,7 +750,10 @@
                                 },
                                 "asset": {
                                   "type": "string",
-                                  "enum": ["XLM", "USDC_TEST"]
+                                  "enum": [
+                                    "XLM",
+                                    "USDC_TEST"
+                                  ]
                                 },
                                 "amount": {
                                   "type": "string",
@@ -656,7 +770,13 @@
                                   "maxLength": 64
                                 }
                               },
-                              "required": ["type", "destinationId", "asset", "amount", "label"],
+                              "required": [
+                                "type",
+                                "destinationId",
+                                "asset",
+                                "amount",
+                                "label"
+                              ],
                               "additionalProperties": false
                             },
                             "minItems": 1,
@@ -667,7 +787,11 @@
                             "properties": {
                               "decision": {
                                 "type": "string",
-                                "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                "enum": [
+                                  "AUTO_APPROVE",
+                                  "REQUIRE_USER",
+                                  "DENY"
+                                ]
                               },
                               "reasons": {
                                 "type": "array",
@@ -690,7 +814,11 @@
                                     },
                                     "effect": {
                                       "type": "string",
-                                      "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                      "enum": [
+                                        "AUTO_APPROVE",
+                                        "REQUIRE_USER",
+                                        "DENY"
+                                      ]
                                     },
                                     "message": {
                                       "type": "string"
@@ -700,7 +828,11 @@
                                       "minimum": 0
                                     }
                                   },
-                                  "required": ["ruleId", "effect", "message"],
+                                  "required": [
+                                    "ruleId",
+                                    "effect",
+                                    "message"
+                                  ],
                                   "additionalProperties": false
                                 }
                               },
@@ -709,7 +841,11 @@
                                 "format": "date-time"
                               }
                             },
-                            "required": ["decision", "reasons", "evaluatedAt"],
+                            "required": [
+                              "decision",
+                              "reasons",
+                              "evaluatedAt"
+                            ],
                             "additionalProperties": false,
                             "nullable": true
                           },
@@ -723,7 +859,12 @@
                               },
                               "level": {
                                 "type": "string",
-                                "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                                "enum": [
+                                  "LOW",
+                                  "MEDIUM",
+                                  "HIGH",
+                                  "CRITICAL"
+                                ]
                               },
                               "signals": {
                                 "type": "array",
@@ -746,7 +887,11 @@
                                     },
                                     "severity": {
                                       "type": "string",
-                                      "enum": ["INFO", "WARN", "HIGH"]
+                                      "enum": [
+                                        "INFO",
+                                        "WARN",
+                                        "HIGH"
+                                      ]
                                     },
                                     "actionIndex": {
                                       "type": "integer",
@@ -757,7 +902,11 @@
                                       "additionalProperties": {}
                                     }
                                   },
-                                  "required": ["id", "severity", "data"],
+                                  "required": [
+                                    "id",
+                                    "severity",
+                                    "data"
+                                  ],
                                   "additionalProperties": false
                                 }
                               },
@@ -809,16 +958,26 @@
                                       "type": "string"
                                     }
                                   },
-                                  "required": ["signalId", "text"],
+                                  "required": [
+                                    "signalId",
+                                    "text"
+                                  ],
                                   "additionalProperties": false
                                 }
                               },
                               "generatedBy": {
                                 "type": "string",
-                                "enum": ["llm", "template"]
+                                "enum": [
+                                  "llm",
+                                  "template"
+                                ]
                               }
                             },
-                            "required": ["summary", "warnings", "generatedBy"],
+                            "required": [
+                              "summary",
+                              "warnings",
+                              "generatedBy"
+                            ],
                             "additionalProperties": false,
                             "nullable": true
                           },
@@ -861,7 +1020,9 @@
                       }
                     }
                   },
-                  "required": ["proposals"],
+                  "required": [
+                    "proposals"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -873,7 +1034,9 @@
     "/proposals/{id}": {
       "get": {
         "summary": "Estado, decisión de política, riesgo y explicación",
-        "tags": ["proposals"],
+        "tags": [
+          "proposals"
+        ],
         "parameters": [
           {
             "schema": {
@@ -932,7 +1095,9 @@
                             "properties": {
                               "type": {
                                 "type": "string",
-                                "enum": ["PAYMENT"]
+                                "enum": [
+                                  "PAYMENT"
+                                ]
                               },
                               "destinationId": {
                                 "type": "string",
@@ -940,7 +1105,10 @@
                               },
                               "asset": {
                                 "type": "string",
-                                "enum": ["XLM", "USDC_TEST"]
+                                "enum": [
+                                  "XLM",
+                                  "USDC_TEST"
+                                ]
                               },
                               "amount": {
                                 "type": "string",
@@ -957,7 +1125,13 @@
                                 "maxLength": 64
                               }
                             },
-                            "required": ["type", "destinationId", "asset", "amount", "label"],
+                            "required": [
+                              "type",
+                              "destinationId",
+                              "asset",
+                              "amount",
+                              "label"
+                            ],
                             "additionalProperties": false
                           },
                           "minItems": 1,
@@ -968,7 +1142,11 @@
                           "properties": {
                             "decision": {
                               "type": "string",
-                              "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                              "enum": [
+                                "AUTO_APPROVE",
+                                "REQUIRE_USER",
+                                "DENY"
+                              ]
                             },
                             "reasons": {
                               "type": "array",
@@ -991,7 +1169,11 @@
                                   },
                                   "effect": {
                                     "type": "string",
-                                    "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                    "enum": [
+                                      "AUTO_APPROVE",
+                                      "REQUIRE_USER",
+                                      "DENY"
+                                    ]
                                   },
                                   "message": {
                                     "type": "string"
@@ -1001,7 +1183,11 @@
                                     "minimum": 0
                                   }
                                 },
-                                "required": ["ruleId", "effect", "message"],
+                                "required": [
+                                  "ruleId",
+                                  "effect",
+                                  "message"
+                                ],
                                 "additionalProperties": false
                               }
                             },
@@ -1010,7 +1196,11 @@
                               "format": "date-time"
                             }
                           },
-                          "required": ["decision", "reasons", "evaluatedAt"],
+                          "required": [
+                            "decision",
+                            "reasons",
+                            "evaluatedAt"
+                          ],
                           "additionalProperties": false,
                           "nullable": true
                         },
@@ -1024,7 +1214,12 @@
                             },
                             "level": {
                               "type": "string",
-                              "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                              "enum": [
+                                "LOW",
+                                "MEDIUM",
+                                "HIGH",
+                                "CRITICAL"
+                              ]
                             },
                             "signals": {
                               "type": "array",
@@ -1047,7 +1242,11 @@
                                   },
                                   "severity": {
                                     "type": "string",
-                                    "enum": ["INFO", "WARN", "HIGH"]
+                                    "enum": [
+                                      "INFO",
+                                      "WARN",
+                                      "HIGH"
+                                    ]
                                   },
                                   "actionIndex": {
                                     "type": "integer",
@@ -1058,7 +1257,11 @@
                                     "additionalProperties": {}
                                   }
                                 },
-                                "required": ["id", "severity", "data"],
+                                "required": [
+                                  "id",
+                                  "severity",
+                                  "data"
+                                ],
                                 "additionalProperties": false
                               }
                             },
@@ -1071,7 +1274,13 @@
                               "format": "date-time"
                             }
                           },
-                          "required": ["score", "level", "signals", "balanceAfter", "evaluatedAt"],
+                          "required": [
+                            "score",
+                            "level",
+                            "signals",
+                            "balanceAfter",
+                            "evaluatedAt"
+                          ],
                           "additionalProperties": false,
                           "nullable": true
                         },
@@ -1104,16 +1313,26 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["signalId", "text"],
+                                "required": [
+                                  "signalId",
+                                  "text"
+                                ],
                                 "additionalProperties": false
                               }
                             },
                             "generatedBy": {
                               "type": "string",
-                              "enum": ["llm", "template"]
+                              "enum": [
+                                "llm",
+                                "template"
+                              ]
                             }
                           },
-                          "required": ["summary", "warnings", "generatedBy"],
+                          "required": [
+                            "summary",
+                            "warnings",
+                            "generatedBy"
+                          ],
                           "additionalProperties": false,
                           "nullable": true
                         },
@@ -1155,7 +1374,9 @@
                       "additionalProperties": false
                     }
                   },
-                  "required": ["proposal"],
+                  "required": [
+                    "proposal"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1167,7 +1388,9 @@
     "/proposals/{id}/approve": {
       "post": {
         "summary": "Aprueba una propuesta con el XDR firmado por la wallet",
-        "tags": ["proposals"],
+        "tags": [
+          "proposals"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1247,7 +1470,9 @@
                             "properties": {
                               "type": {
                                 "type": "string",
-                                "enum": ["PAYMENT"]
+                                "enum": [
+                                  "PAYMENT"
+                                ]
                               },
                               "destinationId": {
                                 "type": "string",
@@ -1255,7 +1480,10 @@
                               },
                               "asset": {
                                 "type": "string",
-                                "enum": ["XLM", "USDC_TEST"]
+                                "enum": [
+                                  "XLM",
+                                  "USDC_TEST"
+                                ]
                               },
                               "amount": {
                                 "type": "string",
@@ -1272,7 +1500,13 @@
                                 "maxLength": 64
                               }
                             },
-                            "required": ["type", "destinationId", "asset", "amount", "label"],
+                            "required": [
+                              "type",
+                              "destinationId",
+                              "asset",
+                              "amount",
+                              "label"
+                            ],
                             "additionalProperties": false
                           },
                           "minItems": 1,
@@ -1283,7 +1517,11 @@
                           "properties": {
                             "decision": {
                               "type": "string",
-                              "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                              "enum": [
+                                "AUTO_APPROVE",
+                                "REQUIRE_USER",
+                                "DENY"
+                              ]
                             },
                             "reasons": {
                               "type": "array",
@@ -1306,7 +1544,11 @@
                                   },
                                   "effect": {
                                     "type": "string",
-                                    "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                    "enum": [
+                                      "AUTO_APPROVE",
+                                      "REQUIRE_USER",
+                                      "DENY"
+                                    ]
                                   },
                                   "message": {
                                     "type": "string"
@@ -1316,7 +1558,11 @@
                                     "minimum": 0
                                   }
                                 },
-                                "required": ["ruleId", "effect", "message"],
+                                "required": [
+                                  "ruleId",
+                                  "effect",
+                                  "message"
+                                ],
                                 "additionalProperties": false
                               }
                             },
@@ -1325,7 +1571,11 @@
                               "format": "date-time"
                             }
                           },
-                          "required": ["decision", "reasons", "evaluatedAt"],
+                          "required": [
+                            "decision",
+                            "reasons",
+                            "evaluatedAt"
+                          ],
                           "additionalProperties": false,
                           "nullable": true
                         },
@@ -1339,7 +1589,12 @@
                             },
                             "level": {
                               "type": "string",
-                              "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                              "enum": [
+                                "LOW",
+                                "MEDIUM",
+                                "HIGH",
+                                "CRITICAL"
+                              ]
                             },
                             "signals": {
                               "type": "array",
@@ -1362,7 +1617,11 @@
                                   },
                                   "severity": {
                                     "type": "string",
-                                    "enum": ["INFO", "WARN", "HIGH"]
+                                    "enum": [
+                                      "INFO",
+                                      "WARN",
+                                      "HIGH"
+                                    ]
                                   },
                                   "actionIndex": {
                                     "type": "integer",
@@ -1373,7 +1632,11 @@
                                     "additionalProperties": {}
                                   }
                                 },
-                                "required": ["id", "severity", "data"],
+                                "required": [
+                                  "id",
+                                  "severity",
+                                  "data"
+                                ],
                                 "additionalProperties": false
                               }
                             },
@@ -1386,7 +1649,13 @@
                               "format": "date-time"
                             }
                           },
-                          "required": ["score", "level", "signals", "balanceAfter", "evaluatedAt"],
+                          "required": [
+                            "score",
+                            "level",
+                            "signals",
+                            "balanceAfter",
+                            "evaluatedAt"
+                          ],
                           "additionalProperties": false,
                           "nullable": true
                         },
@@ -1419,16 +1688,26 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["signalId", "text"],
+                                "required": [
+                                  "signalId",
+                                  "text"
+                                ],
                                 "additionalProperties": false
                               }
                             },
                             "generatedBy": {
                               "type": "string",
-                              "enum": ["llm", "template"]
+                              "enum": [
+                                "llm",
+                                "template"
+                              ]
                             }
                           },
-                          "required": ["summary", "warnings", "generatedBy"],
+                          "required": [
+                            "summary",
+                            "warnings",
+                            "generatedBy"
+                          ],
                           "additionalProperties": false,
                           "nullable": true
                         },
@@ -1470,7 +1749,9 @@
                       "additionalProperties": false
                     }
                   },
-                  "required": ["proposal"],
+                  "required": [
+                    "proposal"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1482,7 +1763,9 @@
     "/proposals/{id}/reject": {
       "post": {
         "summary": "Rechaza una propuesta pendiente",
-        "tags": ["proposals"],
+        "tags": [
+          "proposals"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1559,7 +1842,9 @@
                             "properties": {
                               "type": {
                                 "type": "string",
-                                "enum": ["PAYMENT"]
+                                "enum": [
+                                  "PAYMENT"
+                                ]
                               },
                               "destinationId": {
                                 "type": "string",
@@ -1567,7 +1852,10 @@
                               },
                               "asset": {
                                 "type": "string",
-                                "enum": ["XLM", "USDC_TEST"]
+                                "enum": [
+                                  "XLM",
+                                  "USDC_TEST"
+                                ]
                               },
                               "amount": {
                                 "type": "string",
@@ -1584,7 +1872,13 @@
                                 "maxLength": 64
                               }
                             },
-                            "required": ["type", "destinationId", "asset", "amount", "label"],
+                            "required": [
+                              "type",
+                              "destinationId",
+                              "asset",
+                              "amount",
+                              "label"
+                            ],
                             "additionalProperties": false
                           },
                           "minItems": 1,
@@ -1595,7 +1889,11 @@
                           "properties": {
                             "decision": {
                               "type": "string",
-                              "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                              "enum": [
+                                "AUTO_APPROVE",
+                                "REQUIRE_USER",
+                                "DENY"
+                              ]
                             },
                             "reasons": {
                               "type": "array",
@@ -1618,7 +1916,11 @@
                                   },
                                   "effect": {
                                     "type": "string",
-                                    "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                    "enum": [
+                                      "AUTO_APPROVE",
+                                      "REQUIRE_USER",
+                                      "DENY"
+                                    ]
                                   },
                                   "message": {
                                     "type": "string"
@@ -1628,7 +1930,11 @@
                                     "minimum": 0
                                   }
                                 },
-                                "required": ["ruleId", "effect", "message"],
+                                "required": [
+                                  "ruleId",
+                                  "effect",
+                                  "message"
+                                ],
                                 "additionalProperties": false
                               }
                             },
@@ -1637,7 +1943,11 @@
                               "format": "date-time"
                             }
                           },
-                          "required": ["decision", "reasons", "evaluatedAt"],
+                          "required": [
+                            "decision",
+                            "reasons",
+                            "evaluatedAt"
+                          ],
                           "additionalProperties": false,
                           "nullable": true
                         },
@@ -1651,7 +1961,12 @@
                             },
                             "level": {
                               "type": "string",
-                              "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                              "enum": [
+                                "LOW",
+                                "MEDIUM",
+                                "HIGH",
+                                "CRITICAL"
+                              ]
                             },
                             "signals": {
                               "type": "array",
@@ -1674,7 +1989,11 @@
                                   },
                                   "severity": {
                                     "type": "string",
-                                    "enum": ["INFO", "WARN", "HIGH"]
+                                    "enum": [
+                                      "INFO",
+                                      "WARN",
+                                      "HIGH"
+                                    ]
                                   },
                                   "actionIndex": {
                                     "type": "integer",
@@ -1685,7 +2004,11 @@
                                     "additionalProperties": {}
                                   }
                                 },
-                                "required": ["id", "severity", "data"],
+                                "required": [
+                                  "id",
+                                  "severity",
+                                  "data"
+                                ],
                                 "additionalProperties": false
                               }
                             },
@@ -1698,7 +2021,13 @@
                               "format": "date-time"
                             }
                           },
-                          "required": ["score", "level", "signals", "balanceAfter", "evaluatedAt"],
+                          "required": [
+                            "score",
+                            "level",
+                            "signals",
+                            "balanceAfter",
+                            "evaluatedAt"
+                          ],
                           "additionalProperties": false,
                           "nullable": true
                         },
@@ -1731,16 +2060,26 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["signalId", "text"],
+                                "required": [
+                                  "signalId",
+                                  "text"
+                                ],
                                 "additionalProperties": false
                               }
                             },
                             "generatedBy": {
                               "type": "string",
-                              "enum": ["llm", "template"]
+                              "enum": [
+                                "llm",
+                                "template"
+                              ]
                             }
                           },
-                          "required": ["summary", "warnings", "generatedBy"],
+                          "required": [
+                            "summary",
+                            "warnings",
+                            "generatedBy"
+                          ],
                           "additionalProperties": false,
                           "nullable": true
                         },
@@ -1782,7 +2121,9 @@
                       "additionalProperties": false
                     }
                   },
-                  "required": ["proposal"],
+                  "required": [
+                    "proposal"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1794,7 +2135,9 @@
     "/policy": {
       "get": {
         "summary": "Reglas y modo de operación actuales",
-        "tags": ["policy"],
+        "tags": [
+          "policy"
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -1824,10 +2167,16 @@
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "enum": ["XLM", "USDC_TEST"]
+                            "enum": [
+                              "XLM",
+                              "USDC_TEST"
+                            ]
                           },
                           "minItems": 1,
-                          "default": ["XLM", "USDC_TEST"]
+                          "default": [
+                            "XLM",
+                            "USDC_TEST"
+                          ]
                         },
                         "maxOperationsPerHour": {
                           "type": "integer",
@@ -1842,7 +2191,10 @@
                         },
                         "mode": {
                           "type": "string",
-                          "enum": ["MANUAL", "AUTONOMOUS"],
+                          "enum": [
+                            "MANUAL",
+                            "AUTONOMOUS"
+                          ],
                           "default": "MANUAL"
                         },
                         "paused": {
@@ -1863,7 +2215,10 @@
                       "properties": {
                         "mode": {
                           "type": "string",
-                          "enum": ["MANUAL", "AUTONOMOUS"]
+                          "enum": [
+                            "MANUAL",
+                            "AUTONOMOUS"
+                          ]
                         },
                         "paused": {
                           "type": "boolean"
@@ -1884,7 +2239,10 @@
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "enum": ["XLM", "USDC_TEST"]
+                            "enum": [
+                              "XLM",
+                              "USDC_TEST"
+                            ]
                           }
                         },
                         "remainingDailyAmount": {
@@ -1904,7 +2262,10 @@
                       "additionalProperties": false
                     }
                   },
-                  "required": ["config", "summary"],
+                  "required": [
+                    "config",
+                    "summary"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1914,7 +2275,9 @@
       },
       "put": {
         "summary": "Actualiza las reglas (parcial)",
-        "tags": ["policy"],
+        "tags": [
+          "policy"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1940,10 +2303,16 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "enum": ["XLM", "USDC_TEST"]
+                      "enum": [
+                        "XLM",
+                        "USDC_TEST"
+                      ]
                     },
                     "minItems": 1,
-                    "default": ["XLM", "USDC_TEST"]
+                    "default": [
+                      "XLM",
+                      "USDC_TEST"
+                    ]
                   },
                   "maxOperationsPerHour": {
                     "type": "integer",
@@ -1958,7 +2327,10 @@
                   },
                   "mode": {
                     "type": "string",
-                    "enum": ["MANUAL", "AUTONOMOUS"],
+                    "enum": [
+                      "MANUAL",
+                      "AUTONOMOUS"
+                    ],
                     "default": "MANUAL"
                   },
                   "paused": {
@@ -2006,10 +2378,16 @@
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "enum": ["XLM", "USDC_TEST"]
+                            "enum": [
+                              "XLM",
+                              "USDC_TEST"
+                            ]
                           },
                           "minItems": 1,
-                          "default": ["XLM", "USDC_TEST"]
+                          "default": [
+                            "XLM",
+                            "USDC_TEST"
+                          ]
                         },
                         "maxOperationsPerHour": {
                           "type": "integer",
@@ -2024,7 +2402,10 @@
                         },
                         "mode": {
                           "type": "string",
-                          "enum": ["MANUAL", "AUTONOMOUS"],
+                          "enum": [
+                            "MANUAL",
+                            "AUTONOMOUS"
+                          ],
                           "default": "MANUAL"
                         },
                         "paused": {
@@ -2045,7 +2426,10 @@
                       "properties": {
                         "mode": {
                           "type": "string",
-                          "enum": ["MANUAL", "AUTONOMOUS"]
+                          "enum": [
+                            "MANUAL",
+                            "AUTONOMOUS"
+                          ]
                         },
                         "paused": {
                           "type": "boolean"
@@ -2066,7 +2450,10 @@
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "enum": ["XLM", "USDC_TEST"]
+                            "enum": [
+                              "XLM",
+                              "USDC_TEST"
+                            ]
                           }
                         },
                         "remainingDailyAmount": {
@@ -2086,7 +2473,10 @@
                       "additionalProperties": false
                     }
                   },
-                  "required": ["config", "summary"],
+                  "required": [
+                    "config",
+                    "summary"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2098,7 +2488,9 @@
     "/policy/pause": {
       "post": {
         "summary": "Pausa o reactiva al agente",
-        "tags": ["policy"],
+        "tags": [
+          "policy"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2110,7 +2502,9 @@
                     "type": "boolean"
                   }
                 },
-                "required": ["paused"],
+                "required": [
+                  "paused"
+                ],
                 "additionalProperties": false
               }
             }
@@ -2145,10 +2539,16 @@
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "enum": ["XLM", "USDC_TEST"]
+                            "enum": [
+                              "XLM",
+                              "USDC_TEST"
+                            ]
                           },
                           "minItems": 1,
-                          "default": ["XLM", "USDC_TEST"]
+                          "default": [
+                            "XLM",
+                            "USDC_TEST"
+                          ]
                         },
                         "maxOperationsPerHour": {
                           "type": "integer",
@@ -2163,7 +2563,10 @@
                         },
                         "mode": {
                           "type": "string",
-                          "enum": ["MANUAL", "AUTONOMOUS"],
+                          "enum": [
+                            "MANUAL",
+                            "AUTONOMOUS"
+                          ],
                           "default": "MANUAL"
                         },
                         "paused": {
@@ -2184,7 +2587,10 @@
                       "properties": {
                         "mode": {
                           "type": "string",
-                          "enum": ["MANUAL", "AUTONOMOUS"]
+                          "enum": [
+                            "MANUAL",
+                            "AUTONOMOUS"
+                          ]
                         },
                         "paused": {
                           "type": "boolean"
@@ -2205,7 +2611,10 @@
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "enum": ["XLM", "USDC_TEST"]
+                            "enum": [
+                              "XLM",
+                              "USDC_TEST"
+                            ]
                           }
                         },
                         "remainingDailyAmount": {
@@ -2225,7 +2634,10 @@
                       "additionalProperties": false
                     }
                   },
-                  "required": ["config", "summary"],
+                  "required": [
+                    "config",
+                    "summary"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2237,7 +2649,9 @@
     "/audit": {
       "get": {
         "summary": "Bitácora de auditoría del usuario, con el estado de la cadena de hashes",
-        "tags": ["policy"],
+        "tags": [
+          "policy"
+        ],
         "parameters": [
           {
             "schema": {
@@ -2334,11 +2748,16 @@
                           "type": "string"
                         }
                       },
-                      "required": ["valid"],
+                      "required": [
+                        "valid"
+                      ],
                       "additionalProperties": false
                     }
                   },
-                  "required": ["events", "chain"],
+                  "required": [
+                    "events",
+                    "chain"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2350,7 +2769,9 @@
     "/agent/messages": {
       "post": {
         "summary": "Envía un mensaje al agente y recibe su respuesta y sus propuestas",
-        "tags": ["agent"],
+        "tags": [
+          "agent"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2369,7 +2790,9 @@
                     "nullable": true
                   }
                 },
-                "required": ["message"],
+                "required": [
+                  "message"
+                ],
                 "additionalProperties": false
               }
             }
@@ -2431,7 +2854,9 @@
                               "properties": {
                                 "type": {
                                   "type": "string",
-                                  "enum": ["PAYMENT"]
+                                  "enum": [
+                                    "PAYMENT"
+                                  ]
                                 },
                                 "destinationId": {
                                   "type": "string",
@@ -2439,7 +2864,10 @@
                                 },
                                 "asset": {
                                   "type": "string",
-                                  "enum": ["XLM", "USDC_TEST"]
+                                  "enum": [
+                                    "XLM",
+                                    "USDC_TEST"
+                                  ]
                                 },
                                 "amount": {
                                   "type": "string",
@@ -2456,7 +2884,13 @@
                                   "maxLength": 64
                                 }
                               },
-                              "required": ["type", "destinationId", "asset", "amount", "label"],
+                              "required": [
+                                "type",
+                                "destinationId",
+                                "asset",
+                                "amount",
+                                "label"
+                              ],
                               "additionalProperties": false
                             },
                             "minItems": 1,
@@ -2467,7 +2901,11 @@
                             "properties": {
                               "decision": {
                                 "type": "string",
-                                "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                "enum": [
+                                  "AUTO_APPROVE",
+                                  "REQUIRE_USER",
+                                  "DENY"
+                                ]
                               },
                               "reasons": {
                                 "type": "array",
@@ -2490,7 +2928,11 @@
                                     },
                                     "effect": {
                                       "type": "string",
-                                      "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                      "enum": [
+                                        "AUTO_APPROVE",
+                                        "REQUIRE_USER",
+                                        "DENY"
+                                      ]
                                     },
                                     "message": {
                                       "type": "string"
@@ -2500,7 +2942,11 @@
                                       "minimum": 0
                                     }
                                   },
-                                  "required": ["ruleId", "effect", "message"],
+                                  "required": [
+                                    "ruleId",
+                                    "effect",
+                                    "message"
+                                  ],
                                   "additionalProperties": false
                                 }
                               },
@@ -2509,7 +2955,11 @@
                                 "format": "date-time"
                               }
                             },
-                            "required": ["decision", "reasons", "evaluatedAt"],
+                            "required": [
+                              "decision",
+                              "reasons",
+                              "evaluatedAt"
+                            ],
                             "additionalProperties": false,
                             "nullable": true
                           },
@@ -2523,7 +2973,12 @@
                               },
                               "level": {
                                 "type": "string",
-                                "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                                "enum": [
+                                  "LOW",
+                                  "MEDIUM",
+                                  "HIGH",
+                                  "CRITICAL"
+                                ]
                               },
                               "signals": {
                                 "type": "array",
@@ -2546,7 +3001,11 @@
                                     },
                                     "severity": {
                                       "type": "string",
-                                      "enum": ["INFO", "WARN", "HIGH"]
+                                      "enum": [
+                                        "INFO",
+                                        "WARN",
+                                        "HIGH"
+                                      ]
                                     },
                                     "actionIndex": {
                                       "type": "integer",
@@ -2557,7 +3016,11 @@
                                       "additionalProperties": {}
                                     }
                                   },
-                                  "required": ["id", "severity", "data"],
+                                  "required": [
+                                    "id",
+                                    "severity",
+                                    "data"
+                                  ],
                                   "additionalProperties": false
                                 }
                               },
@@ -2609,16 +3072,26 @@
                                       "type": "string"
                                     }
                                   },
-                                  "required": ["signalId", "text"],
+                                  "required": [
+                                    "signalId",
+                                    "text"
+                                  ],
                                   "additionalProperties": false
                                 }
                               },
                               "generatedBy": {
                                 "type": "string",
-                                "enum": ["llm", "template"]
+                                "enum": [
+                                  "llm",
+                                  "template"
+                                ]
                               }
                             },
-                            "required": ["summary", "warnings", "generatedBy"],
+                            "required": [
+                              "summary",
+                              "warnings",
+                              "generatedBy"
+                            ],
                             "additionalProperties": false,
                             "nullable": true
                           },
@@ -2661,7 +3134,11 @@
                       }
                     }
                   },
-                  "required": ["conversationId", "reply", "proposals"],
+                  "required": [
+                    "conversationId",
+                    "reply",
+                    "proposals"
+                  ],
                   "additionalProperties": false
                 }
               }
