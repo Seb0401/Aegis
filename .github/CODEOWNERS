@@ -1,0 +1,30 @@
+# Cada carpeta tiene un dueño (§6.2 del PLAN.md).
+# Se puede proponer cambios en carpetas ajenas por PR, pero el dueño aprueba.
+#
+# TODO(ALL-01): sustituir los marcadores por los usuarios reales de GitHub
+# en el kickoff. Hasta entonces, @Seb0401 revisa todo.
+
+*                       @Seb0401
+
+# Frontend
+/apps/web/              @Seb0401
+
+# Backend 2 — API, políticas y Guardian
+/apps/api/              @Seb0401
+/packages/policy-engine/ @Seb0401
+/packages/guardian/     @Seb0401
+
+# Backend 1 — Stellar
+/packages/stellar/      @Seb0401
+
+# AI Agent
+/packages/agent/        @Seb0401
+
+# Contratos compartidos: cambios con 2 aprobaciones (§5.4)
+/packages/contracts/    @Seb0401
+/docs/api/              @Seb0401
+
+# Infraestructura y decisiones
+/.github/               @Seb0401
+/infra/                 @Seb0401
+/docs/adr/              @Seb0401

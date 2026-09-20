@@ -1,0 +1,31 @@
+# Infraestructura local de Aegis.
+#
+#   docker compose -f infra/docker-compose.yml up -d
+#
+# O desde la raíz: `pnpm db:up` / `pnpm db:down`.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aegis-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aegis
+      POSTGRES_PASSWORD: aegis
+      POSTGRES_DB: aegis
+    ports:
+      # El puerto del host es configurable: si ya tienes otro Postgres en el
+      # 5432, pon POSTGRES_PORT=5433 en tu .env y ajusta DATABASE_URL.
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - aegis-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # La API espera a que Postgres acepte conexiones, no solo a que el
+      # contenedor arranque: son dos cosas distintas.
+      test: ['CMD-SHELL', 'pg_isready -U aegis -d aegis']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  aegis-postgres-data:

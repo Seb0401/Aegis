@@ -1,0 +1,2679 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Aegis API",
+    "description": "Orquestador del agente financiero: propuestas, políticas, Guardian y auditoría.",
+    "version": "0.1.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Sonda de salud",
+        "tags": ["system"],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/auth/challenge": {
+      "post": {
+        "summary": "Pide un reto para firmar con la wallet",
+        "tags": ["auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "address": {
+                    "type": "string",
+                    "pattern": "^G[A-Z2-7]{55}$"
+                  }
+                },
+                "required": ["address"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "challenge": {
+                      "type": "string"
+                    },
+                    "challengeId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": ["challenge", "challengeId", "expiresAt"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify": {
+      "post": {
+        "summary": "Verifica la firma del reto y devuelve un token de sesión",
+        "tags": ["auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "challengeId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "signature": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["challengeId", "signature"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "address": {
+                          "type": "string",
+                          "pattern": "^G[A-Z2-7]{55}$"
+                        }
+                      },
+                      "required": ["id", "address"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["token", "user"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/dev-login": {
+      "post": {
+        "summary": "Solo en desarrollo: inicia sesión sin firma",
+        "tags": ["auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "address": {
+                    "type": "string"
+                  }
+                },
+                "required": ["address"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "address": {
+                          "type": "string",
+                          "pattern": "^G[A-Z2-7]{55}$"
+                        }
+                      },
+                      "required": ["id", "address"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["token", "user"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/balances": {
+      "get": {
+        "summary": "Saldos de la cuenta del usuario",
+        "tags": ["account"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "pattern": "^G[A-Z2-7]{55}$"
+                    },
+                    "balances": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "asset": {
+                            "type": "string",
+                            "enum": ["XLM", "USDC_TEST"]
+                          },
+                          "total": {
+                            "type": "string",
+                            "pattern": "^\\d+(\\.\\d{1,7})?$"
+                          },
+                          "available": {
+                            "type": "string",
+                            "pattern": "^\\d+(\\.\\d{1,7})?$"
+                          }
+                        },
+                        "required": ["asset", "total", "available"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["address", "balances"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/delegation/prepare": {
+      "post": {
+        "summary": "XDR sin firmar para añadir el signer delegado del agente",
+        "tags": ["account"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "agentPublicKey": {
+                    "type": "string"
+                  }
+                },
+                "required": ["agentPublicKey"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "xdr": {
+                      "type": "string"
+                    },
+                    "agentPublicKey": {
+                      "type": "string",
+                      "pattern": "^G[A-Z2-7]{55}$"
+                    }
+                  },
+                  "required": ["xdr", "agentPublicKey"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "get": {
+        "summary": "Historial de transacciones",
+        "tags": ["account"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "hash": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "direction": {
+                            "type": "string",
+                            "enum": ["IN", "OUT"]
+                          },
+                          "counterparty": {
+                            "type": "string",
+                            "pattern": "^G[A-Z2-7]{55}$"
+                          },
+                          "asset": {
+                            "type": "string",
+                            "enum": ["XLM", "USDC_TEST"]
+                          },
+                          "amount": {
+                            "type": "string",
+                            "pattern": "^\\d+(\\.\\d{1,7})?$"
+                          },
+                          "memo": {
+                            "type": "string",
+                            "nullable": true,
+                            "default": null
+                          },
+                          "successful": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "hash",
+                          "createdAt",
+                          "direction",
+                          "counterparty",
+                          "asset",
+                          "amount",
+                          "successful"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["transactions"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/destinations": {
+      "get": {
+        "summary": "Lista los objetivos y contactos registrados",
+        "tags": ["destinations"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "destinations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": ["GOAL", "CONTACT", "EMERGENCY_FUND"]
+                          },
+                          "label": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          },
+                          "address": {
+                            "type": "string",
+                            "pattern": "^G[A-Z2-7]{55}$"
+                          },
+                          "targetAmount": {
+                            "type": "string",
+                            "pattern": "^\\d+(\\.\\d{1,7})?$",
+                            "nullable": true,
+                            "default": null
+                          },
+                          "targetAsset": {
+                            "type": "string",
+                            "enum": ["XLM", "USDC_TEST"],
+                            "nullable": true,
+                            "default": null
+                          },
+                          "trusted": {
+                            "type": "boolean",
+                            "default": false
+                          },
+                          "blocked": {
+                            "type": "boolean",
+                            "default": false
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": ["id", "userId", "kind", "label", "address", "createdAt"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["destinations"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Registra un objetivo o contacto nuevo",
+        "tags": ["destinations"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": ["GOAL", "CONTACT", "EMERGENCY_FUND"]
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "address": {
+                    "type": "string",
+                    "pattern": "^G[A-Z2-7]{55}$"
+                  },
+                  "targetAmount": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,7})?$",
+                    "nullable": true
+                  },
+                  "targetAsset": {
+                    "type": "string",
+                    "enum": ["XLM", "USDC_TEST"],
+                    "nullable": true
+                  },
+                  "trusted": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": ["kind", "label", "address"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "destination": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "userId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": ["GOAL", "CONTACT", "EMERGENCY_FUND"]
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        },
+                        "address": {
+                          "type": "string",
+                          "pattern": "^G[A-Z2-7]{55}$"
+                        },
+                        "targetAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": null
+                        },
+                        "targetAsset": {
+                          "type": "string",
+                          "enum": ["XLM", "USDC_TEST"],
+                          "nullable": true,
+                          "default": null
+                        },
+                        "trusted": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "blocked": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": ["id", "userId", "kind", "label", "address", "createdAt"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["destination"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proposals": {
+      "get": {
+        "summary": "Lista las propuestas del usuario, de la más reciente a la más antigua",
+        "tags": ["proposals"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "proposals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "DRAFT",
+                              "POLICY_CHECK",
+                              "GUARDIAN_REVIEW",
+                              "PENDING_USER",
+                              "AUTO_APPROVED",
+                              "SIGNED",
+                              "SUBMITTED",
+                              "CONFIRMED",
+                              "REJECTED",
+                              "DENIED",
+                              "EXPIRED",
+                              "FAILED"
+                            ]
+                          },
+                          "summary": {
+                            "type": "string",
+                            "maxLength": 280
+                          },
+                          "actions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": ["PAYMENT"]
+                                },
+                                "destinationId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "asset": {
+                                  "type": "string",
+                                  "enum": ["XLM", "USDC_TEST"]
+                                },
+                                "amount": {
+                                  "type": "string",
+                                  "pattern": "^\\d+(\\.\\d{1,7})?$"
+                                },
+                                "memo": {
+                                  "type": "string",
+                                  "maxLength": 28,
+                                  "nullable": true
+                                },
+                                "label": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 64
+                                }
+                              },
+                              "required": ["type", "destinationId", "asset", "amount", "label"],
+                              "additionalProperties": false
+                            },
+                            "minItems": 1,
+                            "maxItems": 10
+                          },
+                          "policy": {
+                            "type": "object",
+                            "properties": {
+                              "decision": {
+                                "type": "string",
+                                "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                              },
+                              "reasons": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "ruleId": {
+                                      "type": "string",
+                                      "enum": [
+                                        "P-01",
+                                        "P-02",
+                                        "P-03",
+                                        "P-04",
+                                        "P-05",
+                                        "P-06",
+                                        "P-07",
+                                        "P-08",
+                                        "P-09"
+                                      ]
+                                    },
+                                    "effect": {
+                                      "type": "string",
+                                      "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                    },
+                                    "message": {
+                                      "type": "string"
+                                    },
+                                    "actionIndex": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    }
+                                  },
+                                  "required": ["ruleId", "effect", "message"],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "evaluatedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": ["decision", "reasons", "evaluatedAt"],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
+                          "risk": {
+                            "type": "object",
+                            "properties": {
+                              "score": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100
+                              },
+                              "level": {
+                                "type": "string",
+                                "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                              },
+                              "signals": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "enum": [
+                                        "G-01",
+                                        "G-02",
+                                        "G-03",
+                                        "G-04",
+                                        "G-05",
+                                        "G-06",
+                                        "G-07",
+                                        "G-08",
+                                        "G-09"
+                                      ]
+                                    },
+                                    "severity": {
+                                      "type": "string",
+                                      "enum": ["INFO", "WARN", "HIGH"]
+                                    },
+                                    "actionIndex": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "data": {
+                                      "type": "object",
+                                      "additionalProperties": {}
+                                    }
+                                  },
+                                  "required": ["id", "severity", "data"],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "balanceAfter": {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d{1,7})?$"
+                              },
+                              "evaluatedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "score",
+                              "level",
+                              "signals",
+                              "balanceAfter",
+                              "evaluatedAt"
+                            ],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
+                          "explanation": {
+                            "type": "object",
+                            "properties": {
+                              "summary": {
+                                "type": "string"
+                              },
+                              "warnings": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "signalId": {
+                                      "type": "string",
+                                      "enum": [
+                                        "G-01",
+                                        "G-02",
+                                        "G-03",
+                                        "G-04",
+                                        "G-05",
+                                        "G-06",
+                                        "G-07",
+                                        "G-08",
+                                        "G-09"
+                                      ]
+                                    },
+                                    "text": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["signalId", "text"],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "generatedBy": {
+                                "type": "string",
+                                "enum": ["llm", "template"]
+                              }
+                            },
+                            "required": ["summary", "warnings", "generatedBy"],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
+                          "unsignedXdr": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "txHash": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "failureReason": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "expiresAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "userId",
+                          "status",
+                          "summary",
+                          "actions",
+                          "createdAt",
+                          "expiresAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["proposals"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proposals/{id}": {
+      "get": {
+        "summary": "Estado, decisión de política, riesgo y explicación",
+        "tags": ["proposals"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "proposal": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "userId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "DRAFT",
+                            "POLICY_CHECK",
+                            "GUARDIAN_REVIEW",
+                            "PENDING_USER",
+                            "AUTO_APPROVED",
+                            "SIGNED",
+                            "SUBMITTED",
+                            "CONFIRMED",
+                            "REJECTED",
+                            "DENIED",
+                            "EXPIRED",
+                            "FAILED"
+                          ]
+                        },
+                        "summary": {
+                          "type": "string",
+                          "maxLength": 280
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["PAYMENT"]
+                              },
+                              "destinationId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "asset": {
+                                "type": "string",
+                                "enum": ["XLM", "USDC_TEST"]
+                              },
+                              "amount": {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d{1,7})?$"
+                              },
+                              "memo": {
+                                "type": "string",
+                                "maxLength": 28,
+                                "nullable": true
+                              },
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["type", "destinationId", "asset", "amount", "label"],
+                            "additionalProperties": false
+                          },
+                          "minItems": 1,
+                          "maxItems": 10
+                        },
+                        "policy": {
+                          "type": "object",
+                          "properties": {
+                            "decision": {
+                              "type": "string",
+                              "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                            },
+                            "reasons": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "ruleId": {
+                                    "type": "string",
+                                    "enum": [
+                                      "P-01",
+                                      "P-02",
+                                      "P-03",
+                                      "P-04",
+                                      "P-05",
+                                      "P-06",
+                                      "P-07",
+                                      "P-08",
+                                      "P-09"
+                                    ]
+                                  },
+                                  "effect": {
+                                    "type": "string",
+                                    "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  },
+                                  "actionIndex": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  }
+                                },
+                                "required": ["ruleId", "effect", "message"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "evaluatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": ["decision", "reasons", "evaluatedAt"],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "risk": {
+                          "type": "object",
+                          "properties": {
+                            "score": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "level": {
+                              "type": "string",
+                              "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                            },
+                            "signals": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "enum": [
+                                      "G-01",
+                                      "G-02",
+                                      "G-03",
+                                      "G-04",
+                                      "G-05",
+                                      "G-06",
+                                      "G-07",
+                                      "G-08",
+                                      "G-09"
+                                    ]
+                                  },
+                                  "severity": {
+                                    "type": "string",
+                                    "enum": ["INFO", "WARN", "HIGH"]
+                                  },
+                                  "actionIndex": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "data": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                  }
+                                },
+                                "required": ["id", "severity", "data"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "balanceAfter": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$"
+                            },
+                            "evaluatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": ["score", "level", "signals", "balanceAfter", "evaluatedAt"],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "explanation": {
+                          "type": "object",
+                          "properties": {
+                            "summary": {
+                              "type": "string"
+                            },
+                            "warnings": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "signalId": {
+                                    "type": "string",
+                                    "enum": [
+                                      "G-01",
+                                      "G-02",
+                                      "G-03",
+                                      "G-04",
+                                      "G-05",
+                                      "G-06",
+                                      "G-07",
+                                      "G-08",
+                                      "G-09"
+                                    ]
+                                  },
+                                  "text": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["signalId", "text"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "generatedBy": {
+                              "type": "string",
+                              "enum": ["llm", "template"]
+                            }
+                          },
+                          "required": ["summary", "warnings", "generatedBy"],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "unsignedXdr": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "txHash": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "failureReason": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "status",
+                        "summary",
+                        "actions",
+                        "createdAt",
+                        "expiresAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["proposal"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proposals/{id}/approve": {
+      "post": {
+        "summary": "Aprueba una propuesta con el XDR firmado por la wallet",
+        "tags": ["proposals"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "signedXdr": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "confirmedTotal": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "proposal": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "userId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "DRAFT",
+                            "POLICY_CHECK",
+                            "GUARDIAN_REVIEW",
+                            "PENDING_USER",
+                            "AUTO_APPROVED",
+                            "SIGNED",
+                            "SUBMITTED",
+                            "CONFIRMED",
+                            "REJECTED",
+                            "DENIED",
+                            "EXPIRED",
+                            "FAILED"
+                          ]
+                        },
+                        "summary": {
+                          "type": "string",
+                          "maxLength": 280
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["PAYMENT"]
+                              },
+                              "destinationId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "asset": {
+                                "type": "string",
+                                "enum": ["XLM", "USDC_TEST"]
+                              },
+                              "amount": {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d{1,7})?$"
+                              },
+                              "memo": {
+                                "type": "string",
+                                "maxLength": 28,
+                                "nullable": true
+                              },
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["type", "destinationId", "asset", "amount", "label"],
+                            "additionalProperties": false
+                          },
+                          "minItems": 1,
+                          "maxItems": 10
+                        },
+                        "policy": {
+                          "type": "object",
+                          "properties": {
+                            "decision": {
+                              "type": "string",
+                              "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                            },
+                            "reasons": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "ruleId": {
+                                    "type": "string",
+                                    "enum": [
+                                      "P-01",
+                                      "P-02",
+                                      "P-03",
+                                      "P-04",
+                                      "P-05",
+                                      "P-06",
+                                      "P-07",
+                                      "P-08",
+                                      "P-09"
+                                    ]
+                                  },
+                                  "effect": {
+                                    "type": "string",
+                                    "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  },
+                                  "actionIndex": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  }
+                                },
+                                "required": ["ruleId", "effect", "message"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "evaluatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": ["decision", "reasons", "evaluatedAt"],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "risk": {
+                          "type": "object",
+                          "properties": {
+                            "score": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "level": {
+                              "type": "string",
+                              "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                            },
+                            "signals": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "enum": [
+                                      "G-01",
+                                      "G-02",
+                                      "G-03",
+                                      "G-04",
+                                      "G-05",
+                                      "G-06",
+                                      "G-07",
+                                      "G-08",
+                                      "G-09"
+                                    ]
+                                  },
+                                  "severity": {
+                                    "type": "string",
+                                    "enum": ["INFO", "WARN", "HIGH"]
+                                  },
+                                  "actionIndex": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "data": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                  }
+                                },
+                                "required": ["id", "severity", "data"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "balanceAfter": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$"
+                            },
+                            "evaluatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": ["score", "level", "signals", "balanceAfter", "evaluatedAt"],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "explanation": {
+                          "type": "object",
+                          "properties": {
+                            "summary": {
+                              "type": "string"
+                            },
+                            "warnings": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "signalId": {
+                                    "type": "string",
+                                    "enum": [
+                                      "G-01",
+                                      "G-02",
+                                      "G-03",
+                                      "G-04",
+                                      "G-05",
+                                      "G-06",
+                                      "G-07",
+                                      "G-08",
+                                      "G-09"
+                                    ]
+                                  },
+                                  "text": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["signalId", "text"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "generatedBy": {
+                              "type": "string",
+                              "enum": ["llm", "template"]
+                            }
+                          },
+                          "required": ["summary", "warnings", "generatedBy"],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "unsignedXdr": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "txHash": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "failureReason": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "status",
+                        "summary",
+                        "actions",
+                        "createdAt",
+                        "expiresAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["proposal"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proposals/{id}/reject": {
+      "post": {
+        "summary": "Rechaza una propuesta pendiente",
+        "tags": ["proposals"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 280,
+                    "nullable": true
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "proposal": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "userId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "DRAFT",
+                            "POLICY_CHECK",
+                            "GUARDIAN_REVIEW",
+                            "PENDING_USER",
+                            "AUTO_APPROVED",
+                            "SIGNED",
+                            "SUBMITTED",
+                            "CONFIRMED",
+                            "REJECTED",
+                            "DENIED",
+                            "EXPIRED",
+                            "FAILED"
+                          ]
+                        },
+                        "summary": {
+                          "type": "string",
+                          "maxLength": 280
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["PAYMENT"]
+                              },
+                              "destinationId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "asset": {
+                                "type": "string",
+                                "enum": ["XLM", "USDC_TEST"]
+                              },
+                              "amount": {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d{1,7})?$"
+                              },
+                              "memo": {
+                                "type": "string",
+                                "maxLength": 28,
+                                "nullable": true
+                              },
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["type", "destinationId", "asset", "amount", "label"],
+                            "additionalProperties": false
+                          },
+                          "minItems": 1,
+                          "maxItems": 10
+                        },
+                        "policy": {
+                          "type": "object",
+                          "properties": {
+                            "decision": {
+                              "type": "string",
+                              "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                            },
+                            "reasons": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "ruleId": {
+                                    "type": "string",
+                                    "enum": [
+                                      "P-01",
+                                      "P-02",
+                                      "P-03",
+                                      "P-04",
+                                      "P-05",
+                                      "P-06",
+                                      "P-07",
+                                      "P-08",
+                                      "P-09"
+                                    ]
+                                  },
+                                  "effect": {
+                                    "type": "string",
+                                    "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  },
+                                  "actionIndex": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  }
+                                },
+                                "required": ["ruleId", "effect", "message"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "evaluatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": ["decision", "reasons", "evaluatedAt"],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "risk": {
+                          "type": "object",
+                          "properties": {
+                            "score": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "level": {
+                              "type": "string",
+                              "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                            },
+                            "signals": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "enum": [
+                                      "G-01",
+                                      "G-02",
+                                      "G-03",
+                                      "G-04",
+                                      "G-05",
+                                      "G-06",
+                                      "G-07",
+                                      "G-08",
+                                      "G-09"
+                                    ]
+                                  },
+                                  "severity": {
+                                    "type": "string",
+                                    "enum": ["INFO", "WARN", "HIGH"]
+                                  },
+                                  "actionIndex": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "data": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                  }
+                                },
+                                "required": ["id", "severity", "data"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "balanceAfter": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$"
+                            },
+                            "evaluatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": ["score", "level", "signals", "balanceAfter", "evaluatedAt"],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "explanation": {
+                          "type": "object",
+                          "properties": {
+                            "summary": {
+                              "type": "string"
+                            },
+                            "warnings": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "signalId": {
+                                    "type": "string",
+                                    "enum": [
+                                      "G-01",
+                                      "G-02",
+                                      "G-03",
+                                      "G-04",
+                                      "G-05",
+                                      "G-06",
+                                      "G-07",
+                                      "G-08",
+                                      "G-09"
+                                    ]
+                                  },
+                                  "text": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["signalId", "text"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "generatedBy": {
+                              "type": "string",
+                              "enum": ["llm", "template"]
+                            }
+                          },
+                          "required": ["summary", "warnings", "generatedBy"],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "unsignedXdr": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "txHash": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "failureReason": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "status",
+                        "summary",
+                        "actions",
+                        "createdAt",
+                        "expiresAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["proposal"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/policy": {
+      "get": {
+        "summary": "Reglas y modo de operación actuales",
+        "tags": ["policy"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "config": {
+                      "type": "object",
+                      "properties": {
+                        "maxAmountPerOperation": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "5"
+                        },
+                        "maxDailyAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "20"
+                        },
+                        "requireConfirmationForNewDestination": {
+                          "type": "boolean",
+                          "default": true
+                        },
+                        "allowedAssets": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": ["XLM", "USDC_TEST"]
+                          },
+                          "minItems": 1,
+                          "default": ["XLM", "USDC_TEST"]
+                        },
+                        "maxOperationsPerHour": {
+                          "type": "integer",
+                          "exclusiveMinimum": true,
+                          "minimum": 0,
+                          "default": 10
+                        },
+                        "minimumReserve": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "10"
+                        },
+                        "mode": {
+                          "type": "string",
+                          "enum": ["MANUAL", "AUTONOMOUS"],
+                          "default": "MANUAL"
+                        },
+                        "paused": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "proposalTtlMinutes": {
+                          "type": "integer",
+                          "exclusiveMinimum": true,
+                          "minimum": 0,
+                          "default": 10
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "type": "string",
+                          "enum": ["MANUAL", "AUTONOMOUS"]
+                        },
+                        "paused": {
+                          "type": "boolean"
+                        },
+                        "maxAmountPerOperation": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "maxDailyAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "minimumReserve": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "allowedAssets": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": ["XLM", "USDC_TEST"]
+                          }
+                        },
+                        "remainingDailyAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        }
+                      },
+                      "required": [
+                        "mode",
+                        "paused",
+                        "maxAmountPerOperation",
+                        "maxDailyAmount",
+                        "minimumReserve",
+                        "allowedAssets",
+                        "remainingDailyAmount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["config", "summary"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualiza las reglas (parcial)",
+        "tags": ["policy"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "maxAmountPerOperation": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,7})?$",
+                    "default": "5"
+                  },
+                  "maxDailyAmount": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,7})?$",
+                    "default": "20"
+                  },
+                  "requireConfirmationForNewDestination": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "allowedAssets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["XLM", "USDC_TEST"]
+                    },
+                    "minItems": 1,
+                    "default": ["XLM", "USDC_TEST"]
+                  },
+                  "maxOperationsPerHour": {
+                    "type": "integer",
+                    "exclusiveMinimum": true,
+                    "minimum": 0,
+                    "default": 10
+                  },
+                  "minimumReserve": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,7})?$",
+                    "default": "10"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": ["MANUAL", "AUTONOMOUS"],
+                    "default": "MANUAL"
+                  },
+                  "paused": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "proposalTtlMinutes": {
+                    "type": "integer",
+                    "exclusiveMinimum": true,
+                    "minimum": 0,
+                    "default": 10
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "config": {
+                      "type": "object",
+                      "properties": {
+                        "maxAmountPerOperation": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "5"
+                        },
+                        "maxDailyAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "20"
+                        },
+                        "requireConfirmationForNewDestination": {
+                          "type": "boolean",
+                          "default": true
+                        },
+                        "allowedAssets": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": ["XLM", "USDC_TEST"]
+                          },
+                          "minItems": 1,
+                          "default": ["XLM", "USDC_TEST"]
+                        },
+                        "maxOperationsPerHour": {
+                          "type": "integer",
+                          "exclusiveMinimum": true,
+                          "minimum": 0,
+                          "default": 10
+                        },
+                        "minimumReserve": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "10"
+                        },
+                        "mode": {
+                          "type": "string",
+                          "enum": ["MANUAL", "AUTONOMOUS"],
+                          "default": "MANUAL"
+                        },
+                        "paused": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "proposalTtlMinutes": {
+                          "type": "integer",
+                          "exclusiveMinimum": true,
+                          "minimum": 0,
+                          "default": 10
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "type": "string",
+                          "enum": ["MANUAL", "AUTONOMOUS"]
+                        },
+                        "paused": {
+                          "type": "boolean"
+                        },
+                        "maxAmountPerOperation": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "maxDailyAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "minimumReserve": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "allowedAssets": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": ["XLM", "USDC_TEST"]
+                          }
+                        },
+                        "remainingDailyAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        }
+                      },
+                      "required": [
+                        "mode",
+                        "paused",
+                        "maxAmountPerOperation",
+                        "maxDailyAmount",
+                        "minimumReserve",
+                        "allowedAssets",
+                        "remainingDailyAmount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["config", "summary"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/policy/pause": {
+      "post": {
+        "summary": "Pausa o reactiva al agente",
+        "tags": ["policy"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paused": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["paused"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "config": {
+                      "type": "object",
+                      "properties": {
+                        "maxAmountPerOperation": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "5"
+                        },
+                        "maxDailyAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "20"
+                        },
+                        "requireConfirmationForNewDestination": {
+                          "type": "boolean",
+                          "default": true
+                        },
+                        "allowedAssets": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": ["XLM", "USDC_TEST"]
+                          },
+                          "minItems": 1,
+                          "default": ["XLM", "USDC_TEST"]
+                        },
+                        "maxOperationsPerHour": {
+                          "type": "integer",
+                          "exclusiveMinimum": true,
+                          "minimum": 0,
+                          "default": 10
+                        },
+                        "minimumReserve": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "10"
+                        },
+                        "mode": {
+                          "type": "string",
+                          "enum": ["MANUAL", "AUTONOMOUS"],
+                          "default": "MANUAL"
+                        },
+                        "paused": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "proposalTtlMinutes": {
+                          "type": "integer",
+                          "exclusiveMinimum": true,
+                          "minimum": 0,
+                          "default": 10
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "type": "string",
+                          "enum": ["MANUAL", "AUTONOMOUS"]
+                        },
+                        "paused": {
+                          "type": "boolean"
+                        },
+                        "maxAmountPerOperation": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "maxDailyAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "minimumReserve": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "allowedAssets": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": ["XLM", "USDC_TEST"]
+                          }
+                        },
+                        "remainingDailyAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        }
+                      },
+                      "required": [
+                        "mode",
+                        "paused",
+                        "maxAmountPerOperation",
+                        "maxDailyAmount",
+                        "minimumReserve",
+                        "allowedAssets",
+                        "remainingDailyAmount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["config", "summary"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit": {
+      "get": {
+        "summary": "Bitácora de auditoría del usuario, con el estado de la cadena de hashes",
+        "tags": ["policy"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "proposalId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "nullable": true
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "PROPOSAL_CREATED",
+                              "POLICY_EVALUATED",
+                              "GUARDIAN_EVALUATED",
+                              "STATUS_CHANGED",
+                              "USER_APPROVED",
+                              "USER_REJECTED",
+                              "AGENT_SIGNED",
+                              "TX_SUBMITTED",
+                              "TX_CONFIRMED",
+                              "TX_FAILED",
+                              "POLICY_UPDATED",
+                              "KILL_SWITCH_TOGGLED",
+                              "DESTINATION_CREATED",
+                              "AUTH_LOGIN"
+                            ]
+                          },
+                          "payload": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          },
+                          "previousHash": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "hash": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "userId",
+                          "type",
+                          "payload",
+                          "previousHash",
+                          "hash",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "chain": {
+                      "type": "object",
+                      "properties": {
+                        "valid": {
+                          "type": "boolean"
+                        },
+                        "brokenAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["valid"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["events", "chain"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/messages": {
+      "post": {
+        "summary": "Envía un mensaje al agente y recibe su respuesta y sus propuestas",
+        "tags": ["agent"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "conversationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "nullable": true
+                  }
+                },
+                "required": ["message"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "conversationId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "reply": {
+                      "type": "string"
+                    },
+                    "proposals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "DRAFT",
+                              "POLICY_CHECK",
+                              "GUARDIAN_REVIEW",
+                              "PENDING_USER",
+                              "AUTO_APPROVED",
+                              "SIGNED",
+                              "SUBMITTED",
+                              "CONFIRMED",
+                              "REJECTED",
+                              "DENIED",
+                              "EXPIRED",
+                              "FAILED"
+                            ]
+                          },
+                          "summary": {
+                            "type": "string",
+                            "maxLength": 280
+                          },
+                          "actions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": ["PAYMENT"]
+                                },
+                                "destinationId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "asset": {
+                                  "type": "string",
+                                  "enum": ["XLM", "USDC_TEST"]
+                                },
+                                "amount": {
+                                  "type": "string",
+                                  "pattern": "^\\d+(\\.\\d{1,7})?$"
+                                },
+                                "memo": {
+                                  "type": "string",
+                                  "maxLength": 28,
+                                  "nullable": true
+                                },
+                                "label": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 64
+                                }
+                              },
+                              "required": ["type", "destinationId", "asset", "amount", "label"],
+                              "additionalProperties": false
+                            },
+                            "minItems": 1,
+                            "maxItems": 10
+                          },
+                          "policy": {
+                            "type": "object",
+                            "properties": {
+                              "decision": {
+                                "type": "string",
+                                "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                              },
+                              "reasons": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "ruleId": {
+                                      "type": "string",
+                                      "enum": [
+                                        "P-01",
+                                        "P-02",
+                                        "P-03",
+                                        "P-04",
+                                        "P-05",
+                                        "P-06",
+                                        "P-07",
+                                        "P-08",
+                                        "P-09"
+                                      ]
+                                    },
+                                    "effect": {
+                                      "type": "string",
+                                      "enum": ["AUTO_APPROVE", "REQUIRE_USER", "DENY"]
+                                    },
+                                    "message": {
+                                      "type": "string"
+                                    },
+                                    "actionIndex": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    }
+                                  },
+                                  "required": ["ruleId", "effect", "message"],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "evaluatedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": ["decision", "reasons", "evaluatedAt"],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
+                          "risk": {
+                            "type": "object",
+                            "properties": {
+                              "score": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100
+                              },
+                              "level": {
+                                "type": "string",
+                                "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                              },
+                              "signals": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "enum": [
+                                        "G-01",
+                                        "G-02",
+                                        "G-03",
+                                        "G-04",
+                                        "G-05",
+                                        "G-06",
+                                        "G-07",
+                                        "G-08",
+                                        "G-09"
+                                      ]
+                                    },
+                                    "severity": {
+                                      "type": "string",
+                                      "enum": ["INFO", "WARN", "HIGH"]
+                                    },
+                                    "actionIndex": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "data": {
+                                      "type": "object",
+                                      "additionalProperties": {}
+                                    }
+                                  },
+                                  "required": ["id", "severity", "data"],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "balanceAfter": {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d{1,7})?$"
+                              },
+                              "evaluatedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "score",
+                              "level",
+                              "signals",
+                              "balanceAfter",
+                              "evaluatedAt"
+                            ],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
+                          "explanation": {
+                            "type": "object",
+                            "properties": {
+                              "summary": {
+                                "type": "string"
+                              },
+                              "warnings": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "signalId": {
+                                      "type": "string",
+                                      "enum": [
+                                        "G-01",
+                                        "G-02",
+                                        "G-03",
+                                        "G-04",
+                                        "G-05",
+                                        "G-06",
+                                        "G-07",
+                                        "G-08",
+                                        "G-09"
+                                      ]
+                                    },
+                                    "text": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["signalId", "text"],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "generatedBy": {
+                                "type": "string",
+                                "enum": ["llm", "template"]
+                              }
+                            },
+                            "required": ["summary", "warnings", "generatedBy"],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
+                          "unsignedXdr": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "txHash": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "failureReason": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "expiresAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "userId",
+                          "status",
+                          "summary",
+                          "actions",
+                          "createdAt",
+                          "expiresAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["conversationId", "reply", "proposals"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001"
+    }
+  ]
+}

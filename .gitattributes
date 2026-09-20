@@ -1,0 +1,12 @@
+# Finales de línea LF en el repositorio, sea cual sea el sistema operativo.
+# Sin esto, un `prettier --check` en la CI (Linux) puede discrepar de lo que ve
+# quien trabaja en Windows.
+* text=auto eol=lf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.ico binary
+
+# El lockfile no cuenta para las estadísticas del repositorio ni se revisa a mano.
+pnpm-lock.yaml linguist-generated=true -diff

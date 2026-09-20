@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  # Un push nuevo sobre la misma rama cancela la ejecución anterior.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Valores de mentira: la CI no habla con ninguna base de datos real todavía.
+  DATABASE_URL: postgresql://aegis:aegis@localhost:5432/aegis
+  JWT_SECRET: secreto-de-ci-solo-para-compilar-y-pasar-los-tests-0000
+
+jobs:
+  verify:
+    name: Lint · typecheck · test · build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      # Los paquetes compilan antes que nada: el resto del monorepo consume sus
+      # tipos desde `dist/`, así que sin esto el typecheck de la API no vale.
+      - name: Compilar paquetes
+        run: pnpm -r --filter "./packages/**" build
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Formato
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      # El OpenAPI publicado es el contrato del que FE genera su mock server.
+      # Si alguien cambia una ruta y no lo regenera, aquí se ve.
+      - name: El OpenAPI publicado está al día
+        run: |
+          pnpm --filter @aegis/api openapi
+          git diff --exit-code docs/api/openapi.json \
+            || (echo "::error::docs/api/openapi.json está desactualizado. Ejecuta 'pnpm --filter @aegis/api openapi' y súbelo." && exit 1)
+
+  secrets:
+    name: Sin secretos en el diff
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Buscar claves secretas de Stellar
+        run: |
+          # Una clave secreta de Stellar es una cadena de 56 caracteres que
+          # empieza por S. Nunca debe aparecer en el repositorio (§12).
+          if git grep -nIE '\bS[A-Z2-7]{55}\b' -- ':!*.md' ':!pnpm-lock.yaml'; then
+            echo "::error::Hay algo que parece una clave secreta de Stellar en el repositorio."
+            exit 1
+          fi
+          echo "Sin claves secretas."
