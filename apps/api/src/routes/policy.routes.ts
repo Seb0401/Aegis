@@ -91,7 +91,12 @@ export const policyRoutes: FastifyPluginAsyncZod = async (app) => {
         response: {
           200: z.object({
             events: z.array(AuditEventSchema),
-            chain: z.object({ valid: z.boolean(), brokenAt: z.string().optional() }),
+            chain: z.object({
+              valid: z.boolean(),
+              brokenAt: z.string().optional(),
+              verifiedEvents: z.number().int().nonnegative(),
+              complete: z.boolean(),
+            }),
           }),
         },
       },
@@ -100,7 +105,9 @@ export const policyRoutes: FastifyPluginAsyncZod = async (app) => {
       const userId = request.user.sub;
       const [rows, chain] = await Promise.all([
         app.services.audit.list(userId, request.query.limit),
-        app.services.audit.verifyChain(userId),
+        // Se verifica la misma ventana que se devuelve: decir "la cadena está
+        // bien" sobre eventos que no se muestran sería una garantía vacía.
+        app.services.audit.verifyChain(userId, { limit: request.query.limit }),
       ]);
 
       return {

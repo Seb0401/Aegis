@@ -8,11 +8,13 @@ import { isValidStellarAddress } from '@aegis/stellar';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { errors } from '../lib/errors.js';
+import { RATE_LIMITS, ipLimit } from '../lib/rate-limit.js';
 
 export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/auth/challenge',
     {
+      ...ipLimit(app, RATE_LIMITS.auth),
       schema: {
         tags: ['auth'],
         summary: 'Pide un reto para firmar con la wallet',
@@ -35,6 +37,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/auth/verify',
     {
+      ...ipLimit(app, RATE_LIMITS.auth),
       schema: {
         tags: ['auth'],
         summary: 'Verifica la firma del reto y devuelve un token de sesión',
@@ -69,6 +72,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/auth/dev-login',
     {
+      ...ipLimit(app, RATE_LIMITS.auth),
       schema: {
         tags: ['auth'],
         summary: 'Solo en desarrollo: inicia sesión sin firma',

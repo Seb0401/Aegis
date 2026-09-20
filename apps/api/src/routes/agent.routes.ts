@@ -2,6 +2,7 @@ import { AgentMessageRequestSchema, AgentMessageResponseSchema } from '@aegis/co
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { newConversationId, newMessageId } from '../lib/ids.js';
 import { agentMessages } from '../db/schema.js';
+import { RATE_LIMITS, perUserLimit } from '../lib/rate-limit.js';
 import { createAgentTools } from '../services/agent-tools.js';
 
 export const agentRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -9,6 +10,7 @@ export const agentRoutes: FastifyPluginAsyncZod = async (app) => {
     '/agent/messages',
     {
       onRequest: [app.authenticate],
+      preHandler: [perUserLimit(app, RATE_LIMITS.agent)],
       schema: {
         tags: ['agent'],
         summary: 'Envía un mensaje al agente y recibe su respuesta y sus propuestas',

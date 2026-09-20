@@ -550,9 +550,17 @@
                     ]
                   },
                   "label": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 64
+                    "allOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 128
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      }
+                    ]
                   },
                   "address": {
                     "type": "string",
@@ -588,6 +596,154 @@
         },
         "responses": {
           "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "destination": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "userId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "GOAL",
+                            "CONTACT",
+                            "EMERGENCY_FUND"
+                          ]
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        },
+                        "address": {
+                          "type": "string",
+                          "pattern": "^G[A-Z2-7]{55}$"
+                        },
+                        "targetAmount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": null
+                        },
+                        "targetAsset": {
+                          "type": "string",
+                          "enum": [
+                            "XLM",
+                            "USDC_TEST"
+                          ],
+                          "nullable": true,
+                          "default": null
+                        },
+                        "trusted": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "blocked": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "kind",
+                        "label",
+                        "address",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "destination"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/destinations/{id}": {
+      "patch": {
+        "summary": "Actualiza un destino: etiqueta, confianza o bloqueo",
+        "tags": [
+          "destinations"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "allOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 128
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      }
+                    ]
+                  },
+                  "trusted": {
+                    "type": "boolean"
+                  },
+                  "blocked": {
+                    "type": "boolean"
+                  },
+                  "targetAmount": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,7})?$",
+                    "nullable": true
+                  },
+                  "targetAsset": {
+                    "type": "string",
+                    "enum": [
+                      "XLM",
+                      "USDC_TEST"
+                    ],
+                    "nullable": true
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "Default Response",
             "content": {
               "application/json": {
@@ -2707,6 +2863,9 @@
                               "POLICY_UPDATED",
                               "KILL_SWITCH_TOGGLED",
                               "DESTINATION_CREATED",
+                              "DESTINATION_UPDATED",
+                              "PROPOSAL_EXPIRED",
+                              "PROPOSAL_ABANDONED",
                               "AUTH_LOGIN"
                             ]
                           },
@@ -2746,10 +2905,19 @@
                         },
                         "brokenAt": {
                           "type": "string"
+                        },
+                        "verifiedEvents": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "complete": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "valid"
+                        "valid",
+                        "verifiedEvents",
+                        "complete"
                       ],
                       "additionalProperties": false
                     }

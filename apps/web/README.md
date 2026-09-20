@@ -38,6 +38,19 @@ Después, desde la raíz del repo: `pnpm install`.
 7. Objetivos y contactos (FE-10)
 8. Historial (FE-11) y kill switch bien visible (FE-12)
 
+## Endpoints que quizá no esperabas
+
+| Endpoint                  | Para qué                                                                                                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `PATCH /destinations/:id` | Renombrar, marcar como de confianza (`trusted`) o **bloquear** (`blocked`) un destino. Lo necesita FE-10. La dirección no se puede editar |
+| `GET /audit`              | Bitácora del usuario y estado de la cadena de hashes (`chain.valid`, `chain.complete`)                                                    |
+| `GET /health`             | Sonda con comprobación real de base de datos                                                                                              |
+
+Las etiquetas que envíes se **sanean** en el servidor: se eliminan caracteres de
+control, invisibles y marcas bidireccionales. Una etiqueta que quede vacía tras
+sanear se rechaza con 400, así que valida también en el formulario para dar un
+mensaje mejor.
+
 ## Detalle importante del flujo de firma
 
 Cuando una propuesta queda en `PENDING_USER`, la API devuelve `unsignedXdr`

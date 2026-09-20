@@ -9,6 +9,7 @@ import { AuthService } from './services/auth-service.js';
 import { DestinationStore } from './services/destination-store.js';
 import { PolicyStore } from './services/policy-store.js';
 import { ProposalService } from './services/proposal-service.js';
+import { ProposalSweeper } from './services/sweeper.js';
 
 /**
  * Cableado de dependencias.
@@ -27,6 +28,7 @@ export interface Services {
   reader: StellarReader;
   executor: StellarExecutor;
   agent: Agent;
+  sweeper: ProposalSweeper;
 }
 
 export interface BuildServicesOptions {
@@ -45,6 +47,7 @@ export function buildServices({ db, env, overrides }: BuildServicesOptions): Ser
   const destinations = new DestinationStore(db);
 
   const proposals = new ProposalService({ db, audit, policies, destinations, reader, executor });
+  const sweeper = new ProposalSweeper({ db, audit });
 
   return {
     db,
@@ -55,6 +58,7 @@ export function buildServices({ db, env, overrides }: BuildServicesOptions): Ser
     proposals,
     reader,
     executor,
+    sweeper,
     // Sustituto temporal hasta que AI entregue el agente con tool calling (AI-01).
     agent: overrides?.agent ?? createRuleBasedAgent(),
   };

@@ -31,6 +31,13 @@ addAmounts('0.1', '0.2'); // '0.3000000', no 0.30000000000000004
 Usar `Number` para sumar saldos parece inofensivo hasta que un error de redondeo
 se convierte en una decisión de autorización equivocada.
 
+## El texto libre entra saneado
+
+`memo`, `label` y `summary` pasan por `sanitizeText` en los esquemas de
+**entrada**: fuera caracteres de control, invisibles y marcas de anulación
+bidireccional. Los esquemas de salida no lo repiten, porque lo que devuelven ya
+entró limpio. El porqué está en [ADR 0007](../../docs/adr/0007-saneado-texto-libre.md).
+
 ## Fixtures
 
 Las direcciones de `fixtures/` son claves públicas **válidas** (formato y

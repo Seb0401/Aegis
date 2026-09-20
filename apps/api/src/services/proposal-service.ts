@@ -460,17 +460,35 @@ export class ProposalService {
     }
   }
 
-  /** Marca como EXPIRED una propuesta vencida que siga esperando al usuario. */
+  /**
+   * Marca como EXPIRED una propuesta vencida que siga esperando al usuario.
+   *
+   * Es la red de seguridad para el caso "el usuario abre la propuesta justo
+   * después de que venza": el barrido periódico corre cada minuto, así que sin
+   * esto habría una ventana en la que se podría aprobar algo ya caducado.
+   */
   private async expireIfNeeded(proposal: Proposal): Promise<Proposal> {
     const waiting = proposal.status === 'PENDING_USER' || proposal.status === 'AUTO_APPROVED';
     if (!waiting) return proposal;
 
     if (new Date(proposal.expiresAt).getTime() > Date.now()) return proposal;
 
-    await this.deps.db
+    const updated = await this.deps.db
       .update(proposals)
       .set({ status: 'EXPIRED', updatedAt: new Date() })
-      .where(and(eq(proposals.id, proposal.id), eq(proposals.status, proposal.status)));
+      .where(and(eq(proposals.id, proposal.id), eq(proposals.status, proposal.status)))
+      .returning({ id: proposals.id });
+
+    // Solo se audita si esta llamada fue la que cambió el estado. Si el barrido
+    // se adelantó, el evento ya está escrito y duplicarlo ensuciaría la cadena.
+    if (updated.length > 0) {
+      await this.deps.audit.append({
+        userId: proposal.userId,
+        proposalId: proposal.id,
+        type: 'PROPOSAL_EXPIRED',
+        payload: { expiresAt: proposal.expiresAt, detectedBy: 'lectura' },
+      });
+    }
 
     return { ...proposal, status: 'EXPIRED' };
   }

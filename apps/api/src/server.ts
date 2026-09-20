@@ -4,6 +4,7 @@ import rateLimit from '@fastify/rate-limit';
 import sensible from '@fastify/sensible';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
+import { sql } from 'drizzle-orm';
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 import {
   jsonSchemaTransform,
@@ -14,13 +15,17 @@ import { ZodError } from 'zod';
 import { buildServices, type Services } from './container.js';
 import type { Database } from './db/client.js';
 import type { Env } from './env.js';
-import { AppError } from './lib/errors.js';
+import { AppError, errors } from './lib/errors.js';
+import { RATE_LIMITS } from './lib/rate-limit.js';
 import { accountRoutes } from './routes/account.routes.js';
 import { agentRoutes } from './routes/agent.routes.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { destinationRoutes } from './routes/destinations.routes.js';
 import { policyRoutes } from './routes/policy.routes.js';
 import { proposalRoutes } from './routes/proposals.routes.js';
+
+/** Se publica en `/health` y en el OpenAPI para poder correlacionar despliegues. */
+const VERSION = '0.1.0';
 
 export interface BuildServerOptions {
   env: Env;
@@ -48,9 +53,11 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
     credentials: true,
   });
 
+  // Red de seguridad global por IP. Los límites finos van por ruta, en
+  // `src/lib/rate-limit.ts`.
   await app.register(rateLimit, {
-    max: env.NODE_ENV === 'test' ? 10_000 : 120,
-    timeWindow: '1 minute',
+    max: env.NODE_ENV === 'test' ? 100_000 : RATE_LIMITS.global.max,
+    timeWindow: RATE_LIMITS.global.timeWindow,
   });
 
   await app.register(jwt, {
@@ -91,8 +98,11 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
     try {
       await request.jwtVerify();
     } catch {
-      return reply.code(401).send({
-        error: { code: 'UNAUTHORIZED', message: 'Token ausente o inválido.' },
+      // Se reutiliza el error de dominio para que el formato de la respuesta
+      // esté definido en un único sitio.
+      const error = errors.unauthorized('Token ausente o inválido.');
+      return reply.code(error.statusCode).send({
+        error: { code: error.code, message: error.message },
       });
     }
   });
@@ -137,11 +147,39 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
     });
   });
 
-  app.get('/health', { schema: { tags: ['system'], summary: 'Sonda de salud' } }, async () => ({
-    status: 'ok',
-    network: env.STELLAR_NETWORK,
-    fakeStellar: env.USE_FAKE_STELLAR,
-  }));
+  /**
+   * Sonda de salud.
+   *
+   * Comprueba la base de datos de verdad: un proceso que responde pero no puede
+   * consultar nada está caído a efectos prácticos, y una sonda que solo dice
+   * "sigo vivo" haría que el orquestador lo mantuviera en rotación.
+   */
+  app.get(
+    '/health',
+    { schema: { tags: ['system'], summary: 'Sonda de salud' }, logLevel: 'warn' },
+    async (_request, reply) => {
+      const startedAt = Date.now();
+      let database: 'ok' | 'error' = 'ok';
+
+      try {
+        await db.execute(sql`select 1`);
+      } catch {
+        database = 'error';
+      }
+
+      const body = {
+        status: database === 'ok' ? ('ok' as const) : ('degraded' as const),
+        database,
+        databaseLatencyMs: Date.now() - startedAt,
+        network: env.STELLAR_NETWORK,
+        fakeStellar: env.USE_FAKE_STELLAR,
+        uptimeSeconds: Math.round(process.uptime()),
+        version: VERSION,
+      };
+
+      return reply.code(database === 'ok' ? 200 : 503).send(body);
+    },
+  );
 
   await app.register(authRoutes);
   await app.register(accountRoutes);

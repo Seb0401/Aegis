@@ -19,6 +19,19 @@ import { newAuditId } from '../lib/ids.js';
  * paralelo consigo mismo); si aparece una cola de trabajos (BE2-Q2) habrá que
  * añadir un `SELECT … FOR UPDATE` sobre el usuario.
  */
+/** Cuántos eventos verifica `verifyChain` cuando no se le dice otra cosa. */
+const DEFAULT_VERIFY_LIMIT = 200;
+
+export interface ChainVerification {
+  valid: boolean;
+  /** Id del primer evento que no cuadra, si lo hay. */
+  brokenAt?: string;
+  /** Cuántos eventos se han comprobado en esta llamada. */
+  verifiedEvents: number;
+  /** `false` si la ventana verificada no llega al principio de la cadena. */
+  complete: boolean;
+}
+
 export interface AuditEntry {
   userId: string;
   type: AuditEventType;
@@ -77,15 +90,38 @@ export class AuditLog {
       .limit(limit);
   }
 
-  /** Recalcula la cadena completa de un usuario. Devuelve el primer punto roto. */
-  async verifyChain(userId: string): Promise<{ valid: boolean; brokenAt?: string }> {
-    const events = await this.db
+  /**
+   * Recalcula la cadena y devuelve el primer punto roto.
+   *
+   * Por defecto verifica solo los últimos `limit` eventos. Recalcular la cadena
+   * entera en cada petición es O(n) sobre una tabla que solo crece: con unos
+   * pocos miles de eventos, `GET /audit` empezaría a arrastrarse.
+   *
+   * Verificar una ventana sigue detectando cualquier manipulación **dentro** de
+   * ella, que es donde de verdad se mira. El resultado dice si la ventana cubre
+   * toda la cadena (`complete`), para no dar una garantía que no se ha
+   * comprobado. Para una auditoría exhaustiva se pasa `limit: 0`.
+   */
+  async verifyChain(userId: string, options: { limit?: number } = {}): Promise<ChainVerification> {
+    const limit = options.limit ?? DEFAULT_VERIFY_LIMIT;
+
+    const query = this.db
       .select()
       .from(auditEvents)
       .where(eq(auditEvents.userId, userId))
-      .orderBy(auditEvents.seq);
+      .orderBy(desc(auditEvents.seq));
 
-    let previousHash: string | null = null;
+    const recent = limit > 0 ? await query.limit(limit) : await query;
+    const events = recent.reverse();
+
+    if (events.length === 0) {
+      return { valid: true, verifiedEvents: 0, complete: true };
+    }
+
+    // El primer evento de la ventana solo puede enlazar con la nada si es
+    // también el primero de la cadena.
+    const complete = events[0]!.previousHash === null;
+    let previousHash: string | null = events[0]!.previousHash;
 
     for (const event of events) {
       const expected = computeHash({
@@ -99,13 +135,18 @@ export class AuditLog {
       });
 
       if (event.previousHash !== previousHash || event.hash !== expected) {
-        return { valid: false, brokenAt: event.id };
+        return {
+          valid: false,
+          brokenAt: event.id,
+          verifiedEvents: events.length,
+          complete,
+        };
       }
 
       previousHash = event.hash;
     }
 
-    return { valid: true };
+    return { valid: true, verifiedEvents: events.length, complete };
   }
 }
 

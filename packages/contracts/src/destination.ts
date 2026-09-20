@@ -5,6 +5,7 @@ import {
   IdSchema,
   IsoDateSchema,
   StellarAddressSchema,
+  safeText,
 } from './common.js';
 
 /**
@@ -45,10 +46,41 @@ export type Destination = z.infer<typeof DestinationSchema>;
 
 export const CreateDestinationInputSchema = z.object({
   kind: DestinationKindSchema,
-  label: z.string().min(1).max(64),
+  label: safeText(64),
   address: StellarAddressSchema,
   targetAmount: AmountSchema.nullish(),
   targetAsset: AssetCodeSchema.nullish(),
   trusted: z.boolean().optional().default(false),
 });
 export type CreateDestinationInput = z.infer<typeof CreateDestinationInputSchema>;
+
+/**
+ * Lo que el cliente envía, antes de aplicar los valores por defecto.
+ *
+ * `CreateDestinationInput` es el resultado de validar, donde `trusted` ya tiene
+ * valor. Quien construye la petición no debería verse obligado a rellenarlo.
+ */
+export type CreateDestinationRequest = z.input<typeof CreateDestinationInputSchema>;
+
+/**
+ * Cambios que el usuario puede hacer sobre un destino ya registrado.
+ *
+ * La dirección NO se puede editar: cambiarla convertiría "marqué este destino
+ * como de confianza" en un cheque en blanco hacia otra cuenta. Para enviar a
+ * otra dirección se registra un destino nuevo, que vuelve a pasar por P-03.
+ */
+export const UpdateDestinationInputSchema = z
+  .object({
+    label: safeText(64).optional(),
+    /** Exime de la señal G-01. */
+    trusted: z.boolean().optional(),
+    /** Lo deniega en política (P-03) y lo marca en el Guardian (G-09). */
+    blocked: z.boolean().optional(),
+    targetAmount: AmountSchema.nullish(),
+    targetAsset: AssetCodeSchema.nullish(),
+  })
+  .refine(
+    (value) => Object.values(value).some((v) => v !== undefined),
+    'Hay que enviar al menos un campo que cambiar',
+  );
+export type UpdateDestinationInput = z.infer<typeof UpdateDestinationInputSchema>;

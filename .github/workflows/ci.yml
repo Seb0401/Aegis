@@ -11,14 +11,33 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Valores de mentira: la CI no habla con ninguna base de datos real todavía.
+  # Los tests de integración crean su propia base de datos dentro de este
+  # Postgres; esta URL es solo la conexión de administración.
   DATABASE_URL: postgresql://aegis:aegis@localhost:5432/aegis
+  TEST_DATABASE_URL: postgresql://aegis:aegis@localhost:5432/aegis
   JWT_SECRET: secreto-de-ci-solo-para-compilar-y-pasar-los-tests-0000
 
 jobs:
   verify:
     name: Lint · typecheck · test · build
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aegis
+          POSTGRES_PASSWORD: aegis
+          POSTGRES_DB: aegis
+        ports:
+          - 5432:5432
+        # El job no arranca hasta que Postgres acepta conexiones: sin esto, los
+        # tests fallarían de forma intermitente según lo que tarde el contenedor.
+        options: >-
+          --health-cmd "pg_isready -U aegis -d aegis"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - uses: actions/checkout@v4

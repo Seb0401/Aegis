@@ -6,6 +6,8 @@ import {
   IsoDateSchema,
   PositiveAmountSchema,
   StellarAddressSchema,
+  optionalSafeText,
+  safeText,
 } from './common.js';
 import { PolicyDecisionSchema } from './policy.js';
 import { ExplanationSchema, RiskReportSchema } from './risk.js';
@@ -108,9 +110,22 @@ export const ProposalSchema = z.object({
 export type Proposal = z.infer<typeof ProposalSchema>;
 
 /** Entrada con la que el agente crea una propuesta. */
+/**
+ * Igual que `ProposedActionSchema`, pero saneando el texto libre.
+ *
+ * Es la puerta de entrada: todo lo que el agente propone pasa por aquí. Los
+ * esquemas de salida se quedan sin `transform` porque lo que devuelven ya
+ * entró limpio.
+ */
+export const ProposedActionInputSchema = ProposedActionSchema.extend({
+  memo: optionalSafeText(28).nullish(),
+  label: safeText(64),
+});
+export type ProposedActionInput = z.infer<typeof ProposedActionInputSchema>;
+
 export const ProposalInputSchema = z.object({
-  summary: z.string().min(1).max(280),
-  actions: z.array(ProposedActionSchema).min(1).max(10),
+  summary: safeText(280),
+  actions: z.array(ProposedActionInputSchema).min(1).max(10),
   /**
    * Tope que pidió el usuario en lenguaje natural, si lo hubo.
    * El backend valida que la suma de las acciones no lo exceda (AI-05).
@@ -134,6 +149,9 @@ export const AuditEventTypeSchema = z.enum([
   'POLICY_UPDATED',
   'KILL_SWITCH_TOGGLED',
   'DESTINATION_CREATED',
+  'DESTINATION_UPDATED',
+  'PROPOSAL_EXPIRED',
+  'PROPOSAL_ABANDONED',
   'AUTH_LOGIN',
 ]);
 export type AuditEventType = z.infer<typeof AuditEventTypeSchema>;

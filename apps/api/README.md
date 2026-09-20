@@ -54,6 +54,9 @@ Cada paso escribe en la bitácora antes de continuar.
 | `src/services/agent-tools.ts`      | `AgentTools` atadas a un usuario concreto                                                      |
 | `src/services/auth-service.ts`     | Login por reto firmado con la wallet                                                           |
 | `src/routes/`                      | Una ruta por endpoint de §5.2 del PLAN                                                         |
+| `src/services/sweeper.ts`          | Barrido de caducidad y rescate de propuestas colgadas                                          |
+| `src/lib/rate-limit.ts`            | Límites por ruta: por IP en `/auth`, por usuario en el resto                                   |
+| `src/test/`                        | Andamiaje de tests: base de datos efímera, app lista y agente guionizado                       |
 
 ## Desarrollo sin Stellar ni wallet
 
@@ -64,6 +67,51 @@ el flujo completo (incluido `CONFIRMED`) funciona.
 Con `ALLOW_DEV_LOGIN=true` se puede iniciar sesión con
 `POST /auth/dev-login { address }` sin firmar nada. Las dos banderas son
 imposibles de activar en producción: `loadEnv` lo rechaza.
+
+## Tests
+
+```bash
+pnpm db:up   # Docker tiene que estar levantado
+pnpm test
+```
+
+Casi todos son **de integración**: cada fichero crea su propia base de datos
+dentro del Postgres local, le aplica las migraciones reales y la destruye al
+acabar. Se usa `app.inject()` en vez de levantar un puerto, así que ejercitan los
+mismos plugins, validadores y manejador de errores que en producción.
+
+| Fichero                                | Qué fija                                                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `routes/proposals.integration.test.ts` | El pipeline entero, la degradación por riesgo, la confirmación reforzada y el aislamiento entre usuarios |
+| `routes/auth.routes.test.ts`           | Firmas Ed25519 reales, retos de un solo uso, caducidad                                                   |
+| `routes/destinations.routes.test.ts`   | Saneado del texto libre, duplicados, bloqueo                                                             |
+| `services/audit.test.ts`               | Que **manipular la bitácora se nota**                                                                    |
+| `services/sweeper.test.ts`             | Caducidad real y que `SIGNED`/`SUBMITTED` no se toquen                                                   |
+| `services/proposal-service.test.ts`    | Las funciones puras, sin base de datos                                                                   |
+
+Dos cosas que conviene saber antes de añadir tests:
+
+1. Los contadores de P-02 (límite diario) y P-05 (operaciones por hora) acumulan
+   dentro del mismo fichero. Si tu test depende de empezar en cero, **usa un
+   usuario propio**.
+2. Para controlar las acciones exactas de una propuesta se inyecta
+   `createScriptedAgent()` por `overrides.agent`. No es una puerta trasera: entra
+   por el mismo `/agent/messages` y recorre el pipeline completo.
+
+## Límites de uso
+
+| Ruta                                 | Límite  | Clave                 |
+| ------------------------------------ | ------- | --------------------- |
+| Todo                                 | 120/min | IP (red de seguridad) |
+| `/auth/*`                            | 10/min  | IP                    |
+| `/agent/messages`                    | 20/min  | **usuario**           |
+| `/proposals/:id/approve` y `/reject` | 30/min  | **usuario**           |
+
+Los límites por usuario van en `preHandler` y no en `onRequest` a propósito: el
+plugin de rate limit corre antes que la autenticación, así que en `onRequest`
+`request.user` todavía no existe y la clave sería siempre la IP.
+
+En los tests los límites se desactivan (`NODE_ENV=test`).
 
 ## Lo que falta (backlog BE2 del PLAN)
 
@@ -76,10 +124,20 @@ imposibles de activar en producción: `loadEnv` lo rechaza.
 - [x] BE2-07 / BE2-08 · Señales G-01…G-09 + score
 - [x] BE2-09 · Integración de Policy + Guardian en el pipeline
 - [x] BE2-10 · Degradación por riesgo y kill switch
-- [ ] BE2-10 · Confirmación de la transacción contra la red (hoy el fake
-      confirma al instante; la confirmación real depende de BE1-09)
-- [ ] BE2-11 · Tests de integración con Postgres, observabilidad (`BE2-Q5`)
-- [ ] Respuestas en streaming con SSE para `/agent/messages` (pendiente de `FE-Q4`)
+- [x] BE2-11 · Tests de integración con Postgres (59 tests)
+- [x] BE2-11 · Rate limiting por ruta y por usuario
+- [x] Caducidad real de propuestas y rescate de estados colgados (ADR 0008)
+- [x] Saneado del texto libre y edición de destinos (ADR 0007)
+- [ ] **Bloqueado en BE1-09** · Confirmación real contra la red. Hoy el ejecutor
+      falso confirma al instante, y el barrido no toca `SIGNED` ni `SUBMITTED`
+      porque reconciliarlos exige consultar Stellar
+- [ ] **Bloqueado en BE1-Q3** · `/account/delegation/prepare` recibe hoy la clave
+      pública del agente en el cuerpo. El cliente no debería decidir con qué
+      clave firma el agente
+- [ ] **Pendiente de `FE-Q4`** · Respuestas en streaming con SSE
+- [ ] `BE2-Q5` · Nivel de observabilidad. Hoy hay id por petición, logs con
+      cabeceras redactadas y `/health` con sonda real de base de datos. Falta
+      decidir si hacen falta métricas y trazas
 
 ## Preguntas abiertas
 

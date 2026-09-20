@@ -103,3 +103,36 @@ pnpm db:down
 docker volume rm infra_aegis-postgres-data
 pnpm db:up && pnpm db:migrate && pnpm db:seed
 ```
+
+## Correr los tests
+
+Los tests de `apps/api` son de integración: crean su **propia base de datos**
+dentro del Postgres de `pnpm db:up`, le aplican las migraciones reales y la
+destruyen al terminar. No tocan la base de datos de desarrollo.
+
+```bash
+pnpm db:up      # tiene que estar levantado
+pnpm test       # todo el monorepo
+
+pnpm --filter @aegis/api test          # solo la API
+pnpm --filter @aegis/policy-engine test  # solo las reglas (no necesitan Docker)
+```
+
+Si tu Postgres no está en el 5432, pon `TEST_DATABASE_URL` en el `.env` de la
+raíz apuntando al puerto correcto. Los tests lo cargan solos.
+
+### Qué hacer si fallan
+
+| Mensaje                                     | Qué pasa                                                                                                                               |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `No se pudo crear la base de datos de test` | Postgres no está levantado, o `TEST_DATABASE_URL` apunta a otro puerto                                                                 |
+| `ECONNREFUSED` durante los tests            | Docker se cerró a mitad; `pnpm db:up` otra vez                                                                                         |
+| Tests que pasan sueltos y fallan juntos     | Suele ser estado compartido entre tests del mismo fichero: los contadores de P-02 y P-05 acumulan. Usa un usuario propio en ese bloque |
+
+Las bases de datos de test se llaman `aegis_test_<aleatorio>`. Si alguna queda
+huérfana porque la suite se cortó a la fuerza:
+
+```bash
+docker exec aegis-postgres psql -U aegis -d aegis -c \
+  "SELECT datname FROM pg_database WHERE datname LIKE 'aegis_test_%';"
+```

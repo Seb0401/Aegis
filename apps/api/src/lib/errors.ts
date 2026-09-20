@@ -19,9 +19,6 @@ export class AppError extends Error {
 export const errors = {
   unauthorized: (message = 'No has iniciado sesión.') => new AppError('UNAUTHORIZED', message, 401),
 
-  forbidden: (message = 'No tienes permiso para hacer esto.') =>
-    new AppError('FORBIDDEN', message, 403),
-
   notFound: (resource: string) => new AppError('NOT_FOUND', `No se encontró ${resource}.`, 404),
 
   invalidChallenge: () =>
@@ -36,12 +33,6 @@ export const errors = {
       `Una propuesta en estado ${from} no puede pasar a ${to}.`,
       409,
     ),
-
-  proposalExpired: () =>
-    new AppError('PROPOSAL_EXPIRED', 'La propuesta caducó. Pide una nueva.', 409),
-
-  policyDenied: (reasons: unknown) =>
-    new AppError('POLICY_DENIED', 'Tus reglas no permiten esta operación.', 409, reasons),
 
   confirmationRequired: (message: string) => new AppError('CONFIRMATION_REQUIRED', message, 400),
 

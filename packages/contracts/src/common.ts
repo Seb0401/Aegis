@@ -66,3 +66,53 @@ export const ApiErrorSchema = z.object({
   }),
 });
 export type ApiError = z.infer<typeof ApiErrorSchema>;
+
+/**
+ * Caracteres que se eliminan de todo texto libre antes de guardarlo.
+ *
+ * No es paranoia decorativa. Este texto (memos, etiquetas de objetivos) llega
+ * desde el usuario y desde la cadena, se guarda, se muestra en el frontend y
+ * acaba dentro del prompt del agente. Los tres destinos tienen problemas
+ * distintos con estos caracteres:
+ *
+ *  - Los de control rompen logs y terminales.
+ *  - Los invisibles (espacios de ancho cero) permiten colar dos etiquetas que
+ *    se ven idénticas pero son distintas: el usuario cree aprobar un pago a
+ *    "Viaje" y aprueba otro.
+ *  - Los de anulación bidireccional (RLO/LRO) invierten el orden visual del
+ *    texto, así que lo que se lee no es lo que dice.
+ *
+ * Ver §12 del PLAN: todo lo que viene del usuario o de la cadena es no confiable.
+ */
+const CONTROL_AND_INVISIBLE_CHARS =
+  // eslint-disable-next-line no-control-regex
+  /[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u2028-\u202E\u2060-\u206F\uFEFF]/g;
+
+/** Quita caracteres de control e invisibles y recorta los espacios sobrantes. */
+export function sanitizeText(value: string): string {
+  return value.replace(CONTROL_AND_INVISIBLE_CHARS, '').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Texto libre saneado y con longitud acotada.
+ *
+ * Se usa solo en los esquemas de **entrada**: los de salida devuelven lo que ya
+ * está guardado, que pasó por aquí al entrar. Mantenerlos sin `transform`
+ * también evita sorpresas al generar el OpenAPI.
+ */
+export function safeText(maxLength: number) {
+  return z
+    .string()
+    .max(maxLength * 2, 'El texto es demasiado largo')
+    .transform(sanitizeText)
+    .pipe(z.string().min(1, 'El texto no puede quedar vacío').max(maxLength));
+}
+
+/** Como `safeText`, pero admite vacío y lo convierte en `null`. */
+export function optionalSafeText(maxLength: number) {
+  return z
+    .string()
+    .max(maxLength * 2)
+    .transform((value) => sanitizeText(value) || null)
+    .pipe(z.string().max(maxLength).nullable());
+}

@@ -15,8 +15,14 @@ async function main(): Promise<void> {
 
   const app = await buildServer({ env, db: database.db });
 
+  // El barrido arranca aquí y no en `buildServer` para que los tests controlen
+  // cuándo corre, en vez de tener un temporizador de fondo interfiriendo.
+  const sweeper = app.services.sweeper;
+  sweeper.start();
+
   const shutdown = async (signal: string) => {
     app.log.info({ signal }, 'Apagando');
+    sweeper.stop();
     await app.close();
     await database.close();
     process.exit(0);

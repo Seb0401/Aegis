@@ -6,6 +6,7 @@ import {
 } from '@aegis/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { RATE_LIMITS, perUserLimit } from '../lib/rate-limit.js';
 
 const ParamsSchema = z.object({ id: z.string().min(1) });
 
@@ -48,6 +49,7 @@ export const proposalRoutes: FastifyPluginAsyncZod = async (app) => {
     '/proposals/:id/approve',
     {
       onRequest: [app.authenticate],
+      preHandler: [perUserLimit(app, RATE_LIMITS.approval)],
       schema: {
         tags: ['proposals'],
         summary: 'Aprueba una propuesta con el XDR firmado por la wallet',
@@ -70,6 +72,7 @@ export const proposalRoutes: FastifyPluginAsyncZod = async (app) => {
     '/proposals/:id/reject',
     {
       onRequest: [app.authenticate],
+      preHandler: [perUserLimit(app, RATE_LIMITS.approval)],
       schema: {
         tags: ['proposals'],
         summary: 'Rechaza una propuesta pendiente',
