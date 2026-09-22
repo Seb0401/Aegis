@@ -36,6 +36,10 @@ export function ChatSheet({ open, onClose }: { open: boolean; onClose: () => voi
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
+    // El foco entra en la hoja: si se quedara detrás, tabular seguiría
+    // recorriendo la página de debajo mientras el diálogo tapa la pantalla.
+    document.getElementById('chat-input')?.focus();
+
     return () => {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = previous;

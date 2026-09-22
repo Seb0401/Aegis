@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ChatSheet } from '@/components/chat/chat-sheet';
 import { Jupi } from '@/components/jupi/jupi';
 import { useAgentThinking, usePolicy, useProposals } from '@/lib/api/hooks';
@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 export function MobileTabBar() {
   const pathname = usePathname();
   const [chatOpen, setChatOpen] = useState(false);
+  const fabRef = useRef<HTMLButtonElement>(null);
 
   const policy = usePolicy();
   const proposals = useProposals(20, { poll: true });
@@ -36,7 +37,15 @@ export function MobileTabBar() {
 
   return (
     <>
-      <ChatSheet open={chatOpen} onClose={() => setChatOpen(false)} />
+      <ChatSheet
+        open={chatOpen}
+        onClose={() => {
+          setChatOpen(false);
+          // Devolver el foco a donde estaba evita que, al cerrar, el teclado
+          // vuelva a empezar desde el principio de la página.
+          fabRef.current?.focus();
+        }}
+      />
 
       <nav
         aria-label="Secciones"
@@ -49,6 +58,7 @@ export function MobileTabBar() {
 
           <div className="flex justify-center">
             <button
+              ref={fabRef}
               type="button"
               onClick={() => setChatOpen(true)}
               aria-label="Abrir el chat con el agente"

@@ -18,6 +18,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body className="min-h-dvh antialiased">
+        {/*
+          Primer elemento tabulable de la página: sin él, llegar al contenido
+          con teclado obliga a pasar por la barra lateral entera en cada
+          pantalla. Solo se ve cuando tiene el foco.
+        */}
+        <a
+          href="#contenido"
+          className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-[60] focus-visible:rounded-lg focus-visible:bg-primary focus-visible:px-4 focus-visible:py-2 focus-visible:text-sm focus-visible:text-primary-foreground"
+        >
+          Saltar al contenido
+        </a>
         <Providers>{children}</Providers>
       </body>
     </html>

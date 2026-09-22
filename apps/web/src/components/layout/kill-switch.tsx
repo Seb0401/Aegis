@@ -30,6 +30,16 @@ export function KillSwitch() {
       disabled={pending}
       aria-pressed={paused}
       onClick={() => setPaused.mutate(!paused)}
+      /*
+        El `title` solo o el texto solo se quedan cortos: uno no dice qué hace
+        el botón y el otro no dice qué implica. El nombre accesible dice las
+        dos cosas, en ese orden.
+      */
+      aria-label={
+        paused
+          ? 'Reactivar agente. Ahora está pausado y la política deniega todo.'
+          : 'Pausar agente. La política pasará a denegar cualquier operación.'
+      }
       title={
         paused
           ? 'El agente está pausado: la política deniega todo.'
