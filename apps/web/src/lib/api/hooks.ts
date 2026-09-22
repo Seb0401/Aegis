@@ -1,6 +1,12 @@
 'use client';
 
-import type { AgentMessageRequest, ApproveProposalRequest } from '@aegis/contracts';
+import type {
+  AgentMessageRequest,
+  ApproveProposalRequest,
+  CreateDestinationRequest,
+  UpdateDestinationInput,
+  UpdatePolicyInput,
+} from '@aegis/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApiClient, useAuth } from '../auth/auth-context';
 
@@ -143,6 +149,49 @@ export function useRejectProposal() {
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.proposal(data.proposal.id), data);
       void queryClient.invalidateQueries({ queryKey: ['proposals'] });
+    },
+  });
+}
+
+/** Alta de un destino (FE-10). Es la única puerta por la que entra una dirección nueva. */
+export function useCreateDestination() {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateDestinationRequest) => client.createDestination(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.destinations });
+    },
+  });
+}
+
+/** Renombrar, marcar de confianza o bloquear (FE-10). */
+export function useUpdateDestination() {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateDestinationInput }) =>
+      client.updateDestination(id, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.destinations });
+      // `trusted` y `blocked` cambian lo que la política y el Guardian deciden,
+      // así que lo que ya estaba propuesto puede evaluarse distinto a partir de ahora.
+      void queryClient.invalidateQueries({ queryKey: ['proposals'] });
+    },
+  });
+}
+
+/** Edición de límites y modo de operación (FE-09). */
+export function useUpdatePolicy() {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdatePolicyInput) => client.updatePolicy(input),
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.policy, data);
     },
   });
 }

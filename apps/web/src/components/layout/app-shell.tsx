@@ -3,6 +3,7 @@
 import { LogOut, ShieldCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { KillSwitch } from '@/components/layout/kill-switch';
+import { MainNav } from '@/components/layout/main-nav';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePolicy } from '@/lib/api/hooks';
@@ -33,6 +34,8 @@ export function AppShell({ children, aside }: { children: ReactNode; aside?: Rea
               {mode === 'AUTONOMOUS' ? 'Autónomo' : 'Manual'}
             </Badge>
           ) : null}
+
+          <MainNav />
 
           <div className="ml-auto flex items-center gap-2">
             <KillSwitch />
