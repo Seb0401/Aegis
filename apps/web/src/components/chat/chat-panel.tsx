@@ -1,7 +1,7 @@
 'use client';
 
-import { Loader2, SendHorizonal } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { Loader2, RotateCw, SendHorizonal } from 'lucide-react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Jupi } from '@/components/jupi/jupi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,8 +20,15 @@ import { cn } from '@/lib/utils';
  * central en móvil.
  */
 export function ChatPanel({ bare = false }: { bare?: boolean }) {
-  const { turns, send, isPending, error } = useChat();
+  const { turns, send, retry, isPending, error, canRetry } = useChat();
   const [draft, setDraft] = useState('');
+  const endRef = useRef<HTMLDivElement>(null);
+
+  // El último mensaje siempre a la vista: si no, una respuesta larga aparece
+  // fuera de pantalla y parece que no ha pasado nada.
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [turns, isPending]);
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -82,10 +89,18 @@ export function ChatPanel({ bare = false }: { bare?: boolean }) {
         ) : null}
 
         {error ? (
-          <p role="alert" className="text-sm text-destructive">
-            {describeError(error)}
-          </p>
+          <div role="alert" className="flex flex-col items-start gap-2">
+            <p className="text-sm text-destructive">{describeError(error)}</p>
+            {canRetry ? (
+              <Button size="sm" variant="outline" onClick={retry} disabled={isPending}>
+                <RotateCw />
+                Reintentar
+              </Button>
+            ) : null}
+          </div>
         ) : null}
+
+        <div ref={endRef} />
       </div>
 
       <form onSubmit={onSubmit} className="flex items-end gap-2">
