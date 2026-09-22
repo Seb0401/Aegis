@@ -1,0 +1,96 @@
+'use client';
+
+import { LogOut } from 'lucide-react';
+import { KillSwitch } from '@/components/layout/kill-switch';
+import { MainNav } from '@/components/layout/main-nav';
+import { Button } from '@/components/ui/button';
+import { useBalances, usePolicy } from '@/lib/api/hooks';
+import { useAuth } from '@/lib/auth/auth-context';
+import { formatAmount, shortAddress } from '@/lib/utils';
+
+/**
+ * Cabecera del mockup: saludo, estado del sistema y saldo a mano.
+ *
+ * El saludo no lleva nombre porque la API no tiene ninguno: se entra con una
+ * wallet, y lo único que Aegis sabe de ti es tu dirección. Inventar un nombre
+ * en una pantalla que autoriza pagos sería el tipo de detalle bonito que
+ * después confunde.
+ */
+export function TopBar({ title, subtitle }: { title?: string; subtitle?: string }) {
+  const { session, logout } = useAuth();
+  const policy = usePolicy();
+  const balances = useBalances();
+
+  const paused = policy.data?.config.paused ?? false;
+  const xlm = balances.data?.balances.find((balance) => balance.asset === 'XLM');
+
+  return (
+    <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
+      <div className="flex flex-col gap-3 px-4 py-4 sm:px-6">
+        <div className="flex flex-wrap items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+              {title ?? 'Hola'}
+              {title ? null : (
+                <span aria-hidden className="text-xl">
+                  👋
+                </span>
+              )}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {subtitle ??
+                'Tu agente de IA ya está listo para mover dinero en Stellar. Siempre dentro de tus límites y con la aprobación del Guardian.'}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={
+                paused
+                  ? 'flex items-center gap-2 rounded-full border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive'
+                  : 'flex items-center gap-2 rounded-full border border-success/40 bg-success/10 px-3 py-1.5 text-xs font-medium text-success'
+              }
+            >
+              <span
+                aria-hidden
+                className={
+                  paused
+                    ? 'size-1.5 rounded-full bg-destructive'
+                    : 'size-1.5 rounded-full bg-success'
+                }
+              />
+              {paused ? 'Agente en pausa' : 'Sistema activo'}
+            </span>
+
+            {xlm ? (
+              <span className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs">
+                <span className="text-muted-foreground">XLM</span>
+                <span className="font-medium tabular-nums">{formatAmount(xlm.available)}</span>
+              </span>
+            ) : null}
+
+            <KillSwitch />
+
+            {session ? (
+              <code
+                className="hidden rounded-full bg-muted px-3 py-1.5 text-xs sm:inline"
+                title={session.user.address}
+              >
+                {shortAddress(session.user.address)}
+              </code>
+            ) : null}
+
+            <Button variant="ghost" size="icon" onClick={logout} aria-label="Cerrar sesión">
+              <LogOut />
+            </Button>
+          </div>
+        </div>
+
+        {/* En móvil la barra lateral no está, así que la navegación vive aquí. */}
+        <div className="lg:hidden">
+          <MainNav />
+        </div>
+      </div>
+    </header>
+  );
+}

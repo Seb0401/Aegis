@@ -7,14 +7,14 @@ límites y kill switch.
 
 ## Stack y por qué
 
-| Pieza              | Elección                                  | Nota                                                                                   |
-| ------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------- |
-| Framework          | **Next.js 16** (App Router, Turbopack)    | Lo propuesto en §3 del PLAN. Todo es cliente: la API usa Bearer, no cookies            |
-| Estilos            | **Tailwind v4** + tokens estilo shadcn/ui | El tema vive entero en `src/app/globals.css`; `components.json` deja usar `shadcn add` |
-| Datos              | **TanStack Query v5**                     | Caché, reintentos e invalidación tras aprobar, rechazar o pausar                       |
-| Wallet             | **Freighter** tras `WalletAdapter`        | `FE-Q2` sigue abierta: añadir xBull o Albedo es escribir otro adaptador                |
-| Validación         | **Zod**, vía `@aegis/contracts`           | Entrada y salida se validan con los mismos esquemas que usa la API                     |
-| Tipografía / marca | Pila del sistema                          | `FE-Q1` sin responder; sin `next/font` para que `pnpm build` funcione también sin red  |
+| Pieza      | Elección                                  | Nota                                                                                   |
+| ---------- | ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| Framework  | **Next.js 16** (App Router, Turbopack)    | Lo propuesto en §3 del PLAN. Todo es cliente: la API usa Bearer, no cookies            |
+| Estilos    | **Tailwind v4** + tokens estilo shadcn/ui | El tema vive entero en `src/app/globals.css`; `components.json` deja usar `shadcn add` |
+| Datos      | **TanStack Query v5**                     | Caché, reintentos e invalidación tras aprobar, rechazar o pausar                       |
+| Wallet     | **Freighter** tras `WalletAdapter`        | `FE-Q2` sigue abierta: añadir xBull o Albedo es escribir otro adaptador                |
+| Validación | **Zod**, vía `@aegis/contracts`           | Entrada y salida se validan con los mismos esquemas que usa la API                     |
+| Identidad  | Mockup + mascota **Jupi** (`images/`)     | Tema oscuro en variables CSS; sin `next/font` para que `pnpm build` funcione sin red   |
 
 ## Arranque
 
@@ -53,20 +53,37 @@ src/
 ├── components/
 │   ├── auth/               Panel de conexión y guarda de ruta
 │   ├── chat/               Chat con el agente (base de FE-05)
-│   ├── dashboard/          Tarjetas del panel y estados de consulta
+│   ├── dashboard/          Tarjeta de Jupi, estadísticas y listas del panel
 │   ├── destinations/       Formulario en dos pasos y lista
 │   ├── history/            Movimientos y bitácora encadenada
-│   ├── layout/             Cabecera, navegación y kill switch
+│   ├── jupi/               La mascota
+│   ├── layout/             Barra lateral, cabecera y kill switch
 │   ├── policy/             Formulario de límites
 │   ├── proposals/          Tarjeta de propuesta y panel del Guardian
 │   └── ui/                 Primitivas estilo shadcn (button, card, badge…)
-└── lib/
-    ├── api/                client.ts (tipado), errors.ts, hooks.ts
-    ├── auth/               wallet.ts, session.ts, auth-context.tsx
-    ├── proposals.ts        Estados, totales y confirmación del monto
-    ├── env.ts              Solo variables NEXT_PUBLIC_*
-    └── utils.ts            cn(), formatos de monto, dirección y fecha
+├── lib/
+│   ├── api/                client.ts (tipado), errors.ts, hooks.ts
+│   ├── auth/               wallet.ts, session.ts, auth-context.tsx
+│   ├── jupi.ts             Qué cara pone la mascota en cada estado
+│   ├── navigation.ts       Las cuatro secciones, compartidas por las dos navegaciones
+│   ├── proposals.ts        Estados, totales y confirmación del monto
+│   ├── env.ts              Solo variables NEXT_PUBLIC_*
+│   └── utils.ts            cn(), formatos de monto, dirección y fecha
+└── public/jupi/            Los 12 sprites recortados del sheet
 ```
+
+### Jupi
+
+La mascota sale de `images/jupi.jpeg`: doce expresiones recortadas a PNG con
+fondo transparente en `public/jupi/`. Qué cara pone lo decide `lib/jupi.ts`, y
+esa decisión tiene una regla:
+
+> **Jupi nunca contradice al Guardian.** No opina sobre el riesgo: lo refleja.
+> Con riesgo alto o crítico no pone cara alegre, y no celebra una operación
+> hasta que la red la confirma. Es una mascota, no una segunda opinión.
+
+Su única animación es una flotación lenta, y desaparece con
+`prefers-reduced-motion`.
 
 ### Reglas que este código respeta
 

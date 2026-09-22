@@ -7,8 +7,10 @@ import { PolicyForm } from '@/components/policy/policy-form';
 export default function LimitesPage() {
   return (
     <RequireSession>
-      <AppShell>
-        <h1 className="text-xl font-semibold tracking-tight">Límites y modo</h1>
+      <AppShell
+        title="Límites y modo"
+        subtitle="Lo único que separa «el agente puede moverme dinero» de «el agente puede moverme todo el dinero»."
+      >
         <PolicyForm />
       </AppShell>
     </RequireSession>

@@ -8,8 +8,10 @@ import { AppShell } from '@/components/layout/app-shell';
 export default function HistorialPage() {
   return (
     <RequireSession>
-      <AppShell>
-        <h1 className="text-xl font-semibold tracking-tight">Historial</h1>
+      <AppShell
+        title="Historial"
+        subtitle="Lo que de verdad se ejecutó en la red y la bitácora encadenada de todo lo que pasó."
+      >
         <TransactionsCard />
         <AuditCard />
       </AppShell>

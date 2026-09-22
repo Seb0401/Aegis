@@ -7,7 +7,7 @@ import type {
   UpdateDestinationInput,
   UpdatePolicyInput,
 } from '@aegis/contracts';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApiClient, useAuth } from '../auth/auth-context';
 
 /**
@@ -109,11 +109,25 @@ export function useAudit(limit = 50) {
 
 // ── Mutaciones ──────────────────────────────────────────────────────
 
+/** Clave de la mutación del agente, para poder preguntar desde fuera si está pensando. */
+const AGENT_MESSAGE_KEY = ['agent-message'] as const;
+
+/**
+ * ¿Hay un mensaje al agente en vuelo?
+ *
+ * Lo usa Jupi para poner cara de estar pensando mientras el agente trabaja,
+ * aunque la mascota viva en otro componente distinto del chat.
+ */
+export function useAgentThinking(): boolean {
+  return useIsMutating({ mutationKey: AGENT_MESSAGE_KEY }) > 0;
+}
+
 export function useSendMessage() {
   const client = useApiClient();
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: AGENT_MESSAGE_KEY,
     mutationFn: (input: AgentMessageRequest) => client.sendMessage(input),
     onSuccess: () => {
       // Un mensaje al agente puede crear propuestas y consumir límite diario.

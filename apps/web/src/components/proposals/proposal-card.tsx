@@ -15,11 +15,13 @@ import { WalletError } from '@/lib/auth/wallet';
 import {
   RISK_LABEL,
   RISK_VARIANT,
+  RISK_WORD,
   STATUS_LABEL,
   isActionable,
   matchesTotal,
   needsTotalConfirmation,
   proposalTotal,
+  shareOfTotal,
   totalsByAsset,
 } from '@/lib/proposals';
 import { formatAmount, shortAddress } from '@/lib/utils';
@@ -107,7 +109,7 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
-        <ActionList actions={proposal.actions} destinations={byId} />
+        <ActionList actions={proposal.actions} destinations={byId} total={total} />
 
         <div className="flex items-baseline justify-between gap-4 border-t border-border pt-3">
           <span className="text-sm text-muted-foreground">Total</span>
@@ -171,8 +173,8 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
                   disabled={busy}
                 />
                 <span className="text-xs text-muted-foreground">
-                  El riesgo es {RISK_LABEL[proposal.risk?.level ?? 'HIGH'].toLowerCase()}. La API
-                  rechaza la aprobación si el monto no coincide exactamente.
+                  El riesgo es {RISK_WORD[proposal.risk?.level ?? 'HIGH']}. La API rechaza la
+                  aprobación si el monto no coincide exactamente.
                 </span>
               </label>
             ) : null}
@@ -282,9 +284,11 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
 function ActionList({
   actions,
   destinations,
+  total,
 }: {
   actions: ProposedAction[];
   destinations: Map<string, Destination>;
+  total: string;
 }) {
   return (
     <ul className="flex flex-col divide-y divide-border">
@@ -302,8 +306,13 @@ function ActionList({
                 {action.memo ? ` · memo: ${action.memo}` : ''}
               </p>
             </div>
-            <span className="shrink-0 text-sm font-medium tabular-nums">
-              {formatAmount(action.amount, action.asset)}
+            <span className="shrink-0 text-right">
+              <span className="block text-sm font-medium tabular-nums">
+                {formatAmount(action.amount, action.asset)}
+              </span>
+              <span className="block text-xs text-muted-foreground tabular-nums">
+                {shareOfTotal(action.amount, total).toFixed(1)}%
+              </span>
             </span>
           </li>
         );

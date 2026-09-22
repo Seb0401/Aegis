@@ -128,6 +128,7 @@ aegis/
 │   ├── guardian/           Señales G-01…G-09, score, explicación    → BE2
 │   └── agent/              Agente y explicador                      → AI
 ├── docs/{adr,api,runbooks}
+├── images/                 Mockup y sprites de Jupi (fuente de diseño)      → FE
 └── infra/                  docker-compose (Postgres)
 ```
 

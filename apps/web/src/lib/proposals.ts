@@ -1,6 +1,7 @@
 import {
   addAmounts,
   compareAmounts,
+  percentageOf,
   type AssetCode,
   type Proposal,
   type ProposalStatus,
@@ -38,6 +39,14 @@ export const RISK_LABEL: Record<RiskLevel, string> = {
   MEDIUM: 'Riesgo medio',
   HIGH: 'Riesgo alto',
   CRITICAL: 'Riesgo crítico',
+};
+
+/** El adjetivo solo, para frases como «el riesgo es crítico». */
+export const RISK_WORD: Record<RiskLevel, string> = {
+  LOW: 'bajo',
+  MEDIUM: 'medio',
+  HIGH: 'alto',
+  CRITICAL: 'crítico',
 };
 
 export const RISK_VARIANT = {
@@ -87,6 +96,17 @@ export function totalsByAsset(actions: ProposedAction[]): Array<[AssetCode, stri
     totals.set(action.asset, addAmounts(totals.get(action.asset) ?? '0', action.amount));
   }
   return [...totals.entries()];
+}
+
+/**
+ * Qué porcentaje del total se lleva una operación.
+ *
+ * Lo calcula `percentageOf` de `@aegis/contracts`, que divide en BigInt: con
+ * `Number` los repartos en tercios no sumarían 100 y el usuario vería que las
+ * partes no cuadran con el total que está a punto de firmar.
+ */
+export function shareOfTotal(amount: string, total: string): number {
+  return percentageOf(amount, total);
 }
 
 /** Solo desde `PENDING_USER` se puede aprobar o rechazar (máquina de estados §4.3). */

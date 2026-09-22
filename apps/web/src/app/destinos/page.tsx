@@ -8,8 +8,10 @@ import { AppShell } from '@/components/layout/app-shell';
 export default function DestinosPage() {
   return (
     <RequireSession>
-      <AppShell>
-        <h1 className="text-xl font-semibold tracking-tight">Objetivos y contactos</h1>
+      <AppShell
+        title="Objetivos y contactos"
+        subtitle="El agente solo puede enviar dinero a lo que esté en esta lista. Las direcciones entran solo por aquí."
+      >
         <DestinationForm />
         <DestinationList />
       </AppShell>

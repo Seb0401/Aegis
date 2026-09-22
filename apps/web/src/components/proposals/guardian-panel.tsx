@@ -1,6 +1,8 @@
 import type { Explanation, RiskLevel, RiskReport } from '@aegis/contracts';
 import { Info, ShieldAlert, ShieldCheck, TriangleAlert } from 'lucide-react';
+import { Jupi } from '@/components/jupi/jupi';
 import { Badge } from '@/components/ui/badge';
+import { moodForRisk } from '@/lib/jupi';
 import { RISK_LABEL, RISK_VARIANT, SIGNAL_NAME } from '@/lib/proposals';
 import { cn, formatAmount } from '@/lib/utils';
 
@@ -55,7 +57,20 @@ export function GuardianPanel({
       </header>
 
       {explanation ? (
-        <p className="text-sm">{explanation.summary}</p>
+        /*
+          La burbuja del mockup: Jupi pone la cara que corresponde al veredicto
+          del Guardian, pero el texto es el del Guardian, palabra por palabra.
+          La mascota acompaña la explicación; no la escribe ni la matiza.
+        */
+        <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/10 p-3">
+          <Jupi mood={moodForRisk(risk.level)} size={44} className="shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted-foreground">
+              Jupi te lo explica en lenguaje normal
+            </p>
+            <p className="mt-1 text-sm">{explanation.summary}</p>
+          </div>
+        </div>
       ) : (
         <p className="text-sm text-muted-foreground">
           El Guardian evaluó la propuesta pero no hay explicación disponible.

@@ -1,6 +1,7 @@
 'use client';
 
 import { Loader2, SendHorizonal } from 'lucide-react';
+import { Jupi } from '@/components/jupi/jupi';
 import { useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,7 +60,7 @@ export function ChatPanel() {
   }
 
   return (
-    <Card className="flex min-h-[28rem] flex-col lg:sticky lg:top-20">
+    <Card className="flex min-h-[30rem] flex-col xl:sticky xl:top-28">
       <CardHeader>
         <CardTitle>Agente</CardTitle>
         <CardDescription>
@@ -78,25 +79,40 @@ export function ChatPanel() {
               <div
                 key={turn.id}
                 className={cn(
-                  'max-w-[85%] rounded-lg px-3 py-2 text-sm',
-                  turn.role === 'user'
-                    ? 'ml-auto bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground',
+                  'flex items-end gap-2',
+                  turn.role === 'user' ? 'justify-end' : 'justify-start',
                 )}
               >
-                <p className="whitespace-pre-wrap">{turn.text}</p>
-                {turn.proposals ? (
-                  <p className="mt-1 text-xs opacity-80">
-                    {turn.proposals} propuesta{turn.proposals === 1 ? '' : 's'} creada
-                    {turn.proposals === 1 ? '' : 's'}.
-                  </p>
+                {turn.role === 'agent' ? (
+                  <Jupi
+                    mood={turn.proposals ? 'confiado' : 'tranquilo'}
+                    size={32}
+                    className="shrink-0"
+                  />
                 ) : null}
+                <div
+                  className={cn(
+                    'max-w-[85%] rounded-2xl px-3 py-2 text-sm',
+                    turn.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground',
+                  )}
+                >
+                  <p className="whitespace-pre-wrap">{turn.text}</p>
+                  {turn.proposals ? (
+                    <p className="mt-1 text-xs opacity-80">
+                      {turn.proposals} propuesta{turn.proposals === 1 ? '' : 's'} creada
+                      {turn.proposals === 1 ? '' : 's'}.
+                    </p>
+                  ) : null}
+                </div>
               </div>
             ))
           )}
 
           {sendMessage.isPending ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Jupi mood="pensativo" size={32} className="shrink-0" />
               <Loader2 className="size-4 animate-spin" />
               Pensando…
             </p>
@@ -127,7 +143,7 @@ export function ChatPanel() {
               }
             }}
             placeholder="Escribe lo que quieres hacer…"
-            className="min-h-[3rem] flex-1 resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+            className="min-h-[3rem] flex-1 resize-none rounded-xl border border-input bg-muted/40 px-3 py-2 text-sm"
           />
           <Button type="submit" size="icon" disabled={sendMessage.isPending || !draft.trim()}>
             <SendHorizonal />
