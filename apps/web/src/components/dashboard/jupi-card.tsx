@@ -3,6 +3,7 @@
 import type { Proposal } from '@aegis/contracts';
 import { Bot, FileText, Rocket, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { Jupi } from '@/components/jupi/jupi';
+import { SessionControls } from '@/components/layout/session-controls';
 import { Card } from '@/components/ui/card';
 import { useAgentThinking, usePolicy, useProposals } from '@/lib/api/hooks';
 import { jupiStatusLine, moodForAgent } from '@/lib/jupi';
@@ -106,6 +107,9 @@ export function JupiCard() {
           ) : null}
         </div>
       </div>
+
+      {/* Solo en móvil: la cabecera de ahí se queda con el título y nada más. */}
+      <SessionControls />
 
       <ol className="flex flex-col gap-1.5" aria-label="Etapas de una operación">
         {STAGES.map((stage) => {

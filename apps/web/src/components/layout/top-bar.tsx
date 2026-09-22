@@ -9,7 +9,12 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { formatAmount, shortAddress } from '@/lib/utils';
 
 /**
- * Cabecera del mockup: saludo, estado del sistema y saldo a mano.
+ * Cabecera: saludo, estado del sistema y saldo a mano.
+ *
+ * En móvil se queda **solo el título**. Todo lo demás —subtítulo, estado,
+ * saldo, kill switch y salir— ocupaba media pantalla antes de llegar al
+ * contenido. El kill switch y el botón de salir no desaparecen: bajan a la
+ * tarjeta de Jupi (`SessionControls`), que es lo primero del panel.
  *
  * El saludo no lleva nombre porque la API no tiene ninguno: se entra con una
  * wallet, y lo único que Aegis sabe de ti es tu dirección. Inventar un nombre
@@ -26,25 +31,20 @@ export function TopBar({ title, subtitle }: { title?: string; subtitle?: string 
 
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
-      <div className="flex flex-col gap-3 px-4 py-4 sm:px-6">
-        {/*
-          En móvil el saludo y los controles van apilados. Con `flex-wrap`, el
-          título se comprimía hasta partir el subtítulo palabra por palabra
-          antes de que los botones bajaran de línea.
-        */}
+      <div className="flex flex-col gap-3 px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="min-w-0 flex-1">
-            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+            <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight sm:text-2xl">
               {title ?? 'Hola'}
-              {title ? null : <WaveMark className="size-6 text-primary" />}
+              {title ? null : <WaveMark className="size-5 text-primary sm:size-6" />}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
               {subtitle ??
                 'Tu agente de IA ya está listo para mover dinero en Stellar. Siempre dentro de tus límites y con la aprobación del Guardian.'}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <div className="hidden flex-wrap items-center gap-2 sm:flex sm:justify-end">
             <span
               className={
                 paused
@@ -64,7 +64,7 @@ export function TopBar({ title, subtitle }: { title?: string; subtitle?: string 
             </span>
 
             {xlm ? (
-              <span className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs sm:flex">
+              <span className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs">
                 <span className="text-muted-foreground">XLM</span>
                 <span className="font-medium tabular-nums">{formatAmount(xlm.available)}</span>
               </span>
@@ -74,7 +74,7 @@ export function TopBar({ title, subtitle }: { title?: string; subtitle?: string 
 
             {session ? (
               <code
-                className="hidden rounded-full bg-muted px-3 py-1.5 text-xs sm:inline"
+                className="hidden rounded-full bg-muted px-3 py-1.5 text-xs lg:inline"
                 title={session.user.address}
               >
                 {shortAddress(session.user.address)}
