@@ -1,0 +1,114 @@
+import type { Explanation, RiskLevel, RiskReport } from '@aegis/contracts';
+import { Info, ShieldAlert, ShieldCheck, TriangleAlert } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { RISK_LABEL, RISK_VARIANT, SIGNAL_NAME } from '@/lib/proposals';
+import { cn, formatAmount } from '@/lib/utils';
+
+/**
+ * Panel del Guardian (FE-08).
+ *
+ * El texto de cada advertencia lo escribe el Guardian, no esta pantalla: viene
+ * en `explanation.warnings`, construido a partir de las cifras reales de la
+ * señal. Aquí no se inventa ni se recalcula nada, solo se ordena y se pinta.
+ *
+ * Las señales `INFO` sí se listan, pero por su nombre y aparte: se evaluaron y
+ * no dispararon nada. Esconderlas daría la impresión de que el Guardian mira
+ * menos cosas de las que mira.
+ */
+export function GuardianPanel({
+  risk,
+  explanation,
+}: {
+  risk: RiskReport;
+  explanation?: Explanation | null;
+}) {
+  const warnings = explanation?.warnings ?? [];
+  const severityById = new Map(risk.signals.map((signal) => [signal.id, signal.severity]));
+  const infoSignals = risk.signals.filter((signal) => signal.severity === 'INFO');
+
+  return (
+    <section
+      aria-label="Análisis del Guardian"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-4"
+    >
+      <header className="flex flex-wrap items-center gap-2">
+        <span className="flex items-center gap-1.5 text-sm font-semibold">
+          <RiskIcon level={risk.level} />
+          Guardian
+        </span>
+        <Badge variant={RISK_VARIANT[risk.level]}>{RISK_LABEL[risk.level]}</Badge>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          puntuación {risk.score}/100
+        </span>
+      </header>
+
+      {explanation ? (
+        <p className="text-sm">{explanation.summary}</p>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          El Guardian evaluó la propuesta pero no hay explicación disponible.
+        </p>
+      )}
+
+      {warnings.length > 0 ? (
+        <ul className="flex flex-col gap-2">
+          {warnings.map((warning) => {
+            const severity = severityById.get(warning.signalId);
+            return (
+              <li key={warning.signalId} className="flex items-start gap-2 text-sm">
+                <TriangleAlert
+                  className={cn(
+                    'mt-0.5 size-4 shrink-0',
+                    severity === 'HIGH' ? 'text-risk-high' : 'text-risk-medium',
+                  )}
+                />
+                <span>
+                  {warning.text}
+                  <span className="ml-1.5 text-xs text-muted-foreground">
+                    ({warning.signalId} · {SIGNAL_NAME[warning.signalId]})
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <ShieldCheck className="size-4 shrink-0 text-risk-low" />
+          Ninguna señal saltó por encima de informativa.
+        </p>
+      )}
+
+      <footer className="flex flex-col gap-2 border-t border-border pt-3">
+        <p className="text-xs text-muted-foreground">
+          Saldo estimado después de ejecutarla (comisiones incluidas):{' '}
+          <span className="font-medium text-foreground tabular-nums">
+            {formatAmount(risk.balanceAfter)}
+          </span>
+        </p>
+
+        {infoSignals.length > 0 ? (
+          <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+            <Info className="mt-0.5 size-3.5 shrink-0" />
+            <span>
+              Informativas: {infoSignals.map((signal) => SIGNAL_NAME[signal.id]).join(', ')}.
+            </span>
+          </p>
+        ) : null}
+
+        {explanation?.generatedBy === 'template' ? (
+          <p className="text-xs text-muted-foreground">
+            Explicación generada con la plantilla determinista del Guardian.
+          </p>
+        ) : null}
+      </footer>
+    </section>
+  );
+}
+
+function RiskIcon({ level }: { level: RiskLevel }) {
+  if (level === 'LOW') return <ShieldCheck className="size-4 text-risk-low" />;
+  if (level === 'MEDIUM') return <ShieldAlert className="size-4 text-risk-medium" />;
+  if (level === 'HIGH') return <ShieldAlert className="size-4 text-risk-high" />;
+  return <ShieldAlert className="size-4 text-risk-critical" />;
+}

@@ -1,3 +1,4 @@
+import { formatAmount as formatStellarAmount } from '@aegis/contracts';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -9,13 +10,14 @@ export function cn(...inputs: ClassValue[]): string {
 /**
  * Formatea un monto decimal de Stellar para mostrarlo.
  *
- * Los montos viajan como string a propósito (7 decimales, los float pierden
- * precisión). Aquí solo se recortan los ceros de cola para leerlos mejor; el
- * valor original nunca se convierte a number para operar con él.
+ * El recorte de ceros lo hace `@aegis/contracts`, que es quien define la
+ * aritmética sin coma flotante que usa el backend. Duplicar aquí la lógica
+ * sería arriesgarse a que la cifra que ve el usuario y la que valida la API
+ * dejen de coincidir.
  */
 export function formatAmount(amount: string, asset?: string): string {
-  const trimmed = amount.includes('.') ? amount.replace(/0+$/, '').replace(/\.$/, '') : amount;
-  return asset ? `${trimmed} ${asset}` : trimmed;
+  const formatted = formatStellarAmount(amount);
+  return asset ? `${formatted} ${asset}` : formatted;
 }
 
 /** Acorta una dirección Stellar: GA4NUZ…VTAGK3XP. */
