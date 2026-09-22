@@ -129,21 +129,21 @@ Su única animación es una flotación lenta, y desaparece con
 
 ## Estado de las tareas
 
-| Tarea     | Estado                                                                             |
-| --------- | ---------------------------------------------------------------------------------- |
-| **FE-01** | ✅ Scaffold, lint, typecheck, tests y build integrados en la CI del monorepo       |
-| **FE-02** | ✅ Cliente tipado con validación Zod, errores por código y hooks de React Query    |
-| **FE-03** | ✅ Conexión Freighter (reto → firma → JWT), sesión persistida y `dev-login`        |
-| FE-04     | Pendiente · delegación del signer (`POST /account/delegation/prepare` ya existe)   |
-| FE-05     | Base funcional · falta historial persistido y streaming (la API aún no hace SSE)   |
-| **FE-06** | ✅ Tarjeta con operaciones, destinos resueltos, motivos de política y total        |
-| **FE-07** | ✅ Aprobar con firma de Freighter, `confirmedTotal` y rechazo con motivo           |
-| **FE-08** | ✅ Panel del Guardian: nivel, puntuación, advertencias, señales INFO y saldo final |
-| **FE-09** | ✅ Formulario de límites y modo, enviando solo los campos que cambiaron            |
-| **FE-10** | ✅ Alta en dos pasos con confirmación de dirección, confianza y bloqueo            |
-| **FE-11** | ✅ Movimientos de la red y bitácora con el estado de la cadena de hashes           |
-| **FE-12** | ✅ Kill switch visible en la cabecera                                              |
-| FE-13     | Pendiente · accesibilidad, responsive y pulido                                     |
+| Tarea     | Estado                                                                               |
+| --------- | ------------------------------------------------------------------------------------ |
+| **FE-01** | ✅ Scaffold, lint, typecheck, tests y build integrados en la CI del monorepo         |
+| **FE-02** | ✅ Cliente tipado con validación Zod, errores por código y hooks de React Query      |
+| **FE-03** | ✅ Conexión Freighter (reto → firma → JWT), sesión persistida y `dev-login`          |
+| **FE-04** | ✅ Configuración inicial y delegación · el **envío** del XDR firmado espera a BE1-05 |
+| FE-05     | Base funcional · falta historial persistido y streaming (la API aún no hace SSE)     |
+| **FE-06** | ✅ Tarjeta con operaciones, destinos resueltos, motivos de política y total          |
+| **FE-07** | ✅ Aprobar con firma de Freighter, `confirmedTotal` y rechazo con motivo             |
+| **FE-08** | ✅ Panel del Guardian: nivel, puntuación, advertencias, señales INFO y saldo final   |
+| **FE-09** | ✅ Formulario de límites y modo, enviando solo los campos que cambiaron              |
+| **FE-10** | ✅ Alta en dos pasos con confirmación de dirección, confianza y bloqueo              |
+| **FE-11** | ✅ Movimientos de la red y bitácora con el estado de la cadena de hashes             |
+| **FE-12** | ✅ Kill switch visible en la cabecera                                                |
+| FE-13     | Pendiente · accesibilidad, responsive y pulido                                       |
 
 ## Detalles del contrato que conviene no olvidar
 

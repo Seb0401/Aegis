@@ -197,6 +197,20 @@ export function useUpdateDestination() {
   });
 }
 
+/**
+ * XDR sin firmar que añade el signer del agente a la cuenta (FE-04).
+ *
+ * No invalida nada: preparar la delegación no cambia el estado del servidor,
+ * solo construye una transacción que después firma el usuario.
+ */
+export function usePrepareDelegation() {
+  const client = useApiClient();
+
+  return useMutation({
+    mutationFn: (agentPublicKey: string) => client.prepareDelegation(agentPublicKey),
+  });
+}
+
 /** Edición de límites y modo de operación (FE-09). */
 export function useUpdatePolicy() {
   const client = useApiClient();

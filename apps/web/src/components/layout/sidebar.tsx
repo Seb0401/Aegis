@@ -68,7 +68,11 @@ export function Sidebar() {
         </div>
 
         {session ? (
-          <div className="flex items-center gap-2.5 rounded-xl px-2 py-2">
+          <Link
+            href="/configuracion"
+            aria-label="Configuración de la cuenta"
+            className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors hover:bg-accent"
+          >
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
               {session.user.address.slice(1, 3)}
             </span>
@@ -78,7 +82,7 @@ export function Sidebar() {
               </span>
               <span className="block text-[11px] text-muted-foreground">Testnet</span>
             </span>
-          </div>
+          </Link>
         ) : null}
       </div>
     </aside>

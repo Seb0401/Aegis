@@ -1,6 +1,7 @@
 'use client';
 
 import { LogOut } from 'lucide-react';
+import Link from 'next/link';
 import { KillSwitch } from '@/components/layout/kill-switch';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -24,12 +25,14 @@ export function SessionControls() {
       <KillSwitch />
 
       {session ? (
-        <code
-          className="min-w-0 flex-1 truncate rounded-full bg-muted px-3 py-1.5 text-xs"
+        <Link
+          href="/configuracion"
+          aria-label="Configuración de la cuenta"
+          className="min-w-0 flex-1 truncate rounded-full bg-muted px-3 py-1.5 font-mono text-xs transition-colors hover:bg-accent"
           title={session.user.address}
         >
           {shortAddress(session.user.address)}
-        </code>
+        </Link>
       ) : (
         <span className="flex-1" />
       )}
