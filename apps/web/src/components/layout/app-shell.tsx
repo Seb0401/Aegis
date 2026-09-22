@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePolicy } from '@/lib/api/hooks';
 import { useAuth } from '@/lib/auth/auth-context';
-import { shortAddress } from '@/lib/utils';
+import { cn, shortAddress } from '@/lib/utils';
 
 /**
  * Armazón de la aplicación: dashboard a la izquierda, chat a la derecha
@@ -56,7 +56,17 @@ export function AppShell({ children, aside }: { children: ReactNode; aside?: Rea
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 gap-6 p-4 lg:grid-cols-[1fr_380px]">
+      {/*
+        La columna del chat solo existe cuando hay chat: si no, las pantallas
+        sin panel lateral (límites, destinos, historial) dejaban 380px vacíos
+        a la derecha y el contenido se apelotonaba a la izquierda.
+      */}
+      <div
+        className={cn(
+          'mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 gap-6 p-4',
+          aside && 'lg:grid-cols-[1fr_380px]',
+        )}
+      >
         <main className="flex flex-col gap-4">{children}</main>
         {aside ? <aside className="flex flex-col gap-4">{aside}</aside> : null}
       </div>

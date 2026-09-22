@@ -51,6 +51,46 @@ export class WalletError extends Error {
 export const REQUIRED_NETWORK = 'TESTNET';
 
 /**
+ * Cuánto se espera a la wallet antes de rendirse.
+ *
+ * `@stellar/freighter-api` habla con la extensión mandando mensajes y
+ * esperando respuesta. Si la extensión no está instalada no contesta nunca:
+ * la promesa se queda colgada para siempre. Sin esto, pulsar «Aprobar y
+ * firmar» dejaba la tarjeta bloqueada en «Firma en la wallet…» sin error y
+ * sin forma de salir.
+ *
+ * La comprobación de presencia es corta; la firma da tiempo a que una persona
+ * lea la transacción en el pop-up de la extensión y decida.
+ */
+const PRESENCE_TIMEOUT_MS = 2_000;
+const SIGNATURE_TIMEOUT_MS = 120_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new WalletError('FAILED', message)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error instanceof Error ? error : new WalletError('FAILED', String(error)));
+      },
+    );
+  });
+}
+
+/** Lanza si la wallet no está, en vez de esperar una respuesta que no llegará. */
+async function ensureAvailable(): Promise<void> {
+  if (await freighterAdapter.isAvailable()) return;
+  throw new WalletError(
+    'NOT_INSTALLED',
+    'No se encontró Freighter en este navegador. Instálalo, recarga la página y vuelve a intentarlo.',
+  );
+}
+
+/**
  * Freighter devuelve la firma como string base64 o como Buffer según versión y
  * navegador. La API espera siempre base64, así que se normaliza aquí.
  */
@@ -98,7 +138,11 @@ export const freighterAdapter: WalletAdapter = {
 
   async isAvailable() {
     try {
-      const result = await isConnected();
+      const result = await withTimeout(
+        isConnected(),
+        PRESENCE_TIMEOUT_MS,
+        'La wallet no respondió.',
+      );
       return result.isConnected === true;
     } catch {
       return false;
@@ -106,20 +150,22 @@ export const freighterAdapter: WalletAdapter = {
   },
 
   async connect() {
-    const available = await freighterAdapter.isAvailable();
-    if (!available) {
-      throw new WalletError(
-        'NOT_INSTALLED',
-        'No se encontró Freighter en este navegador. Instálalo y recarga la página.',
-      );
-    }
+    await ensureAvailable();
 
-    const access = await requestAccess();
+    const access = await withTimeout(
+      requestAccess(),
+      SIGNATURE_TIMEOUT_MS,
+      'La wallet no respondió a la petición de acceso.',
+    );
     if (access.error || !access.address) {
       fail(access.error, 'No se pudo acceder a la wallet.');
     }
 
-    const network = await getNetwork();
+    const network = await withTimeout(
+      getNetwork(),
+      PRESENCE_TIMEOUT_MS,
+      'La wallet no respondió al preguntarle en qué red está.',
+    );
     if (network.error) {
       fail(network.error, 'No se pudo leer la red de la wallet.');
     }
@@ -138,7 +184,11 @@ export const freighterAdapter: WalletAdapter = {
 
   async getAccount() {
     try {
-      const [account, network] = await Promise.all([getAddress(), getNetwork()]);
+      const [account, network] = await withTimeout(
+        Promise.all([getAddress(), getNetwork()]),
+        PRESENCE_TIMEOUT_MS,
+        'La wallet no respondió.',
+      );
       if (account.error || !account.address) return null;
       return { address: account.address, network: network.network ?? '' };
     } catch {
@@ -147,7 +197,13 @@ export const freighterAdapter: WalletAdapter = {
   },
 
   async signChallenge(challenge, address) {
-    const result = await signMessage(challenge, { address });
+    await ensureAvailable();
+
+    const result = await withTimeout(
+      signMessage(challenge, { address }),
+      SIGNATURE_TIMEOUT_MS,
+      'La wallet no respondió a la firma del reto.',
+    );
     if (result.error || result.signedMessage === null) {
       fail(result.error, 'No se pudo firmar el reto.');
     }
@@ -155,10 +211,16 @@ export const freighterAdapter: WalletAdapter = {
   },
 
   async signXdr(xdr, address, networkPassphrase) {
-    const result = await signTransaction(xdr, {
-      address,
-      ...(networkPassphrase ? { networkPassphrase } : {}),
-    });
+    await ensureAvailable();
+
+    const result = await withTimeout(
+      signTransaction(xdr, {
+        address,
+        ...(networkPassphrase ? { networkPassphrase } : {}),
+      }),
+      SIGNATURE_TIMEOUT_MS,
+      'La wallet no respondió a la firma. Comprueba si quedó abierta una ventana de Freighter.',
+    );
     if (result.error || !result.signedTxXdr) {
       fail(result.error, 'No se pudo firmar la transacción.');
     }

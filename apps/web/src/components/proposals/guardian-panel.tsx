@@ -24,7 +24,19 @@ export function GuardianPanel({
 }) {
   const warnings = explanation?.warnings ?? [];
   const severityById = new Map(risk.signals.map((signal) => [signal.id, signal.severity]));
-  const infoSignals = risk.signals.filter((signal) => signal.severity === 'INFO');
+
+  // Una misma señal puede dispararse en varias acciones: G-01 en un destino
+  // nuevo y, a la vez, G-01 informativa en otro. Listarla en los dos sitios
+  // daba a entender que el Guardian se contradecía, así que lo informativo es
+  // solo lo que no salió ya como advertencia, y sin repetir nombres.
+  const warnedIds = new Set(warnings.map((warning) => warning.signalId));
+  const infoNames = [
+    ...new Set(
+      risk.signals
+        .filter((signal) => signal.severity === 'INFO' && !warnedIds.has(signal.id))
+        .map((signal) => SIGNAL_NAME[signal.id]),
+    ),
+  ];
 
   return (
     <section
@@ -52,10 +64,10 @@ export function GuardianPanel({
 
       {warnings.length > 0 ? (
         <ul className="flex flex-col gap-2">
-          {warnings.map((warning) => {
+          {warnings.map((warning, index) => {
             const severity = severityById.get(warning.signalId);
             return (
-              <li key={warning.signalId} className="flex items-start gap-2 text-sm">
+              <li key={`${warning.signalId}-${index}`} className="flex items-start gap-2 text-sm">
                 <TriangleAlert
                   className={cn(
                     'mt-0.5 size-4 shrink-0',
@@ -87,12 +99,10 @@ export function GuardianPanel({
           </span>
         </p>
 
-        {infoSignals.length > 0 ? (
+        {infoNames.length > 0 ? (
           <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
             <Info className="mt-0.5 size-3.5 shrink-0" />
-            <span>
-              Informativas: {infoSignals.map((signal) => SIGNAL_NAME[signal.id]).join(', ')}.
-            </span>
+            <span>Se evaluaron sin encontrar nada: {infoNames.join(', ')}.</span>
           </p>
         ) : null}
 

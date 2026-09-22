@@ -8,7 +8,7 @@ import {
   type AssetCode,
   type DestinationKind,
 } from '@aegis/contracts';
-import { Check, Loader2, Plus, ShieldAlert, X } from 'lucide-react';
+import { Check, CircleCheck, Loader2, Plus, ShieldAlert, X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,6 +47,9 @@ export function DestinationForm() {
   const [targetAsset, setTargetAsset] = useState<AssetCode>('XLM');
   const [trusted, setTrusted] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  // Tras registrar, el formulario se vacía. Sin este aviso, el usuario ve
+  // campos en blanco y no sabe si se guardó o si se perdió lo que escribió.
+  const [created, setCreated] = useState<string | null>(null);
 
   const cleanLabel = sanitizeText(label);
   const cleanAddress = address.trim().toUpperCase();
@@ -58,6 +61,7 @@ export function DestinationForm() {
   const valid = labelValid && addressValid && targetValid;
 
   function reset() {
+    setCreated(cleanLabel);
     setLabel('');
     setAddress('');
     setTargetAmount('');
@@ -69,6 +73,14 @@ export function DestinationForm() {
     event.preventDefault();
     if (!valid) return;
     setConfirming(true);
+  }
+
+  /** Cualquier edición nueva retira el aviso de la anterior. */
+  function edit(setter: (value: string) => void) {
+    return (value: string) => {
+      setCreated(null);
+      setter(value);
+    };
   }
 
   function onConfirm() {
@@ -146,6 +158,16 @@ export function DestinationForm() {
           </div>
         ) : (
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
+            {created ? (
+              <p
+                role="status"
+                className="flex items-center gap-2 rounded-md border border-risk-low/40 bg-risk-low/10 p-3 text-sm"
+              >
+                <CircleCheck className="size-4 shrink-0 text-risk-low" />«{created}» quedó
+                registrado. Ya puedes pedirle al agente que le envíe dinero.
+              </p>
+            ) : null}
+
             <fieldset className="flex flex-col gap-2">
               <legend className="mb-2 text-sm font-medium">Tipo</legend>
               <div className="flex flex-col gap-2 sm:flex-row">
@@ -176,7 +198,7 @@ export function DestinationForm() {
               <Input
                 value={label}
                 maxLength={128}
-                onChange={(event) => setLabel(event.target.value)}
+                onChange={(event) => edit(setLabel)(event.target.value)}
                 placeholder="Viaje a Cusco"
                 aria-invalid={label.length > 0 && !labelValid}
               />
@@ -196,7 +218,7 @@ export function DestinationForm() {
               <span className="font-medium">Dirección Stellar</span>
               <Input
                 value={address}
-                onChange={(event) => setAddress(event.target.value)}
+                onChange={(event) => edit(setAddress)(event.target.value.toUpperCase())}
                 placeholder="G…"
                 spellCheck={false}
                 autoComplete="off"

@@ -5,6 +5,7 @@ import {
   isLive,
   matchesTotal,
   needsTotalConfirmation,
+  operationCount,
   proposalTotal,
   totalsByAsset,
 } from './proposals';
@@ -38,6 +39,15 @@ function proposal(overrides: Partial<Proposal> = {}): Proposal {
     ...overrides,
   };
 }
+
+describe('operationCount', () => {
+  it('quita el acento en plural', () => {
+    // Pegarle "es" al singular daba "operaciónes", que se veía en pantalla.
+    expect(operationCount(1)).toBe('1 operación');
+    expect(operationCount(2)).toBe('2 operaciones');
+    expect(operationCount(0)).toBe('0 operaciones');
+  });
+});
 
 describe('proposalTotal', () => {
   it('suma sin perder decimales', () => {

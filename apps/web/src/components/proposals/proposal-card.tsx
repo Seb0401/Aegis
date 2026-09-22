@@ -42,7 +42,7 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState('');
   const [signing, setSigning] = useState(false);
-  const [walletError, setWalletError] = useState<string | null>(null);
+  const [walletError, setWalletError] = useState<WalletError | null>(null);
 
   const total = proposalTotal(proposal.actions);
   const requiresConfirmation = needsTotalConfirmation(proposal);
@@ -57,7 +57,10 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
 
     if (!proposal.unsignedXdr) {
       setWalletError(
-        'La API no ha generado todavía la transacción a firmar. Recarga en unos segundos.',
+        new WalletError(
+          'FAILED',
+          'La API no ha generado todavía la transacción a firmar. Recarga en unos segundos.',
+        ),
       );
       return;
     }
@@ -68,7 +71,9 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
       signedXdr = await wallet.signXdr(proposal.unsignedXdr, session?.user.address ?? '');
     } catch (cause) {
       setWalletError(
-        cause instanceof WalletError ? cause.message : 'No se pudo firmar con la wallet.',
+        cause instanceof WalletError
+          ? cause
+          : new WalletError('FAILED', 'No se pudo firmar con la wallet.'),
       );
       return;
     } finally {
@@ -213,7 +218,16 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
                   )}
                   {signing ? 'Firma en la wallet…' : 'Aprobar y firmar'}
                 </Button>
-                <Button variant="outline" disabled={busy} onClick={() => setRejecting(true)}>
+                <Button
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => {
+                    // El error de un intento de firma anterior no pinta nada
+                    // en el formulario de rechazo.
+                    setWalletError(null);
+                    setRejecting(true);
+                  }}
+                >
                   <X />
                   Rechazar
                 </Button>
@@ -221,10 +235,22 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
             )}
 
             {walletError ? (
-              <p role="alert" className="flex items-start gap-2 text-sm text-destructive">
+              <div role="alert" className="flex items-start gap-2 text-sm text-destructive">
                 <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-                {walletError}
-              </p>
+                <div className="flex flex-col gap-1">
+                  <span>{walletError.message}</span>
+                  {walletError.code === 'NOT_INSTALLED' ? (
+                    <a
+                      className="underline underline-offset-2"
+                      href={wallet.installUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Instalar {wallet.name}
+                    </a>
+                  ) : null}
+                </div>
+              </div>
             ) : null}
 
             {approve.error ? (

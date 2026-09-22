@@ -61,6 +61,14 @@ export const SIGNAL_NAME: Record<RiskSignalId, string> = {
 };
 
 /**
+ * «1 operación» pero «2 operaciones»: el acento desaparece en plural, así que
+ * no vale con pegarle una «es» al singular.
+ */
+export function operationCount(count: number): string {
+  return count === 1 ? '1 operación' : `${count} operaciones`;
+}
+
+/**
  * Total que la API compara contra `confirmedTotal`.
  *
  * Es la suma plana de todas las acciones, sin separar por activo: así lo hace

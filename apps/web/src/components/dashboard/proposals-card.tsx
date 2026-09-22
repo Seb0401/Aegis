@@ -3,7 +3,14 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProposals } from '@/lib/api/hooks';
-import { RISK_LABEL, RISK_VARIANT, STATUS_LABEL, isActionable, isLive } from '@/lib/proposals';
+import {
+  RISK_LABEL,
+  RISK_VARIANT,
+  STATUS_LABEL,
+  isActionable,
+  isLive,
+  operationCount,
+} from '@/lib/proposals';
 import { formatDateTime } from '@/lib/utils';
 import { QueryState } from './query-state';
 
@@ -47,9 +54,7 @@ export function ProposalsCard() {
                     </Badge>
                   ) : null}
                   <span className="text-xs text-muted-foreground">
-                    {proposal.actions.length} operación
-                    {proposal.actions.length === 1 ? '' : 'es'} ·{' '}
-                    {formatDateTime(proposal.createdAt)}
+                    {operationCount(proposal.actions.length)} · {formatDateTime(proposal.createdAt)}
                   </span>
                 </div>
               </li>
