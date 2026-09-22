@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+
+/*
+  Tema base (FE-Q1 sigue sin branding: esto es un neutro sobrio, fácil de
+  sustituir). Todo es variable CSS, así que cambiar la identidad visual es
+  cambiar este bloque y nada más.
+
+  Convención de shadcn/ui para Tailwind v4: los tokens viven en `:root` y en
+  `.dark`, y `@theme inline` los expone como utilidades (`bg-background`…).
+*/
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.75rem;
+
+  --background: oklch(0.99 0.002 250);
+  --foreground: oklch(0.21 0.02 255);
+
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+
+  --muted: oklch(0.96 0.005 250);
+  --muted-foreground: oklch(0.52 0.02 255);
+
+  --border: oklch(0.91 0.008 255);
+  --input: var(--border);
+  --ring: oklch(0.62 0.13 250);
+
+  --primary: oklch(0.45 0.13 255);
+  --primary-foreground: oklch(0.99 0.002 250);
+
+  --secondary: oklch(0.96 0.005 250);
+  --secondary-foreground: var(--foreground);
+
+  --accent: oklch(0.95 0.02 250);
+  --accent-foreground: var(--foreground);
+
+  /* Severidades del Guardian y de la política. Tienen nombre propio porque
+     significan algo en el dominio, no son solo colores. */
+  --risk-low: oklch(0.62 0.14 155);
+  --risk-medium: oklch(0.75 0.15 85);
+  --risk-high: oklch(0.65 0.18 45);
+  --risk-critical: oklch(0.55 0.21 25);
+
+  --destructive: oklch(0.58 0.2 25);
+  --destructive-foreground: oklch(0.99 0.002 250);
+}
+
+.dark {
+  --background: oklch(0.17 0.015 260);
+  --foreground: oklch(0.95 0.005 250);
+
+  --card: oklch(0.21 0.018 260);
+  --card-foreground: var(--foreground);
+
+  --muted: oklch(0.26 0.018 260);
+  --muted-foreground: oklch(0.69 0.015 255);
+
+  --border: oklch(0.31 0.02 260);
+  --input: var(--border);
+  --ring: oklch(0.65 0.13 250);
+
+  --primary: oklch(0.72 0.12 250);
+  --primary-foreground: oklch(0.17 0.015 260);
+
+  --secondary: oklch(0.26 0.018 260);
+  --secondary-foreground: var(--foreground);
+
+  --accent: oklch(0.29 0.03 255);
+  --accent-foreground: var(--foreground);
+
+  --risk-low: oklch(0.7 0.14 155);
+  --risk-medium: oklch(0.8 0.14 85);
+  --risk-high: oklch(0.72 0.17 45);
+  --risk-critical: oklch(0.65 0.2 25);
+
+  --destructive: oklch(0.65 0.19 25);
+  --destructive-foreground: oklch(0.99 0.002 250);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-risk-low: var(--risk-low);
+  --color-risk-medium: var(--risk-medium);
+  --color-risk-high: var(--risk-high);
+  --color-risk-critical: var(--risk-critical);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* El foco visible no se negocia: aquí se aprueban pagos con el teclado. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
