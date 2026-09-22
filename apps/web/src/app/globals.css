@@ -1,0 +1,140 @@
+@import 'tailwindcss';
+
+/*
+  Tema de Aegis, sacado del mockup (`images/mockup.png`).
+
+  La aplicación es oscura y punto: el mockup lo es, y la mascota viene
+  recortada sobre ese mismo azul noche (#091430), así que Jupi se integra sin
+  costuras. Todo sigue siendo variables CSS, como antes, de modo que cambiar la
+  identidad visual sigue siendo cambiar este bloque y nada más.
+*/
+
+:root {
+  --radius: 0.875rem;
+
+  /* Azules de fondo: el lateral es el más oscuro, las tarjetas el más claro. */
+  --background: #0a1430;
+  --sidebar: #070f26;
+  --foreground: #eaf0ff;
+
+  --card: #101c40;
+  --card-foreground: var(--foreground);
+
+  --muted: #16244e;
+  --muted-foreground: #8fa3c8;
+
+  --border: #1d2e5e;
+  --input: #22356b;
+  --ring: #3b82f6;
+
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+
+  --secondary: #16244e;
+  --secondary-foreground: var(--foreground);
+
+  --accent: #1b2c5c;
+  --accent-foreground: var(--foreground);
+
+  /* Verde de «Sistema activo»: en el mockup significa que todo va bien. */
+  --success: #22c55e;
+
+  /*
+    Severidades del Guardian y de la política. Tienen nombre propio porque
+    significan algo en el dominio, no son solo colores.
+  */
+  --risk-low: #34d399;
+  --risk-medium: #fbbf24;
+  --risk-high: #fb923c;
+  --risk-critical: #f87171;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-sidebar: var(--sidebar);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-risk-low: var(--risk-low);
+  --color-risk-medium: var(--risk-medium);
+  --color-risk-high: var(--risk-high);
+  --color-risk-critical: var(--risk-critical);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    /* El degradado tenue del mockup: azul un poco más vivo arriba. */
+    background-image:
+      radial-gradient(1200px 600px at 20% -10%, #14255a 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #10204c 0%, transparent 55%);
+    background-attachment: fixed;
+  }
+
+  /* El foco visible no se negocia: aquí se aprueban pagos con el teclado. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Los campos heredan el tema oscuro también en el desplegable nativo. */
+  select option {
+    background-color: var(--card);
+    color: var(--foreground);
+  }
+}
+
+@layer utilities {
+  /*
+    Jupi respira. Es el único movimiento de la interfaz y es deliberadamente
+    lento: la mascota acompaña, no distrae de una pantalla donde se autoriza
+    dinero. Quien prefiera no ver animaciones, no la ve.
+  */
+  @keyframes jupi-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  .jupi-float {
+    animation: jupi-float 5s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .jupi-float {
+      animation: none;
+    }
+  }
+}

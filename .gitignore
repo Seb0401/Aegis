@@ -13,6 +13,8 @@ out/
 .env
 .env.*
 !.env.example
+# Plantilla del frontend: es un ejemplo sin secretos y tiene que viajar en el repo.
+!.env.local.example
 
 # Llaves
 *.pem

@@ -8,3 +8,6 @@ pnpm-lock.yaml
 # Si Prettier los reformatea, deja de coincidir con lo que genera el script.
 docs/api/openapi.json
 apps/api/drizzle/
+
+# Lo regenera `next dev` en cada arranque; formatearlo solo crea ruido en el diff.
+apps/web/next-env.d.ts
