@@ -32,11 +32,17 @@ Necesitas la API levantada en el 3001 (`pnpm dev:api` desde la raíz, con
 Postgres en marcha). Sin wallet: el botón **Entrar sin wallet** usa
 `POST /auth/dev-login` y solo aparece con `NEXT_PUBLIC_ALLOW_DEV_LOGIN=true`.
 
-> **Para `next dev` antes de compilar.** `next dev` y `next build` comparten el
-> directorio `.next` y se pisan: el build falla al prerenderizar
-> `/_global-error` con un `Cannot read properties of null (reading
-'useContext')` que no tiene nada que ver con el código. Si ya te pasó,
-> borra `apps/web/.next` y vuelve a compilar.
+> **No compiles con el `.env` de la API cargado en la terminal.** Mientras
+> `apps/api` no lea su propio `.env`, el apaño es exportar esas variables en la
+> sesión — y una de ellas es `NODE_ENV=development`, que `next build` hereda.
+> Con eso el build falla al prerenderizar `/_global-error` con un
+> `Cannot read properties of null (reading 'useContext')` que no tiene nada que
+> ver con el código; el único aviso es una línea de Next sobre un «non-standard
+> NODE_ENV». Compila en otra terminal, o quita la variable antes:
+>
+> ```powershell
+> Remove-Item env:NODE_ENV; pnpm build
+> ```
 
 ## Mapa del código
 
