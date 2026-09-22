@@ -145,7 +145,7 @@ Cada paquete tiene su propio README con lo que hace y lo que le falta.
 | `apps/api`               | BE2        | **Funcional.** Auth, destinos, propuestas con máquina de estados, política, Guardian, auditoría encadenada y barrido de caducidad. 59 tests, casi todos de integración contra Postgres real |
 | `packages/stellar`       | BE1        | **Andamiaje.** Interfaces, `FakeStellarReader` y `FakeStellarExecutor`. Falta la integración real                                                                                           |
 | `packages/agent`         | AI         | **Andamiaje.** Agente de reglas sin LLM, suficiente para la demo end-to-end                                                                                                                 |
-| `apps/web`               | FE         | **Scaffold listo.** Next.js + Tailwind, cliente tipado, sesión con Freighter y `dev-login`, dashboard base, chat mínimo y kill switch. FE-01, FE-02, FE-03 y FE-12 hechos                   |
+| `apps/web`               | FE         | **Funcional.** Sesión con Freighter, propuestas con firma y panel del Guardian, límites, destinos e historial. FE-01…FE-03 y FE-06…FE-12 hechos; quedan FE-04, FE-05 y FE-13                |
 
 Nadie está bloqueado: cada consumidor tiene un mock del que depende
 (§6.2 del PLAN).

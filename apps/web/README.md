@@ -40,16 +40,24 @@ src/
 │   ├── layout.tsx          Providers y tema
 │   ├── page.tsx            Conexión de wallet
 │   ├── providers.tsx       React Query + AuthProvider
-│   └── dashboard/page.tsx  Armazón: dashboard + chat lateral
+│   ├── dashboard/          Pendientes, saldos, límites, chat lateral
+│   ├── limites/            Formulario de límites y modo (FE-09)
+│   ├── destinos/           Alta y gestión de destinos (FE-10)
+│   └── historial/          Movimientos y bitácora (FE-11)
 ├── components/
 │   ├── auth/               Panel de conexión y guarda de ruta
 │   ├── chat/               Chat con el agente (base de FE-05)
-│   ├── dashboard/          Saldos, límites, propuestas, destinos
-│   ├── layout/             Cabecera y kill switch
+│   ├── dashboard/          Tarjetas del panel y estados de consulta
+│   ├── destinations/       Formulario en dos pasos y lista
+│   ├── history/            Movimientos y bitácora encadenada
+│   ├── layout/             Cabecera, navegación y kill switch
+│   ├── policy/             Formulario de límites
+│   ├── proposals/          Tarjeta de propuesta y panel del Guardian
 │   └── ui/                 Primitivas estilo shadcn (button, card, badge…)
 └── lib/
     ├── api/                client.ts (tipado), errors.ts, hooks.ts
     ├── auth/               wallet.ts, session.ts, auth-context.tsx
+    ├── proposals.ts        Estados, totales y confirmación del monto
     ├── env.ts              Solo variables NEXT_PUBLIC_*
     └── utils.ts            cn(), formatos de monto, dirección y fecha
 ```
@@ -66,20 +74,21 @@ src/
 
 ## Estado de las tareas
 
-| Tarea     | Estado                                                                           |
-| --------- | -------------------------------------------------------------------------------- |
-| **FE-01** | ✅ Scaffold, lint, typecheck, tests y build integrados en la CI del monorepo     |
-| **FE-02** | ✅ Cliente tipado con validación Zod, errores por código y hooks de React Query  |
-| **FE-03** | ✅ Conexión Freighter (reto → firma → JWT), sesión persistida y `dev-login`      |
-| FE-04     | Pendiente · delegación del signer (`POST /account/delegation/prepare` ya existe) |
-| FE-05     | Base funcional · falta historial persistido y streaming (la API aún no hace SSE) |
-| FE-06/07  | Pendiente · tarjeta de propuesta con acciones, firma del XDR y `confirmedTotal`  |
-| FE-08     | Pendiente · panel del Guardian con señales G-01…G-09                             |
-| FE-09     | Solo lectura · falta el formulario de límites y el cambio de modo                |
-| FE-10     | Solo lectura · falta alta de destinos con confirmación de dirección              |
-| FE-11     | Pendiente · historial y estados en vivo                                          |
-| **FE-12** | ✅ Kill switch visible en la cabecera                                            |
-| FE-13     | Pendiente · accesibilidad, responsive y pulido                                   |
+| Tarea     | Estado                                                                             |
+| --------- | ---------------------------------------------------------------------------------- |
+| **FE-01** | ✅ Scaffold, lint, typecheck, tests y build integrados en la CI del monorepo       |
+| **FE-02** | ✅ Cliente tipado con validación Zod, errores por código y hooks de React Query    |
+| **FE-03** | ✅ Conexión Freighter (reto → firma → JWT), sesión persistida y `dev-login`        |
+| FE-04     | Pendiente · delegación del signer (`POST /account/delegation/prepare` ya existe)   |
+| FE-05     | Base funcional · falta historial persistido y streaming (la API aún no hace SSE)   |
+| **FE-06** | ✅ Tarjeta con operaciones, destinos resueltos, motivos de política y total        |
+| **FE-07** | ✅ Aprobar con firma de Freighter, `confirmedTotal` y rechazo con motivo           |
+| **FE-08** | ✅ Panel del Guardian: nivel, puntuación, advertencias, señales INFO y saldo final |
+| **FE-09** | ✅ Formulario de límites y modo, enviando solo los campos que cambiaron            |
+| **FE-10** | ✅ Alta en dos pasos con confirmación de dirección, confianza y bloqueo            |
+| **FE-11** | ✅ Movimientos de la red y bitácora con el estado de la cadena de hashes           |
+| **FE-12** | ✅ Kill switch visible en la cabecera                                              |
+| FE-13     | Pendiente · accesibilidad, responsive y pulido                                     |
 
 ## Detalles del contrato que conviene no olvidar
 

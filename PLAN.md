@@ -441,12 +441,12 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [x] FE-03 · Conexión con Freighter y sesión · S1
 - [ ] FE-04 · Pantalla de configuración inicial y delegación del signer · S2
 - [ ] FE-05 · Chat con el agente (con estados de carga y errores) · S2
-- [ ] FE-06 · Tarjeta de propuesta: acciones, montos, destinos · S2
-- [ ] FE-07 · Aprobar/rechazar y firma de XDR con Freighter · S2
-- [ ] FE-08 · Panel del Guardian: severidad, advertencias, saldo restante · S3
-- [ ] FE-09 · Pantalla de límites y modo Manual/Autónomo · S3
-- [ ] FE-10 · Objetivos y contactos (registro de destinos) · S3
-- [ ] FE-11 · Historial de transacciones y estados en vivo · S4
+- [x] FE-06 · Tarjeta de propuesta: acciones, montos, destinos · S2
+- [x] FE-07 · Aprobar/rechazar y firma de XDR con Freighter · S2
+- [x] FE-08 · Panel del Guardian: severidad, advertencias, saldo restante · S3
+- [x] FE-09 · Pantalla de límites y modo Manual/Autónomo · S3
+- [x] FE-10 · Objetivos y contactos (registro de destinos) · S3
+- [x] FE-11 · Historial de transacciones y estados en vivo · S4
 - [x] FE-12 · Kill switch visible y accesible · S4
 - [ ] FE-13 · Accesibilidad, responsive y pulido · S5
 
