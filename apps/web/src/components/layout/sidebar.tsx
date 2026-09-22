@@ -11,9 +11,8 @@ import { cn, shortAddress } from '@/lib/utils';
  * Barra lateral del mockup.
  *
  * Las cuatro secciones son las mismas que ya existían en la cabecera; aquí
- * solo cambian de sitio. Por debajo de `lg` desaparece y la navegación vuelve
- * a ser horizontal (`MainNav`), porque 260px fijos en un móvil se comen la
- * pantalla.
+ * solo cambian de sitio. Por debajo de `lg` desaparece y la navegación baja a
+ * la barra inferior (`MobileTabBar`), donde el pulgar llega sin estirarse.
  */
 
 export function Sidebar() {

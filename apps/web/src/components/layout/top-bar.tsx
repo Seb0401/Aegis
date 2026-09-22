@@ -2,8 +2,8 @@
 
 import { LogOut } from 'lucide-react';
 import { KillSwitch } from '@/components/layout/kill-switch';
-import { MainNav } from '@/components/layout/main-nav';
 import { Button } from '@/components/ui/button';
+import { WaveMark } from '@/components/ui/marks';
 import { useBalances, usePolicy } from '@/lib/api/hooks';
 import { useAuth } from '@/lib/auth/auth-context';
 import { formatAmount, shortAddress } from '@/lib/utils';
@@ -27,15 +27,16 @@ export function TopBar({ title, subtitle }: { title?: string; subtitle?: string 
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
       <div className="flex flex-col gap-3 px-4 py-4 sm:px-6">
-        <div className="flex flex-wrap items-start gap-3">
+        {/*
+          En móvil el saludo y los controles van apilados. Con `flex-wrap`, el
+          título se comprimía hasta partir el subtítulo palabra por palabra
+          antes de que los botones bajaran de línea.
+        */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="min-w-0 flex-1">
             <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
               {title ?? 'Hola'}
-              {title ? null : (
-                <span aria-hidden className="text-xl">
-                  👋
-                </span>
-              )}
+              {title ? null : <WaveMark className="size-6 text-primary" />}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {subtitle ??
@@ -43,7 +44,7 @@ export function TopBar({ title, subtitle }: { title?: string; subtitle?: string 
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <span
               className={
                 paused
@@ -63,7 +64,7 @@ export function TopBar({ title, subtitle }: { title?: string; subtitle?: string 
             </span>
 
             {xlm ? (
-              <span className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs">
+              <span className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs sm:flex">
                 <span className="text-muted-foreground">XLM</span>
                 <span className="font-medium tabular-nums">{formatAmount(xlm.available)}</span>
               </span>
@@ -84,11 +85,6 @@ export function TopBar({ title, subtitle }: { title?: string; subtitle?: string 
               <LogOut />
             </Button>
           </div>
-        </div>
-
-        {/* En móvil la barra lateral no está, así que la navegación vive aquí. */}
-        <div className="lg:hidden">
-          <MainNav />
         </div>
       </div>
     </header>

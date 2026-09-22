@@ -75,8 +75,34 @@ src/
 │   ├── proposals.ts        Estados, totales y confirmación del monto
 │   ├── env.ts              Solo variables NEXT_PUBLIC_*
 │   └── utils.ts            cn(), formatos de monto, dirección y fecha
-└── public/jupi/            Los 12 sprites recortados del sheet
+└── public/
+    ├── fonts/              Las dos tipografías, subconjunto latino
+    └── jupi/               Los 12 sprites recortados del sheet
 ```
+
+### Tipografía
+
+Dos familias, las dos con licencia OFL y **autoalojadas** en `public/fonts/`
+(subconjunto latino, variables: 49 KB las dos). Se sirven desde el propio
+dominio a propósito — nada de pedirle fuentes a Google en cada visita — y así
+`pnpm build` tampoco necesita red.
+
+| Familia               | Dónde              | Por qué                                                                                                                              |
+| --------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Plus Jakarta Sans** | Toda la interfaz   | Geométrica y cálida, del mismo aire redondeado que Jupi, pero seria a tamaños pequeños. Da carácter sin gritar                       |
+| **Space Grotesk**     | Cifras y titulares | Sus números tienen personalidad y ancho fijo: cuando un saldo cambia en pantalla, el resto del número no baila. Clase `font-display` |
+
+Si algún día hay que elegir una sola, Plus Jakarta Sans aguanta las dos
+funciones; se pierde el contraste de las cifras, que es justo lo que hace que
+el panel se lea como un producto financiero y no como una web más.
+
+### Figuras propias
+
+`components/ui/marks.tsx`, `gauge.tsx` y `sparkline.tsx` están dibujados a mano
+en SVG: la mano del saludo, el anillo de Jupi, el anillo de progreso del límite
+diario y la línea de tendencia del saldo. **Sin emojis y sin librerías de
+gráficos**: un emoji lo dibuja cada sistema operativo a su manera, no hereda el
+color del texto y no se alinea con el resto de la iconografía.
 
 ### Jupi
 

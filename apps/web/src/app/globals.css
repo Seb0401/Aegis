@@ -1,6 +1,39 @@
 @import 'tailwindcss';
 
 /*
+  Tipografías, autoalojadas en `public/fonts/` (subconjunto latino, variables).
+  Se sirven desde el propio dominio a propósito: nada de pedirle fuentes a
+  Google en cada visita, y `pnpm build` no necesita red.
+
+  - Plus Jakarta Sans para la interfaz: geométrica y cálida, del mismo aire
+    redondeado que Jupi, pero seria a tamaños pequeños.
+  - Space Grotesk para las cifras: sus números tienen carácter y ancho fijo,
+    que es justo lo que hace falta cuando un saldo cambia en pantalla y no
+    quieres que el resto del número baile.
+*/
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/plus-jakarta-sans-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/*
   Tema de Aegis, sacado del mockup (`images/mockup.png`).
 
   La aplicación es oscura y punto: el mockup lo es, y la mascota viene
@@ -53,6 +86,9 @@
 }
 
 @theme inline {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk', ui-monospace, 'Segoe UI', sans-serif;
+
   --color-background: var(--background);
   --color-sidebar: var(--sidebar);
   --color-foreground: var(--foreground);
@@ -88,6 +124,7 @@
   }
 
   body {
+    font-family: var(--font-sans);
     background-color: var(--background);
     color: var(--foreground);
     font-synthesis-weight: none;

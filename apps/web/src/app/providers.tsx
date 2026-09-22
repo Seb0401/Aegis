@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { ApiError } from '@/lib/api/errors';
 import { AuthProvider } from '@/lib/auth/auth-context';
+import { ChatProvider } from '@/lib/chat/chat-context';
 
 /**
  * Proveedores del cliente.
@@ -34,7 +35,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <ChatProvider>{children}</ChatProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

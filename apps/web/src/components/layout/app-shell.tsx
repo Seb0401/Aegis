@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { MobileTabBar } from '@/components/layout/mobile-tab-bar';
 import { Sidebar } from '@/components/layout/sidebar';
 import { TopBar } from '@/components/layout/top-bar';
 import { cn } from '@/lib/utils';
@@ -38,8 +39,15 @@ export function AppShell({
           )}
         >
           <main className="flex min-w-0 flex-col gap-5">{children}</main>
-          {aside ? <aside className="flex min-w-0 flex-col gap-5">{aside}</aside> : null}
+          {/*
+            Por debajo de `lg` el chat no se apila aquí: vive en la hoja que
+            abre el botón central de la barra inferior, y comparte estado con
+            esta columna a través de `ChatProvider`.
+          */}
+          {aside ? <aside className="hidden min-w-0 flex-col gap-5 lg:flex">{aside}</aside> : null}
         </div>
+
+        <MobileTabBar />
       </div>
     </div>
   );

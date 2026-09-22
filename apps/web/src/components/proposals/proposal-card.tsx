@@ -115,7 +115,7 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
           <span className="text-sm text-muted-foreground">Total</span>
           <span className="text-right">
             {totalsByAsset(proposal.actions).map(([asset, amount]) => (
-              <span key={asset} className="block text-lg font-semibold tabular-nums">
+              <span key={asset} className="font-display block text-xl font-semibold tabular-nums">
                 {formatAmount(amount, asset)}
               </span>
             ))}
