@@ -440,7 +440,7 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [x] FE-02 · Mock server desde OpenAPI y cliente de API tipado · S1
 - [x] FE-03 · Conexión con Freighter y sesión · S1
 - [x] FE-04 · Pantalla de configuración inicial y delegación del signer · S2
-- [ ] FE-05 · Chat con el agente (con estados de carga y errores) · S2
+- [x] FE-05 · Chat con el agente (con estados de carga y errores) · S2
 - [x] FE-06 · Tarjeta de propuesta: acciones, montos, destinos · S2
 - [x] FE-07 · Aprobar/rechazar y firma de XDR con Freighter · S2
 - [x] FE-08 · Panel del Guardian: severidad, advertencias, saldo restante · S3
@@ -448,7 +448,7 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [x] FE-10 · Objetivos y contactos (registro de destinos) · S3
 - [x] FE-11 · Historial de transacciones y estados en vivo · S4
 - [x] FE-12 · Kill switch visible y accesible · S4
-- [ ] FE-13 · Accesibilidad, responsive y pulido · S5
+- [x] FE-13 · Accesibilidad, responsive y pulido · S5
 
 ### Backend 1 — Stellar (BE1)
 

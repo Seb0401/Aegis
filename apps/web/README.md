@@ -145,6 +145,27 @@ Su única animación es una flotación lenta, y desaparece con
 | **FE-12** | ✅ Kill switch visible en la cabecera                                                |
 | FE-13     | Pendiente · accesibilidad, responsive y pulido                                       |
 
+### Accesibilidad (FE-13)
+
+Lo que cubre la pasada, para que nadie lo confunda con una auditoría AA
+certificada:
+
+- Enlace **«Saltar al contenido»** como primer elemento tabulable.
+- **Un título de documento por pantalla** (`Límites · Aegis`), que también es
+  lo primero que anuncia un lector de pantalla al navegar.
+- El **kill switch** dice en su nombre accesible qué hace _y_ qué implica, no
+  solo una de las dos cosas.
+- La hoja del chat en móvil es un `dialog` real: se cierra con Escape, el foco
+  entra al abrirla y vuelve al botón al cerrarla.
+- Contraste comprobado del texto atenuado sobre las tarjetas: 6,6:1 (AA pide
+  4,5:1).
+- La única animación, la flotación de Jupi, desaparece con
+  `prefers-reduced-motion`.
+- Todas las pantallas probadas a 390 px.
+
+Queda sin hacer: una revisión con lector de pantalla real y una trampa de foco
+completa en la hoja (hoy el foco entra y vuelve, pero no está encerrado).
+
 ## Detalles del contrato que conviene no olvidar
 
 - Una propuesta en `PENDING_USER` trae `unsignedXdr`. Se pasa a Freighter y el
