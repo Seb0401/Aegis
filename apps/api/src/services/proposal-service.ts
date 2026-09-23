@@ -42,6 +42,7 @@ export interface ProposalServiceDeps {
   destinations: DestinationStore;
   reader: StellarReader;
   executor: StellarExecutor;
+  explain?: (risk: RiskReport, actions: ResolvedAction[]) => Promise<Explanation>;
 }
 
 /**
@@ -251,7 +252,9 @@ export class ProposalService {
       stats,
     });
 
-    const explanation = buildTemplateExplanation(risk, resolved);
+    const explanation = this.deps.explain
+      ? await this.deps.explain(risk, resolved)
+      : buildTemplateExplanation(risk, resolved);
 
     await this.deps.db
       .update(proposals)

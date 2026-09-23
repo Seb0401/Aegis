@@ -1,4 +1,5 @@
 import { AgentMessageRequestSchema, AgentMessageResponseSchema } from '@aegis/contracts';
+import { and, desc, eq } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { newConversationId, newMessageId } from '../lib/ids.js';
 import { agentMessages } from '../db/schema.js';
@@ -21,6 +22,21 @@ export const agentRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const user = { id: request.user.sub, address: request.user.address };
       const conversationId = request.body.conversationId ?? newConversationId();
+      const historyRows = await app.services.db
+        .select({ role: agentMessages.role, content: agentMessages.content })
+        .from(agentMessages)
+        .where(
+          and(eq(agentMessages.userId, user.id), eq(agentMessages.conversationId, conversationId)),
+        )
+        .orderBy(desc(agentMessages.createdAt))
+        .limit(12);
+      const history = historyRows
+        .reverse()
+        .filter((message) => message.role === 'user' || message.role === 'assistant')
+        .map((message) => ({
+          role: message.role as 'user' | 'assistant',
+          content: message.content,
+        }));
 
       const tools = createAgentTools(
         {
@@ -42,6 +58,7 @@ export const agentRoutes: FastifyPluginAsyncZod = async (app) => {
 
       const result = await app.services.agent.handleMessage({
         message: request.body.message,
+        history,
         tools,
       });
 

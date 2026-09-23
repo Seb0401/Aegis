@@ -88,6 +88,7 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
   const services: Services = buildServices({
     db,
     env,
+    metricsLogger: (event, metrics) => app.log.info(metrics, event),
     ...(options.overrides ? { overrides: options.overrides } : {}),
   });
 
