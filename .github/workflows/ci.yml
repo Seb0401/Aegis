@@ -133,9 +133,14 @@ jobs:
           pnpm db:migrate
           pnpm db:seed
 
+      # `NODE_ENV=test` solo para la API, y solo aquí: es el interruptor que el
+      # propio backend prevé para desactivar los límites de peticiones. Una
+      # suite entera desde una sola IP pasa de 120 peticiones por minuto y se
+      # bloquearía sola con 429. No se pone en el `env:` del job porque
+      # `next dev` hereda cualquier NODE_ENV no estándar y se queja.
       - name: Levantar la API
         run: |
-          pnpm --filter @aegis/api dev &
+          NODE_ENV=test pnpm --filter @aegis/api dev &
           npx --yes wait-on http://localhost:3001/health --timeout 60000
 
       # Playwright usa el Chrome que ya trae el runner (`channel: 'chrome'`),

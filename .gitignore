@@ -32,7 +32,9 @@ coverage/
 test-results/
 playwright-report/
 # Sesión guardada por los E2E: lleva un token de verdad.
-e2e/.auth/
+# Sin barra inicial y con `**`, porque el patrón `e2e/.auth/` queda anclado a
+# la raíz del repo y no cubría `apps/web/e2e/.auth/`.
+**/e2e/.auth/
 
 # Editor / SO
 .DS_Store

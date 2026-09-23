@@ -21,6 +21,8 @@ export default async function globalSetup(): Promise<void> {
         '  2. exporta las variables del .env y lanza  pnpm dev:api',
         '',
         'Y con ALLOW_DEV_LOGIN=true, que es como entran estos tests.',
+        'Arráncala además con NODE_ENV=test: si no, la suite pasa del límite',
+        'de 120 peticiones por minuto y falla con 429 en sitios aleatorios.',
       ].join('\n'),
     );
   }

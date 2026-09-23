@@ -164,6 +164,13 @@ tarjeta bloqueada.
 instalado** (`channel: 'chrome'`) en vez de descargar los navegadores de
 Playwright.
 
+> **Arranca la API con `NODE_ENV=test`.** Es el interruptor que el propio
+> backend prevé para desactivar los límites de peticiones
+> (`apps/api/src/lib/rate-limit.ts`). La suite entera, desde una sola IP,
+> pasa de las 120 peticiones por minuto del límite global y empieza a recibir
+> 429: los tests fallan de forma aleatoria y en sitios que no tienen nada que
+> ver. En PowerShell: `$env:NODE_ENV = "test"` antes de `pnpm dev:api`.
+
 Entran **una sola vez** y reutilizan la sesión: `/auth/*` admite 10 peticiones
 por minuto y por IP, así que una suite que hiciera login en cada test se
 bloquearía sola con 429 a mitad de camino.

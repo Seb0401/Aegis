@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
 /**
  * El camino de la demo, de punta a punta y contra la API real (ALL-04).
@@ -20,6 +20,37 @@ const DIRECCION_PRUEBA = 'GB77EKQZ4NHWGCBARTOSQEF3PD3QLAVJF7LZS7Y6TC2DUDR7VPQKHU
 async function entrar(page: Page): Promise<void> {
   await page.goto('/dashboard');
   await expect(page.getByRole('heading', { name: 'Jupi' })).toBeVisible();
+}
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
+/**
+ * Rechaza por API todo lo que estuviera esperando de antes.
+ *
+ * Los E2E comparten base con el resto del equipo y con las tandas anteriores.
+ * Sin esto, «la primera tarjeta pendiente» no es necesariamente la que acaba
+ * de crear el test, y la prueba falla por el estado que había, no por el
+ * código. Se hace por API y no por interfaz para no confundir la preparación
+ * con lo que se está probando.
+ */
+async function limpiarPendientes(page: Page, request: APIRequestContext): Promise<void> {
+  const raw = await page.evaluate(() => window.localStorage.getItem('aegis.session'));
+  if (!raw) throw new Error('No hay sesión guardada: ¿corrió el proyecto «sesión»?');
+
+  const { token } = JSON.parse(raw) as { token: string };
+  const headers = { authorization: `Bearer ${token}` };
+
+  const listado = await request.get(`${API}/proposals?limit=100`, { headers });
+  const { proposals } = (await listado.json()) as {
+    proposals: Array<{ id: string; status: string }>;
+  };
+
+  for (const propuesta of proposals.filter((p) => p.status === 'PENDING_USER')) {
+    await request.post(`${API}/proposals/${propuesta.id}/reject`, {
+      headers,
+      data: { reason: 'Limpieza previa del E2E' },
+    });
+  }
 }
 
 test.describe('sesión', () => {
@@ -49,18 +80,15 @@ test.describe('sesión', () => {
 });
 
 test.describe('propuesta', () => {
-  test('el agente propone, el Guardian explica y se puede rechazar', async ({ page }) => {
+  test('el agente propone, el Guardian explica y se puede rechazar', async ({ page, request }) => {
     await entrar(page);
+    await limpiarPendientes(page, request);
+    await page.reload();
 
     await page.getByRole('textbox', { name: /mensaje para el agente/i }).fill(MENSAJE);
     await page.keyboard.press('Enter');
 
-    /*
-      Todo se mira dentro de la primera tarjeta pendiente, no en la página
-      entera: la base es compartida y puede haber propuestas de otra tanda
-      esperando. La nueva es la primera porque la lista viene de la más
-      reciente a la más antigua.
-    */
+    // Tras la limpieza, la única pendiente es la que acaba de crear el test.
     const tarjeta = page.locator('#propuesta-pendiente > div').first();
 
     // La propuesta llega con su análisis: sin él, no hay nada que aprobar.
@@ -78,10 +106,9 @@ test.describe('propuesta', () => {
     await tarjeta.getByRole('button', { name: /^rechazar$/i }).click();
     await tarjeta.getByRole('button', { name: /confirmar rechazo/i }).click();
 
-    // Pasa al historial. No se comprueba el «nada pendiente de aprobar»
-    // global: la base es compartida y puede haber propuestas de otra tanda
-    // esperando, que es estado legítimo y no un fallo de este flujo.
+    // Pasa al historial y no queda nada esperando.
     await expect(page.getByText('Rechazada por ti').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/nada pendiente de aprobar/i)).toBeVisible();
   });
 
   /**
