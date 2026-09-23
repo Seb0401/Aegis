@@ -1,7 +1,7 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ChatPanel } from '@/components/chat/chat-panel';
 import { Jupi } from '@/components/jupi/jupi';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { isActionable } from '@/lib/proposals';
  * `ChatProvider`, así que abrir y cerrar la hoja no pierde nada.
  */
 export function ChatSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const panelRef = useRef<HTMLDivElement>(null);
   const policy = usePolicy();
   const proposals = useProposals(20, { poll: true });
   const thinking = useAgentThinking();
@@ -38,7 +39,9 @@ export function ChatSheet({ open, onClose }: { open: boolean; onClose: () => voi
 
     // El foco entra en la hoja: si se quedara detrás, tabular seguiría
     // recorriendo la página de debajo mientras el diálogo tapa la pantalla.
-    document.getElementById('chat-input')?.focus();
+    // Se busca dentro de la hoja, no por id global: hay otro panel de chat
+    // montado (oculto) en la columna de escritorio.
+    panelRef.current?.querySelector('textarea')?.focus();
 
     return () => {
       document.removeEventListener('keydown', onKeyDown);
@@ -58,6 +61,7 @@ export function ChatSheet({ open, onClose }: { open: boolean; onClose: () => voi
       />
 
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label="Chat con el agente"

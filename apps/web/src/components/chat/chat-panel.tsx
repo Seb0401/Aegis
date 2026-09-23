@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2, RotateCw, SendHorizonal } from 'lucide-react';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { Jupi } from '@/components/jupi/jupi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,14 @@ export function ChatPanel({ bare = false }: { bare?: boolean }) {
   const { turns, send, retry, isPending, error, canRetry } = useChat();
   const [draft, setDraft] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
+  /*
+    El id tiene que ser único por instancia: en móvil hay dos paneles montados
+    a la vez —el de la columna de escritorio, oculto por CSS, y el de la hoja—
+    y con un id fijo los dos compartían el mismo. El `htmlFor` de la etiqueta
+    resolvía siempre al primero, así que el campo visible se quedaba sin nombre
+    accesible y sin etiqueta asociada.
+  */
+  const inputId = useId();
 
   // El último mensaje siempre a la vista: si no, una respuesta larga aparece
   // fuera de pantalla y parece que no ha pasado nada.
@@ -104,11 +112,11 @@ export function ChatPanel({ bare = false }: { bare?: boolean }) {
       </div>
 
       <form onSubmit={onSubmit} className="flex items-end gap-2">
-        <label className="sr-only" htmlFor="chat-input">
+        <label className="sr-only" htmlFor={inputId}>
           Mensaje para el agente
         </label>
         <textarea
-          id="chat-input"
+          id={inputId}
           rows={2}
           value={draft}
           maxLength={2000}
