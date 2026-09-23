@@ -1,24 +1,16 @@
-'use client';
+import type { Metadata } from 'next';
+import { DashboardView } from './dashboard-view';
 
-import { RequireSession } from '@/components/auth/require-session';
-import { ChatPanel } from '@/components/chat/chat-panel';
-import { DestinationsCard } from '@/components/dashboard/destinations-card';
-import { JupiCard } from '@/components/dashboard/jupi-card';
-import { ProposalsCard } from '@/components/dashboard/proposals-card';
-import { StatCards } from '@/components/dashboard/stat-cards';
-import { AppShell } from '@/components/layout/app-shell';
-import { PendingProposals } from '@/components/proposals/pending-proposals';
+/*
+  Los metadatos van aquí, en un componente de servidor: el título de la
+  pestaña lo pone Next al navegar, y escribirlo a mano desde un efecto del
+  cliente perdía la carrera contra él.
+*/
+export const metadata: Metadata = {
+  title: 'Panel',
+  description: 'El estado de tu agente, tus límites y lo que espera tu decisión.',
+};
 
 export default function DashboardPage() {
-  return (
-    <RequireSession>
-      <AppShell aside={<ChatPanel />}>
-        <JupiCard />
-        <StatCards />
-        <PendingProposals />
-        <ProposalsCard />
-        <DestinationsCard />
-      </AppShell>
-    </RequireSession>
-  );
+  return <DashboardView />;
 }

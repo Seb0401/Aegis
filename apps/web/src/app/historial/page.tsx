@@ -1,20 +1,16 @@
-'use client';
+import type { Metadata } from 'next';
+import { HistorialView } from './historial-view';
 
-import { RequireSession } from '@/components/auth/require-session';
-import { AuditCard } from '@/components/history/audit-card';
-import { TransactionsCard } from '@/components/history/transactions-card';
-import { AppShell } from '@/components/layout/app-shell';
+/*
+  Los metadatos van aquí, en un componente de servidor: el título de la
+  pestaña lo pone Next al navegar, y escribirlo a mano desde un efecto del
+  cliente perdía la carrera contra él.
+*/
+export const metadata: Metadata = {
+  title: 'Historial',
+  description: 'Lo que se ejecutó en la red y la bitácora encadenada de todo lo que pasó.',
+};
 
 export default function HistorialPage() {
-  return (
-    <RequireSession>
-      <AppShell
-        title="Historial"
-        subtitle="Lo que de verdad se ejecutó en la red y la bitácora encadenada de todo lo que pasó."
-      >
-        <TransactionsCard />
-        <AuditCard />
-      </AppShell>
-    </RequireSession>
-  );
+  return <HistorialView />;
 }

@@ -1,20 +1,16 @@
-'use client';
+import type { Metadata } from 'next';
+import { ConfiguracionView } from './configuracion-view';
 
-import { RequireSession } from '@/components/auth/require-session';
-import { AppShell } from '@/components/layout/app-shell';
-import { DelegationCard } from '@/components/setup/delegation-card';
-import { SetupChecklist } from '@/components/setup/setup-checklist';
+/*
+  Los metadatos van aquí, en un componente de servidor: el título de la
+  pestaña lo pone Next al navegar, y escribirlo a mano desde un efecto del
+  cliente perdía la carrera contra él.
+*/
+export const metadata: Metadata = {
+  title: 'Configuración',
+  description: 'Tu cuenta y la llave que el agente usa para firmar.',
+};
 
 export default function ConfiguracionPage() {
-  return (
-    <RequireSession>
-      <AppShell
-        title="Configuración"
-        subtitle="Tu cuenta y la llave que el agente usa para firmar."
-      >
-        <SetupChecklist />
-        <DelegationCard />
-      </AppShell>
-    </RequireSession>
-  );
+  return <ConfiguracionView />;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { MobileTabBar } from '@/components/layout/mobile-tab-bar';
 import { Sidebar } from '@/components/layout/sidebar';
 import { TopBar } from '@/components/layout/top-bar';
@@ -25,13 +25,6 @@ export function AppShell({
   title?: string;
   subtitle?: string;
 }) {
-  // Cada pantalla con su título: en una pestaña entre veinte, «Aegis» a secas
-  // no dice en cuál estabas. También es lo primero que anuncia un lector de
-  // pantalla al navegar.
-  useEffect(() => {
-    document.title = title ? `${title} · Aegis` : 'Aegis';
-  }, [title]);
-
   return (
     <div className="flex min-h-dvh">
       <Sidebar />
