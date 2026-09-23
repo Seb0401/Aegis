@@ -11,3 +11,8 @@ apps/api/drizzle/
 
 # Lo regenera `next dev` en cada arranque; formatearlo solo crea ruido en el diff.
 apps/web/next-env.d.ts
+
+# Artefactos de los E2E: los genera Playwright, no se revisan ni se suben.
+apps/web/e2e/.auth/
+apps/web/test-results/
+apps/web/playwright-report/
