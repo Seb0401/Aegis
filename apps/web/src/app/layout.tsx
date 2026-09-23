@@ -1,12 +1,36 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import './globals.css';
 import { Providers } from './providers';
 
+const DESCRIPTION =
+  'Un agente que mueve dinero en Stellar por ti, con límites y un Guardian que explica cada operación.';
+
+/**
+ * `metadataBase` sale del entorno porque las URL de las imágenes sociales
+ * tienen que ser absolutas, y en desarrollo no son las mismas que en el
+ * despliegue. La imagen (`opengraph-image.png`) la recoge Next por convención.
+ */
 export const metadata: Metadata = {
-  title: 'Aegis',
-  description:
-    'Un agente que mueve dinero en Stellar por ti, con límites y un Guardian que explica cada operación.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  title: { default: 'Aegis', template: '%s · Aegis' },
+  description: DESCRIPTION,
+  applicationName: 'Aegis',
+  openGraph: {
+    type: 'website',
+    siteName: 'Aegis',
+    locale: 'es_ES',
+    title: 'Aegis',
+    description: DESCRIPTION,
+  },
+  twitter: { card: 'summary_large_image', title: 'Aegis', description: DESCRIPTION },
+  // Solo testnet: que no se indexe como si fuera un producto en producción.
+  robots: { index: false, follow: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0a1430',
+  colorScheme: 'dark',
 };
 
 /*
