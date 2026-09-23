@@ -5,6 +5,13 @@ export interface AgentTurnInput {
   message: string;
   /** Herramientas con las que el agente lee datos y crea propuestas. */
   tools: AgentTools;
+  /** Recent turns from this user's conversation, excluding the current message. */
+  history?: AgentMessage[];
+}
+
+export interface AgentMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 export interface AgentTurnResult {
