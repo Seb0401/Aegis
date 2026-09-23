@@ -194,6 +194,51 @@ certificada:
 Queda sin hacer: una revisión con lector de pantalla real y una trampa de foco
 completa en la hoja (hoy el foco entra y vuelve, pero no está encerrado).
 
+## Despliegue (`Q-09`)
+
+Sin desplegar todavía. Lo que hace falta cuando toque, con Vercel:
+
+| Ajuste          | Valor                                                                                  |
+| --------------- | -------------------------------------------------------------------------------------- |
+| Root Directory  | `apps/web`                                                                             |
+| Install Command | `pnpm install --frozen-lockfile` (desde la raíz del repo)                              |
+| Build Command   | `cd ../.. && pnpm -r --filter "./packages/**" build && pnpm --filter @aegis/web build` |
+| Node            | 22                                                                                     |
+
+Variables (todas `NEXT_PUBLIC_*`, así que **acaban en el navegador**; ninguna
+es un secreto):
+
+- `NEXT_PUBLIC_API_URL` — la API desplegada, no `localhost`.
+- `NEXT_PUBLIC_SITE_URL` — la URL pública, para las imágenes sociales.
+- `NEXT_PUBLIC_ALLOW_DEV_LOGIN` — **`false`** fuera de local. Si se queda en
+  `true`, cualquiera entra a cualquier cuenta escribiendo una dirección.
+
+Y en la API, `WEB_ORIGIN` tiene que incluir el dominio del despliegue o CORS
+lo rechaza todo.
+
+## Lo que queda esperando al backend
+
+Está todo montado hasta donde la API llega. Cuando esas piezas existan, es
+poco más que enchufarlas:
+
+| Falta                                     | Quién   | Dónde se engancha                                                                                                                                                                        |
+| ----------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enviar a la red el XDR de delegación      | BE1-05  | `components/setup/delegation-card.tsx` — hoy firma y ofrece copiar el XDR. Con el endpoint: un método en `lib/api/client.ts`, su hook y sustituir el bloque de «copiar» por el resultado |
+| Saber si la cuenta **ya** tiene el signer | BE1/BE2 | `components/setup/setup-checklist.tsx` — la delegación no sale en la lista porque no hay forma de consultarlo. Con un campo en `/account/balances` o similar, pasa a ser un paso más     |
+| Respuestas en streaming (SSE)             | BE2     | `lib/chat/chat-context.tsx` — hoy una petición y una respuesta. El turno del agente tendría que ir creciendo en vez de aparecer entero                                                   |
+| Estados de propuesta en vivo              | BE2     | `lib/api/hooks.ts` → `useProposals(..., { poll: true })`. Hoy sondea cada 5 s; con un canal en vivo se cambia ahí y en ningún sitio más                                                  |
+| Aprobar firmando de verdad                | BE1     | `e2e/flujo.spec.ts` → el test marcado `fixme`, con los pasos escritos                                                                                                                    |
+| Que el agente entienda más de dos frases  | AI      | Nada que tocar: el chat manda texto libre y pinta lo que vuelva                                                                                                                          |
+
+## Decisiones que siguen sin respuesta
+
+- **`FE-Q2`** · ¿solo Freighter? El `WalletAdapter` de `lib/auth/wallet.ts`
+  está pensado para más de uno: añadir xBull o Albedo es escribir otro
+  adaptador, sin tocar ninguna pantalla.
+- **`FE-Q5`** · ¿i18n? Ahora los textos están en español dentro de los
+  componentes. Sacarlos a un diccionario hoy cuesta poco; dentro de un mes,
+  bastante más.
+
 ## Detalles del contrato que conviene no olvidar
 
 - Una propuesta en `PENDING_USER` trae `unsignedXdr`. Se pasa a Freighter y el

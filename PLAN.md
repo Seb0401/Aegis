@@ -496,7 +496,7 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [ ] ALL-01 · Kickoff y respuesta a preguntas críticas · S1
 - [ ] ALL-02 · `contracts` v0 y contract freeze · S1–S2
 - [ ] ALL-03 · CI, `CODEOWNERS`, plantillas de PR/issues · S1
-- [ ] ALL-04 · Pruebas E2E del flujo completo · S4–S5
+- [x] ALL-04 · Pruebas E2E del flujo completo · S4–S5 — frontend hecho (`apps/web/e2e`); falta la firma real con wallet
 - [ ] ALL-05 · README, guía de demo y roadmap a mainnet · S6
 
 ---
