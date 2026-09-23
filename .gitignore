@@ -29,6 +29,10 @@ pnpm-debug.log*
 # Tests / cobertura
 coverage/
 .vitest/
+test-results/
+playwright-report/
+# Sesión guardada por los E2E: lleva un token de verdad.
+e2e/.auth/
 
 # Editor / SO
 .DS_Store

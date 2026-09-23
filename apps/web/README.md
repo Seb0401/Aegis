@@ -145,6 +145,34 @@ Su única animación es una flotación lenta, y desaparece con
 | **FE-12** | ✅ Kill switch visible en la cabecera                                                |
 | FE-13     | Pendiente · accesibilidad, responsive y pulido                                       |
 
+### Tests
+
+| Comando                                | Qué corre                                                    |
+| -------------------------------------- | ------------------------------------------------------------ |
+| `pnpm --filter @aegis/web test`        | 57 tests: lógica de `lib/` y componentes con Testing Library |
+| `pnpm --filter @aegis/web test:e2e`    | 14 E2E con Playwright, contra la API real                    |
+| `pnpm --filter @aegis/web test:e2e:ui` | Lo mismo, con el inspector de Playwright                     |
+
+Los de componente se centran en lo que puede costar dinero: que el monto haya
+que reescribirlo con riesgo alto, que a la API llegue exactamente lo que firmó
+la wallet, y que un fallo de la wallet devuelva el control en vez de dejar la
+tarjeta bloqueada.
+
+**Los E2E necesitan la pila levantada** (Postgres, API con
+`ALLOW_DEV_LOGIN=true`, y el frontend, que arranca solo). Si falta algo,
+`e2e/global-setup.ts` para antes de empezar y dice qué. Usan el **Chrome ya
+instalado** (`channel: 'chrome'`) en vez de descargar los navegadores de
+Playwright.
+
+Entran **una sola vez** y reutilizan la sesión: `/auth/*` admite 10 peticiones
+por minuto y por IP, así que una suite que hiciera login en cada test se
+bloquearía sola con 429 a mitad de camino.
+
+Queda un test marcado como `fixme`: **aprobar firmando con Freighter**. Una
+extensión de navegador no se conduce desde Playwright sin montarla en el perfil
+y desbloquearla a mano. Los pasos están escritos para completarlo cuando BE1
+cierre el flujo y haya una cuenta de pruebas.
+
 ### Accesibilidad (FE-13)
 
 Lo que cubre la pasada, para que nadie lo confunda con una auditoría AA
