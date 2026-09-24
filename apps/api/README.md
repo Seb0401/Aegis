@@ -42,21 +42,37 @@ Cada paso escribe en la bitácora antes de continuar.
 
 ## Mapa del código
 
-| Archivo                            | Qué hay dentro                                                                                 |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `src/env.ts`                       | Validación de la configuración. Cierra el login de desarrollo y el cliente falso en producción |
-| `src/container.ts`                 | Todo el cableado de dependencias, en un solo sitio                                             |
-| `src/server.ts`                    | Plugins, manejador de errores, OpenAPI, registro de rutas                                      |
-| `src/db/schema.ts`                 | Tablas. Montos como `text`, estructuras ricas en `jsonb`                                       |
-| `src/services/proposal-service.ts` | La máquina de estados. El archivo más importante                                               |
-| `src/services/policy-store.ts`     | Configuración por usuario y ventanas de 24 h / 1 h                                             |
-| `src/services/audit.ts`            | Bitácora append-only con hash encadenado                                                       |
-| `src/services/agent-tools.ts`      | `AgentTools` atadas a un usuario concreto                                                      |
-| `src/services/auth-service.ts`     | Login por reto firmado con la wallet                                                           |
-| `src/routes/`                      | Una ruta por endpoint de §5.2 del PLAN                                                         |
-| `src/services/sweeper.ts`          | Barrido de caducidad y rescate de propuestas colgadas                                          |
-| `src/lib/rate-limit.ts`            | Límites por ruta: por IP en `/auth`, por usuario en el resto                                   |
-| `src/test/`                        | Andamiaje de tests: base de datos efímera, app lista y agente guionizado                       |
+| Archivo                            | Qué hay dentro                                                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `src/env.ts`                       | Validación de la configuración. Cierra el login de desarrollo y el cliente falso en producción                                 |
+| `src/container.ts`                 | Todo el cableado de dependencias, en un solo sitio                                                                             |
+| `src/server.ts`                    | Plugins, manejador de errores, OpenAPI, registro de rutas                                                                      |
+| `src/db/schema.ts`                 | Tablas. Montos como `text`, estructuras ricas en `jsonb`                                                                       |
+| `src/services/proposal-service.ts` | La máquina de estados. El archivo más importante                                                                               |
+| `src/services/policy-store.ts`     | Configuración por usuario y ventanas de 24 h / 1 h                                                                             |
+| `src/services/audit.ts`            | Bitácora append-only con hash encadenado                                                                                       |
+| `src/services/agent-tools.ts`      | `AgentTools` atadas a un usuario concreto                                                                                      |
+| `src/services/auth-service.ts`     | Login por reto firmado con la wallet                                                                                           |
+| `src/routes/`                      | Una ruta por endpoint de §5.2 del PLAN                                                                                         |
+| `POST /proposals`                  | Crea una propuesta con acciones concretas. Es por donde entra el servidor MCP; recorre el mismo pipeline que el agente interno |
+| `src/services/sweeper.ts`          | Barrido de caducidad y rescate de propuestas colgadas                                                                          |
+| `src/lib/rate-limit.ts`            | Límites por ruta: por IP en `/auth`, por usuario en el resto                                                                   |
+| `src/test/`                        | Andamiaje de tests: base de datos efímera, app lista y agente guionizado                                                       |
+
+## Conexión con Stellar (M2)
+
+| `USE_FAKE_STELLAR` | Qué usa                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `true`             | `FakeStellarReader` y `FakeStellarExecutor`. Sin red, determinista                                                                                      |
+| `false`            | `HorizonStellarReader` y `HorizonStellarExecutor`. Saldos, historial, antigüedad de cuentas y simulación reales; firma y envía transacciones en testnet |
+
+Con `false`, `loadEnv` **exige** `STELLAR_AGENT_SIGNER_SECRET` y
+`STELLAR_DEMO_ACCOUNT_ADDRESS`. Falla al arrancar y no en la primera propuesta:
+descubrir que falta una credencial cuando alguien ya está esperando su pago es
+la peor forma de enterarse.
+
+El ejecutor solo firma para `STELLAR_DEMO_ACCOUNT_ADDRESS`. Aunque alguien
+manipulara el origen de una transacción, no podría firmarla.
 
 ## Desarrollo sin Stellar ni wallet
 
@@ -145,12 +161,12 @@ En los tests los límites se desactivan (`NODE_ENV=test`).
 - [x] BE2-11 · Rate limiting por ruta y por usuario
 - [x] Caducidad real de propuestas y rescate de estados colgados (ADR 0008)
 - [x] Saneado del texto libre y edición de destinos (ADR 0007)
-- [ ] **Bloqueado en BE1-09** · Confirmación real contra la red. Hoy el ejecutor
-      falso confirma al instante, y el barrido no toca `SIGNED` ni `SUBMITTED`
-      porque reconciliarlos exige consultar Stellar
-- [ ] **Bloqueado en BE1-Q3** · `/account/delegation/prepare` recibe hoy la clave
-      pública del agente en el cuerpo. El cliente no debería decidir con qué
-      clave firma el agente
+- [x] **M2** · Cableado con Horizon real: lector, ejecutor y validación de
+      credenciales al arrancar
+- [ ] **BE1-09** · Reconciliación de `SIGNED`/`SUBMITTED` consultando la red.
+      El envío ya es real, pero la confirmación se da por buena al enviar
+- [ ] **BE1-Q3** · `/account/delegation/prepare` recibe hoy la clave pública del
+      agente en el cuerpo. El cliente no debería decidir con qué clave firma
 - [ ] **Pendiente de `FE-Q4`** · Respuestas en streaming con SSE
 - [ ] `BE2-Q5` · Nivel de observabilidad. Hoy hay id por petición, logs con
       cabeceras redactadas y `/health` con sonda real de base de datos. Falta

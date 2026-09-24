@@ -15,3 +15,4 @@ export {
   type HorizonAccountClientOptions,
 } from './horizon-account-client.js';
 export { HorizonStellarExecutor, type HorizonStellarExecutorOptions } from './horizon-executor.js';
+export { HorizonStellarReader, type HorizonStellarReaderOptions } from './horizon-reader.js';

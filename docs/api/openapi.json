@@ -1259,6 +1259,522 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Propone un pago con acciones concretas (lo usa el servidor MCP)",
+        "tags": [
+          "proposals"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "summary": {
+                    "allOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 560
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 280
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "PAYMENT"
+                          ]
+                        },
+                        "destinationId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "asset": {
+                          "type": "string",
+                          "enum": [
+                            "XLM",
+                            "USDC_TEST"
+                          ]
+                        },
+                        "amount": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "memo": {
+                          "allOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 56
+                            },
+                            {
+                              "type": "string",
+                              "maxLength": 28,
+                              "nullable": true
+                            }
+                          ],
+                          "nullable": true
+                        },
+                        "label": {
+                          "allOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 128
+                            },
+                            {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "destinationId",
+                        "asset",
+                        "amount",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 10
+                  },
+                  "requestedTotal": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,7})?$",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "summary",
+                  "actions"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "proposal": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "userId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "DRAFT",
+                            "POLICY_CHECK",
+                            "GUARDIAN_REVIEW",
+                            "PENDING_USER",
+                            "AUTO_APPROVED",
+                            "SIGNED",
+                            "SUBMITTED",
+                            "CONFIRMED",
+                            "REJECTED",
+                            "DENIED",
+                            "EXPIRED",
+                            "FAILED"
+                          ]
+                        },
+                        "summary": {
+                          "type": "string",
+                          "maxLength": 280
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "PAYMENT"
+                                ]
+                              },
+                              "destinationId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "asset": {
+                                "type": "string",
+                                "enum": [
+                                  "XLM",
+                                  "USDC_TEST"
+                                ]
+                              },
+                              "amount": {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d{1,7})?$"
+                              },
+                              "memo": {
+                                "type": "string",
+                                "maxLength": 28,
+                                "nullable": true
+                              },
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "destinationId",
+                              "asset",
+                              "amount",
+                              "label"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "minItems": 1,
+                          "maxItems": 10
+                        },
+                        "policy": {
+                          "type": "object",
+                          "properties": {
+                            "decision": {
+                              "type": "string",
+                              "enum": [
+                                "AUTO_APPROVE",
+                                "REQUIRE_USER",
+                                "DENY"
+                              ]
+                            },
+                            "reasons": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "ruleId": {
+                                    "type": "string",
+                                    "enum": [
+                                      "P-01",
+                                      "P-02",
+                                      "P-03",
+                                      "P-04",
+                                      "P-05",
+                                      "P-06",
+                                      "P-07",
+                                      "P-08",
+                                      "P-09",
+                                      "P-10"
+                                    ]
+                                  },
+                                  "unit": {
+                                    "type": "string",
+                                    "enum": [
+                                      "asset",
+                                      "usd"
+                                    ],
+                                    "default": "asset"
+                                  },
+                                  "effect": {
+                                    "type": "string",
+                                    "enum": [
+                                      "AUTO_APPROVE",
+                                      "REQUIRE_USER",
+                                      "DENY"
+                                    ]
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  },
+                                  "actionIndex": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "ruleId",
+                                  "effect",
+                                  "message"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "evaluatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "decision",
+                            "reasons",
+                            "evaluatedAt"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "risk": {
+                          "type": "object",
+                          "properties": {
+                            "score": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "level": {
+                              "type": "string",
+                              "enum": [
+                                "LOW",
+                                "MEDIUM",
+                                "HIGH",
+                                "CRITICAL"
+                              ]
+                            },
+                            "signals": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "enum": [
+                                      "G-01",
+                                      "G-02",
+                                      "G-03",
+                                      "G-04",
+                                      "G-05",
+                                      "G-06",
+                                      "G-07",
+                                      "G-08",
+                                      "G-09",
+                                      "G-10"
+                                    ]
+                                  },
+                                  "severity": {
+                                    "type": "string",
+                                    "enum": [
+                                      "INFO",
+                                      "WARN",
+                                      "HIGH"
+                                    ]
+                                  },
+                                  "actionIndex": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "data": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "severity",
+                                  "data"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "balanceAfter": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$"
+                            },
+                            "totalUsd": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$",
+                              "nullable": true
+                            },
+                            "balanceAfterUsd": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$",
+                              "nullable": true
+                            },
+                            "evaluatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "score",
+                            "level",
+                            "signals",
+                            "balanceAfter",
+                            "evaluatedAt"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "explanation": {
+                          "type": "object",
+                          "properties": {
+                            "summary": {
+                              "type": "string"
+                            },
+                            "warnings": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "signalId": {
+                                    "type": "string",
+                                    "enum": [
+                                      "G-01",
+                                      "G-02",
+                                      "G-03",
+                                      "G-04",
+                                      "G-05",
+                                      "G-06",
+                                      "G-07",
+                                      "G-08",
+                                      "G-09",
+                                      "G-10"
+                                    ]
+                                  },
+                                  "text": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "signalId",
+                                  "text"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "generatedBy": {
+                              "type": "string",
+                              "enum": [
+                                "llm",
+                                "template"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "summary",
+                            "warnings",
+                            "generatedBy"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "prices": {
+                          "type": "object",
+                          "properties": {
+                            "capturedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "quotes": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "asset": {
+                                    "type": "string",
+                                    "enum": [
+                                      "XLM",
+                                      "USDC_TEST"
+                                    ]
+                                  },
+                                  "usd": {
+                                    "type": "string",
+                                    "pattern": "^\\d+(\\.\\d{1,7})?$"
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": [
+                                      "market",
+                                      "fixed",
+                                      "cache"
+                                    ]
+                                  },
+                                  "asOf": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  }
+                                },
+                                "required": [
+                                  "asset",
+                                  "usd",
+                                  "source",
+                                  "asOf"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "capturedAt",
+                            "quotes"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "unsignedXdr": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "txHash": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "failureReason": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "status",
+                        "summary",
+                        "actions",
+                        "createdAt",
+                        "expiresAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "proposal"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/proposals/{id}": {

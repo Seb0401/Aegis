@@ -174,3 +174,16 @@ jobs:
             exit 1
           fi
           echo "Sin claves secretas."
+
+  docker:
+    name: La imagen de la API se construye
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # No se publica en ningún registro: solo se comprueba que la imagen
+      # compila. Un Dockerfile que solo se prueba el día del despliegue es un
+      # Dockerfile que falla el día del despliegue.
+      - name: Construir
+        run: docker build -f apps/api/Dockerfile -t aegis-api:ci .

@@ -27,7 +27,13 @@ Esto aplica a cualquier persona del equipo **y a cualquier asistente de IA** que
 
 ### 1.1 Problema
 
-Delegar dinero a un agente de IA da miedo por buenas razones: puede equivocarse, ser manipulado o gastar de más. Hoy o se le da control total o no se le da ninguno.
+**Cobras cuando cobras, y nunca sabes cuánto apartar.** Quien trabaja por su cuenta —desarrolladores freelance, comerciantes, talleres— tiene ingresos irregulares. Cuando entra dinero hay que decidir en caliente cuánto va a cada cosa, y el fondo de emergencia siempre es lo último. No es falta de disciplina: es que decidir cansa, y se decide justo en el peor momento para hacerlo.
+
+Un agente de IA podría repartirlo automáticamente. Pero delegarle dinero da miedo por buenas razones: puede equivocarse, ser manipulado o gastar de más. Hoy o se le da control total o no se le da ninguno.
+
+Por qué Stellar: repartir un ingreso en cuatro pagos pequeños cuesta fracciones de céntimo —en una red cara, el reparto se comería el ahorro—, liquida en segundos y no exige cuenta bancaria ni monto mínimo.
+
+Ver [ADR 0012](docs/adr/0012-hackathon-track-agentes.md).
 
 ### 1.2 Propuesta
 
@@ -466,17 +472,17 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 
 ### Backend 2 — API, políticas y Guardian (BE2)
 
-- [ ] BE2-01 · Scaffold API, BD, migraciones, `docker-compose` · S1
-- [ ] BE2-02 · Auth con wallet (reto/firma) · S1
-- [ ] BE2-03 · Policy Engine v0 (P-01, P-03, P-04) con tests · S1
-- [ ] BE2-04 · Endpoints y máquina de estados de propuestas · S2
-- [ ] BE2-05 · Registro de destinos (objetivos y contactos) · S2
-- [ ] BE2-06 · Auditoría append-only · S2
-- [ ] BE2-07 · Señales G-01…G-05 + score · S3
-- [ ] BE2-08 · Señales G-06…G-09 · S3
-- [ ] BE2-09 · Integración Policy + Guardian en el pipeline · S3
-- [ ] BE2-10 · Degradación por riesgo, P-02, P-05, P-06, kill switch · S4
-- [ ] BE2-11 · Rate limiting, validación y manejo de errores · S5
+- [x] BE2-01 · Scaffold API, BD, migraciones, `docker-compose` · S1 · **Postgres + Drizzle + docker-compose, migraciones aplicadas**
+- [x] BE2-02 · Auth con wallet (reto/firma) · S1 · **reto firmado con la wallet, un solo uso**
+- [x] BE2-03 · Policy Engine v0 (P-01, P-03, P-04) con tests · S1
+- [x] BE2-04 · Endpoints y máquina de estados de propuestas · S2
+- [x] BE2-05 · Registro de destinos (objetivos y contactos) · S2
+- [x] BE2-06 · Auditoría append-only · S2 · **cadena de hashes verificable**
+- [x] BE2-07 · Señales G-01…G-05 + score · S3
+- [x] BE2-08 · Señales G-06…G-09 · S3
+- [x] BE2-09 · Integración Policy + Guardian en el pipeline · S3
+- [x] BE2-10 · Degradación por riesgo, P-02, P-05, P-06, kill switch · S4
+- [x] BE2-11 · Rate limiting, validación y manejo de errores · S5 · **límites por ruta y por usuario**
 
 ### AI Agent (AI)
 
@@ -494,8 +500,8 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 ### Transversal (todos)
 
 - [ ] ALL-01 · Kickoff y respuesta a preguntas críticas · S1
-- [ ] ALL-02 · `contracts` v0 y contract freeze · S1–S2
-- [ ] ALL-03 · CI, `CODEOWNERS`, plantillas de PR/issues · S1
+- [x] ALL-02 · `contracts` v0 y contract freeze · S1–S2 · **contracts v0 publicado; freeze pendiente de acordar**
+- [x] ALL-03 · CI, `CODEOWNERS`, plantillas de PR/issues · S1 · **CI con 3 jobs; CODEOWNERS pendiente de repartir**
 - [x] ALL-04 · Pruebas E2E del flujo completo · S4–S5 — frontend hecho (`apps/web/e2e`); falta la firma real con wallet
 - [ ] ALL-05 · README, guía de demo y roadmap a mainnet · S6
 
@@ -575,18 +581,18 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 
 ### 14.2 Preguntas para todo el equipo
 
-| ID   | Pregunta                                                                                            | Recomendación por defecto                                                                                          |
-| ---- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Q-01 | ¿Nombre del proyecto, licencia e idioma del código y la documentación?                              | Nombre por definir · MIT · docs en español, código en inglés                                                       |
-| Q-02 | ¿Fecha real de inicio, fecha límite y horas/semana y zona horaria de cada persona?                  | Inicio 2026-09-21 · 6 semanas                                                                                      |
-| Q-03 | ¿Canal de comunicación y horario de la sincronización semanal?                                      | Discord o WhatsApp + 1 sync semanal                                                                                |
-| Q-04 | ¿Es parte de un hackathon o concurso? ¿Qué criterios de evaluación o requisitos de Stellar aplican? | Asumir que no hay requisitos extra                                                                                 |
-| Q-05 | ¿Qué es un "objetivo" en la cadena?                                                                 | Cuenta Stellar de destino etiquetada, propia del usuario, con meta opcional; "Emergencias" es un objetivo especial |
-| Q-06 | ¿Qué activo usamos además de XLM?                                                                   | `USDC_TEST` con emisor propio de testnet                                                                           |
-| Q-07 | ¿Autenticación con wallet o con email? ¿Un solo usuario de demo o varios?                           | Inicio de sesión con wallet, demo con pocos usuarios                                                               |
-| Q-08 | ¿Idioma del agente?                                                                                 | Español (con opción a inglés)                                                                                      |
-| Q-09 | ¿Dónde se despliega la demo?                                                                        | Local con Docker + despliegue simple (Vercel/Render)                                                               |
-| Q-10 | ¿Presupuesto y claves de API para el LLM? ¿Quién las administra?                                    | Una clave de equipo con límite de gasto                                                                            |
+| ID       | Pregunta                                                                                                                                                                   | Recomendación por defecto                                                                                          |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Q-01     | ¿Nombre del proyecto, licencia e idioma del código y la documentación?                                                                                                     | Nombre por definir · MIT · docs en español, código en inglés                                                       |
+| Q-02     | ¿Fecha real de inicio, fecha límite y horas/semana y zona horaria de cada persona?                                                                                         | Inicio 2026-09-21 · 6 semanas                                                                                      |
+| Q-03     | ¿Canal de comunicación y horario de la sincronización semanal?                                                                                                             | Discord o WhatsApp + 1 sync semanal                                                                                |
+| ~~Q-04~~ | **Respondida** en [ADR 0012](docs/adr/0012-hackathon-track-agentes.md): hackathon de Stellar, track Agentes. Entregables: URL pública y video de 3 min con demo en testnet | —                                                                                                                  |
+| Q-05     | ¿Qué es un "objetivo" en la cadena?                                                                                                                                        | Cuenta Stellar de destino etiquetada, propia del usuario, con meta opcional; "Emergencias" es un objetivo especial |
+| Q-06     | ¿Qué activo usamos además de XLM?                                                                                                                                          | `USDC_TEST` con emisor propio de testnet                                                                           |
+| Q-07     | ¿Autenticación con wallet o con email? ¿Un solo usuario de demo o varios?                                                                                                  | Inicio de sesión con wallet, demo con pocos usuarios                                                               |
+| Q-08     | ¿Idioma del agente?                                                                                                                                                        | Español (con opción a inglés)                                                                                      |
+| Q-09     | ¿Dónde se despliega la demo?                                                                                                                                               | Local con Docker + despliegue simple (Vercel/Render)                                                               |
+| Q-10     | ¿Presupuesto y claves de API para el LLM? ¿Quién las administra?                                                                                                           | Una clave de equipo con límite de gasto                                                                            |
 
 ### 14.3 Preguntas por rol
 

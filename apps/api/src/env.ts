@@ -29,6 +29,25 @@ const EnvSchema = z
       .transform((v) => v === 'true'),
 
     STELLAR_NETWORK: z.enum(['testnet', 'mainnet']).default('testnet'),
+    STELLAR_HORIZON_URL: z.string().default('https://horizon-testnet.stellar.org'),
+    /**
+     * Seed del signer delegado del agente. Solo backend: nunca al frontend,
+     * nunca a los logs, nunca al LLM.
+     */
+    STELLAR_AGENT_SIGNER_SECRET: z.string().optional(),
+    /**
+     * Única cuenta para la que el signer del agente puede firmar. Es la misma
+     * variable que usa el runbook M1 de BE1. El ejecutor rechaza cualquier
+     * otra: si alguien manipulara el origen de una transacción, no podría
+     * firmarla igualmente.
+     */
+    STELLAR_DEMO_ACCOUNT_ADDRESS: z.string().optional(),
+    /**
+     * Margen para firmar y enviar. 180 s y no 30: entre que el usuario abre
+     * Freighter y confirma pasa más tiempo del que uno cree, y una transacción
+     * que llega vencida falla con `tx_too_late`.
+     */
+    STELLAR_TRANSACTION_TIMEOUT_SECONDS: z.coerce.number().int().positive().default(180),
 
     // ── Precios (ADR 0011) ──────────────────────────────────────────
     // `fixed` no sale a la red y es determinista: es lo que usan los tests y
@@ -52,6 +71,26 @@ const EnvSchema = z
     AGENT_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
   })
   .superRefine((env, ctx) => {
+    // Conectar con Stellar de verdad sin las credenciales necesarias tiene que
+    // fallar AQUÍ, al arrancar, y no en la primera propuesta que alguien cree.
+    if (!env.USE_FAKE_STELLAR) {
+      if (!env.STELLAR_AGENT_SIGNER_SECRET) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['STELLAR_AGENT_SIGNER_SECRET'],
+          message: 'Hace falta la seed del signer del agente con USE_FAKE_STELLAR=false.',
+        });
+      }
+
+      if (!env.STELLAR_DEMO_ACCOUNT_ADDRESS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['STELLAR_DEMO_ACCOUNT_ADDRESS'],
+          message: 'Hace falta la cuenta que el agente puede firmar con USE_FAKE_STELLAR=false.',
+        });
+      }
+    }
+
     // Dos puertas traseras cómodas en desarrollo que serían un desastre en
     // producción. El esquema las cierra por nosotros.
     if (env.NODE_ENV !== 'production') return;

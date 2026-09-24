@@ -6,7 +6,7 @@ import {
   createRuleBasedAgent,
   type Agent,
 } from '@aegis/agent';
-import { NotImplementedStellarExecutor, NotImplementedStellarReader } from '@aegis/stellar';
+import { HorizonStellarExecutor, HorizonStellarReader } from '@aegis/stellar';
 import { FakeStellarExecutor, FakeStellarReader } from '@aegis/stellar/testing';
 import type { Database } from './db/client.js';
 import type { Env } from './env.js';
@@ -116,12 +116,34 @@ function providerOrder(value: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Lectura de la red (M2).
+ *
+ * Con `USE_FAKE_STELLAR=false` se lee Horizon de verdad: saldos, historial,
+ * antigüedad de las cuentas destino y simulación previa. Eso es lo que hace que
+ * las señales G-01, G-03, G-06 y G-08 hablen de la realidad y no de un fixture.
+ */
 function defaultReader(env: Env): StellarReader {
-  return env.USE_FAKE_STELLAR ? new FakeStellarReader() : new NotImplementedStellarReader();
+  if (env.USE_FAKE_STELLAR) return new FakeStellarReader();
+
+  return new HorizonStellarReader({ horizonUrl: env.STELLAR_HORIZON_URL });
 }
 
+/**
+ * Escritura en la red (M2).
+ *
+ * `loadEnv` ya garantiza que estas dos variables existen cuando el cliente
+ * falso está desactivado, así que aquí no hay que volver a comprobarlo.
+ */
 function defaultExecutor(env: Env): StellarExecutor {
-  return env.USE_FAKE_STELLAR ? new FakeStellarExecutor() : new NotImplementedStellarExecutor();
+  if (env.USE_FAKE_STELLAR) return new FakeStellarExecutor();
+
+  return new HorizonStellarExecutor({
+    horizonUrl: env.STELLAR_HORIZON_URL,
+    agentSignerSecret: env.STELLAR_AGENT_SIGNER_SECRET!,
+    allowedSourceAccount: env.STELLAR_DEMO_ACCOUNT_ADDRESS!,
+    transactionTimeoutSeconds: env.STELLAR_TRANSACTION_TIMEOUT_SECONDS,
+  });
 }
 
 /**

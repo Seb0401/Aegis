@@ -1,5 +1,6 @@
 import {
   ApproveProposalRequestSchema,
+  ProposalInputSchema,
   ProposalResponseSchema,
   ProposalSchema,
   RejectProposalRequestSchema,
@@ -25,6 +26,39 @@ export const proposalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const list = await app.services.proposals.list(request.user.sub, request.query.limit);
       return { proposals: list };
+    },
+  );
+
+  /**
+   * Crear una propuesta con acciones concretas, sin pasar por el chat.
+   *
+   * Es la puerta por la que entra un agente externo a través del servidor MCP.
+   * No es un atajo: recorre exactamente el mismo `ProposalService.create` que
+   * el agente interno, así que pasa por Policy Engine, Guardian y auditoría.
+   *
+   * Y deliberadamente **no** ejecuta nada: crea una propuesta. Quien apruebe
+   * sigue siendo la persona, desde la interfaz de Aegis.
+   */
+  app.post(
+    '/proposals',
+    {
+      onRequest: [app.authenticate],
+      preHandler: [perUserLimit(app, RATE_LIMITS.agent)],
+      schema: {
+        tags: ['proposals'],
+        summary: 'Propone un pago con acciones concretas (lo usa el servidor MCP)',
+        body: ProposalInputSchema,
+        response: { 201: ProposalResponseSchema },
+      },
+    },
+    async (request, reply) => {
+      const proposal = await app.services.proposals.create(
+        request.user.sub,
+        request.user.address,
+        request.body,
+      );
+
+      return reply.code(201).send({ proposal });
     },
   );
 

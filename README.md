@@ -1,13 +1,32 @@
 # Aegis
 
-Un agente de IA que puede mover dinero en **Stellar** por ti, pero siempre con
-límites, y un **Guardian** que analiza cada operación antes de ejecutarla y te
-explica en lenguaje normal qué va a pasar.
+**Cobras cuando cobras, y nunca sabes cuánto apartar.**
+
+Quien trabaja por su cuenta en Perú —desarrolladores freelance, comerciantes,
+talleres— tiene ingresos irregulares. Cuando entra dinero hay que decidir en
+caliente cuánto va a cada cosa, y el fondo de emergencia siempre es lo último.
+No es falta de disciplina: es que decidir cansa, y se decide justo en el peor
+momento para hacerlo.
+
+Aegis reparte cada ingreso por ti sobre **Stellar**, dentro de límites que
+pusiste antes y con una reserva mínima que no se toca. Un **Guardian** analiza
+cada operación antes de ejecutarla y te explica en lenguaje normal qué va a
+pasar.
+
+Repartir un ingreso en cuatro pagos cuesta fracciones de céntimo, liquida en
+segundos y no hace falta cuenta bancaria. En una red cara, el reparto se comería
+el ahorro.
 
 ```
-Usuario → Agente (propone) → Policy Engine (límites) → Guardian (riesgo + explicación)
-        → Usuario autoriza (o autonomía dentro de límites) → Stellar ejecuta
+Usuario ─┐
+         ├→ Agente (propone) → Policy Engine (límites) → Guardian (riesgo + explicación)
+Otro     ┘                   → Usuario autoriza (o autonomía dentro de límites)
+agente                       → Stellar ejecuta
+vía MCP
 ```
+
+Cualquier agente de IA puede conectarse por **MCP** y proponer pagos. Ninguno
+puede enviar dinero: heredan tus límites, tu Guardian y tu auditoría.
 
 El plan completo está en [`PLAN.md`](PLAN.md). Las decisiones tomadas desde
 entonces están en [`docs/adr/`](docs/adr/README.md).
@@ -120,7 +139,8 @@ riesgo y explicación.
 aegis/
 ├── apps/
 │   ├── web/                Frontend (Next.js)                       → FE
-│   └── api/                API + orquestación                       → BE2
+│   ├── api/                API + orquestación                       → BE2
+│   └── mcp/                Servidor MCP para agentes externos       → BE2
 ├── packages/
 │   ├── contracts/          Zod, tipos, puertos, fixtures            → compartido
 │   ├── stellar/            Cliente Stellar + fakes                  → BE1
@@ -146,7 +166,8 @@ Cada paquete tiene su propio README con lo que hace y lo que le falta.
 | `packages/guardian`      | BE2        | **Funcional.** G-01…G-10, score y explicación de respaldo. 29 tests                                                                                                                         |
 | `packages/prices`        | BE2        | **Funcional.** Precio en dólares con caché y respaldo fijo. 19 tests                                                                                                                        |
 | `apps/api`               | BE2        | **Funcional.** Auth, destinos, propuestas con máquina de estados, política, Guardian, auditoría encadenada y barrido de caducidad. 59 tests, casi todos de integración contra Postgres real |
-| `packages/stellar`       | BE1        | **M1 listo.** Horizon real para cuenta/saldo, delegación, pago XLM, firma y envío en testnet; API mantiene el fake hasta la integración M2                                                  |
+| `apps/mcp`               | BE2        | **Funcional.** Servidor MCP con 6 herramientas; ninguna envía dinero. 9 tests                                                                                                               |
+| `packages/stellar`       | BE1        | **Funcional.** Horizon real: saldos, historial, estadísticas, antigüedad de cuentas, simulación, firma y envío en testnet. 32 tests                                                         |
 | `packages/agent`         | AI         | **Andamiaje.** Agente de reglas sin LLM, suficiente para la demo end-to-end                                                                                                                 |
 | `apps/web`               | FE         | **Completo (FE-01…FE-13).** Sesión con Freighter, propuestas con firma, panel del Guardian, límites, destinos, historial, configuración y delegación. Interfaz según `images/mockup.png`    |
 

@@ -1,0 +1,21 @@
+# Lo que nunca debe entrar en la imagen.
+node_modules
+**/node_modules
+dist
+**/dist
+.next
+**/.next
+coverage
+**/coverage
+
+# Secretos
+.env
+.env.*
+!.env.example
+
+.git
+.github
+images
+docs
+apps/web
+*.md
