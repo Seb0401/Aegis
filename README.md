@@ -144,7 +144,7 @@ Cada paquete tiene su propio README con lo que hace y lo que le falta.
 | `packages/policy-engine` | BE2        | **Funcional.** P-01…P-09 con 22 tests                                                                                                                                                       |
 | `packages/guardian`      | BE2        | **Funcional.** G-01…G-09, score y explicación de respaldo, con 22 tests                                                                                                                     |
 | `apps/api`               | BE2        | **Funcional.** Auth, destinos, propuestas con máquina de estados, política, Guardian, auditoría encadenada y barrido de caducidad. 59 tests, casi todos de integración contra Postgres real |
-| `packages/stellar`       | BE1        | **Andamiaje.** Interfaces, `FakeStellarReader` y `FakeStellarExecutor`. Falta la integración real                                                                                           |
+| `packages/stellar`       | BE1        | **M1 listo.** Horizon real para cuenta/saldo, delegación, pago XLM, firma y envío en testnet; API mantiene el fake hasta la integración M2                                                  |
 | `packages/agent`         | AI         | **Andamiaje.** Agente de reglas sin LLM, suficiente para la demo end-to-end                                                                                                                 |
 | `apps/web`               | FE         | **Completo (FE-01…FE-13).** Sesión con Freighter, propuestas con firma, panel del Guardian, límites, destinos, historial, configuración y delegación. Interfaz según `images/mockup.png`    |
 

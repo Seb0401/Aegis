@@ -23,7 +23,8 @@
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "demo:m1": "tsx src/demo-m1.ts"
   },
   "dependencies": {
     "@aegis/contracts": "workspace:*",

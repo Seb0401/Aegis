@@ -12,15 +12,15 @@ import type {
 /**
  * Andamiaje para BE1.
  *
- * Estas clases cumplen el tipo pero fallan en voz alta. Así el monorepo compila
- * desde el día uno y, si alguien conecta la implementación real antes de tiempo,
- * el error dice exactamente qué tarea del PLAN falta.
+ * Estas clases mantienen el modo desacoplado de la API. M1 ya dispone de
+ * `HorizonAccountClient` y `HorizonStellarExecutor`, pero el cableado completo
+ * del `StellarReader` real pertenece a M2/M3.
  */
 
 class NotImplementedError extends Error {
   constructor(method: string, task: string) {
     super(
-      `@aegis/stellar: ${method}() todavía no está implementado (tarea ${task} del PLAN.md). ` +
+      `@aegis/stellar: ${method}() todavía no está disponible en este adaptador (${task}). ` +
         `Usa los fakes de "@aegis/stellar/testing" o arranca la API con USE_FAKE_STELLAR=true.`,
     );
     this.name = 'NotImplementedError';
@@ -29,7 +29,7 @@ class NotImplementedError extends Error {
 
 export class NotImplementedStellarReader implements StellarReader {
   async getBalances(_accountId: string): Promise<Balance[]> {
-    throw new NotImplementedError('getBalances', 'BE1-02');
+    throw new NotImplementedError('getBalances', 'integración M2');
   }
 
   async getHistory(_accountId: string, _opts?: { limit?: number }): Promise<TxSummary[]> {
@@ -37,7 +37,7 @@ export class NotImplementedStellarReader implements StellarReader {
   }
 
   async getAccountInfo(_address: string): Promise<AccountInfo> {
-    throw new NotImplementedError('getAccountInfo', 'BE1-02');
+    throw new NotImplementedError('getAccountInfo', 'integración M2');
   }
 
   async getHistoryStats(_accountId: string): Promise<HistoryStats> {
@@ -54,18 +54,18 @@ export class NotImplementedStellarReader implements StellarReader {
 
 export class NotImplementedStellarExecutor implements StellarExecutor {
   async buildUnsigned(_accountId: string, _actions: ResolvedAction[]): Promise<{ xdr: string }> {
-    throw new NotImplementedError('buildUnsigned', 'BE1-03');
+    throw new NotImplementedError('buildUnsigned', 'cableado API M2');
   }
 
   async signWithAgent(_xdr: string): Promise<{ xdr: string }> {
-    throw new NotImplementedError('signWithAgent', 'BE1-03');
+    throw new NotImplementedError('signWithAgent', 'cableado API M2');
   }
 
   async submit(_xdr: string): Promise<{ hash: string }> {
-    throw new NotImplementedError('submit', 'BE1-03');
+    throw new NotImplementedError('submit', 'cableado API M2');
   }
 
   async buildDelegationXdr(_accountId: string, _agentPublicKey: string): Promise<{ xdr: string }> {
-    throw new NotImplementedError('buildDelegationXdr', 'BE1-05');
+    throw new NotImplementedError('buildDelegationXdr', 'integración BE1-05/M2');
   }
 }
