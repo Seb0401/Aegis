@@ -98,6 +98,23 @@ Dos cosas que conviene saber antes de añadir tests:
    `createScriptedAgent()` por `overrides.agent`. No es una puerta trasera: entra
    por el mismo `/agent/messages` y recorre el pipeline completo.
 
+## Precios en dólares
+
+Antes de evaluar, el orquestador pide el precio de todos los activos que toca la
+propuesta **y** de los que el usuario tiene en cartera: la reserva mínima en
+dólares se mide sobre el patrimonio entero, no solo sobre lo que se mueve.
+
+La foto se guarda en la columna `prices` de la propuesta y sus cotizaciones
+quedan en el evento `POLICY_EVALUATED`. Para explicar dentro de un mes por qué
+algo se aprobó hace falta el precio de entonces, no el de hoy.
+
+Si el oráculo no responde, **no se deniega**: salta P-10, el Guardian añade G-10
+y la propuesta pasa a `PENDING_USER`. Ver
+[ADR 0011](../../docs/adr/0011-precios-en-dolares.md).
+
+En los tests, `PRICE_SOURCE=fixed` evita salir a la red. Para probar la caída del
+oráculo se inyecta un proveedor vacío con `overrides.prices`.
+
 ## Límites de uso
 
 | Ruta                                 | Límite  | Clave                 |

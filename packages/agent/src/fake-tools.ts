@@ -34,6 +34,10 @@ export function createFakeAgentTools(options: FakeAgentToolsOptions = {}): Agent
     minimumReserve: '10',
     allowedAssets: ['XLM', 'USDC_TEST'],
     remainingDailyAmount: '20',
+    // Topes en dólares (ADR 0011). El agente los lee para no proponer algo que
+    // ya sabemos que va a escalar al usuario.
+    maxAmountPerOperationUsd: '5',
+    remainingDailyAmountUsd: '20',
   };
 
   return {

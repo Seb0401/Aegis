@@ -4,6 +4,7 @@ import type {
   Destination,
   HistoryStats,
   PolicyConfig,
+  PriceSnapshot,
   ResolvedAction,
 } from '@aegis/contracts';
 
@@ -30,6 +31,14 @@ export interface GuardianInput {
    * Si no se pasa, el saldo posterior no la descuenta y se avisa en los datos.
    */
   estimatedFee?: string;
+  /**
+   * Foto de precios (ADR 0011).
+   *
+   * Sirve para dos cosas distintas: poner cifras en dólares en las señales, que
+   * es lo que el usuario entiende de un vistazo, y avisar con G-10 cuando no se
+   * ha podido valorar la operación.
+   */
+  prices?: PriceSnapshot;
   now?: Date;
 }
 

@@ -3,6 +3,7 @@ import {
   ExplanationSchema,
   PolicyDecisionSchema,
   ProposalInputSchema,
+  PriceSnapshotSchema,
   ProposedActionSchema,
   RiskReportSchema,
   addAmounts,
@@ -12,6 +13,8 @@ import {
   type Destination,
   type Explanation,
   type PolicyDecision,
+  type PriceProvider,
+  type PriceSnapshot,
   type Proposal,
   type ProposalInput,
   type ProposalStatus,
@@ -42,6 +45,7 @@ export interface ProposalServiceDeps {
   destinations: DestinationStore;
   reader: StellarReader;
   executor: StellarExecutor;
+  prices: PriceProvider;
   explain?: (risk: RiskReport, actions: ResolvedAction[]) => Promise<Explanation>;
 }
 
@@ -205,12 +209,24 @@ export class ProposalService {
 
     await this.transition(id, 'DRAFT', 'POLICY_CHECK');
 
-    const [balances, stats, dailySpentByAsset, operationsLastHour] = await Promise.all([
-      this.deps.reader.getBalances(userAddress),
-      this.deps.reader.getHistoryStats(userAddress),
-      this.deps.policies.getDailySpentByAsset(userId, now),
-      this.deps.policies.getOperationsLastHour(userId, now),
-    ]);
+    // Los precios se piden de todos los activos que toca la propuesta MÁS los
+    // que el usuario tiene en cartera: la reserva mínima en dólares se mide
+    // sobre el patrimonio entero, no solo sobre lo que se está moviendo.
+    const balancesPromise = this.deps.reader.getBalances(userAddress);
+
+    const [balances, stats, dailySpentByAsset, dailySpentUsd, operationsLastHour] =
+      await Promise.all([
+        balancesPromise,
+        this.deps.reader.getHistoryStats(userAddress),
+        this.deps.policies.getDailySpentByAsset(userId, now),
+        this.deps.policies.getDailySpentUsd(userId, now),
+        this.deps.policies.getOperationsLastHour(userId, now),
+      ]);
+
+    const assets = [
+      ...new Set([...input.actions.map((a) => a.asset), ...balances.map((b) => b.asset)]),
+    ];
+    const prices = await this.deps.prices.getPrices(assets);
 
     const decision = evaluatePolicy({
       config,
@@ -218,21 +234,27 @@ export class ProposalService {
       destinations: registered,
       balances,
       dailySpentByAsset,
+      dailySpentUsd,
       operationsLastHour,
       knownCounterparties: stats.knownCounterparties,
+      prices,
       now,
     });
 
     await this.deps.db
       .update(proposals)
-      .set({ policy: decision, updatedAt: new Date() })
+      .set({ policy: decision, prices, updatedAt: new Date() })
       .where(eq(proposals.id, id));
 
     await this.deps.audit.append({
       userId,
       proposalId: id,
       type: 'POLICY_EVALUATED',
-      payload: { decision: decision.decision, reasons: decision.reasons },
+      payload: {
+        decision: decision.decision,
+        reasons: decision.reasons,
+        prices: prices.quotes.map((q) => ({ asset: q.asset, usd: q.usd, source: q.source })),
+      },
     });
 
     if (decision.decision === 'DENY') {
@@ -250,6 +272,7 @@ export class ProposalService {
       balances,
       config,
       stats,
+      prices,
     });
 
     const explanation = this.deps.explain
@@ -295,6 +318,7 @@ export class ProposalService {
     balances: Balance[];
     config: Awaited<ReturnType<PolicyStore['getConfig']>>;
     stats: Awaited<ReturnType<StellarReader['getHistoryStats']>>;
+    prices: PriceSnapshot;
   }): Promise<RiskReport> {
     const uniqueAddresses = [...new Set(args.resolved.map((a) => a.destinationAddress))];
 
@@ -315,6 +339,7 @@ export class ProposalService {
       stats: args.stats,
       accountInfoByAddress: Object.fromEntries(infos),
       estimatedFee: simulation.fee,
+      prices: args.prices,
     });
   }
 
@@ -529,6 +554,7 @@ function toProposal(row: Row): Proposal {
     policy: parseOrNull(PolicyDecisionSchema, row.policy) as PolicyDecision | null,
     risk: parseOrNull(RiskReportSchema, row.risk) as RiskReport | null,
     explanation: parseOrNull(ExplanationSchema, row.explanation) as Explanation | null,
+    prices: parseOrNull(PriceSnapshotSchema, row.prices) as PriceSnapshot | null,
     unsignedXdr: row.unsignedXdr,
     txHash: row.txHash,
     failureReason: row.failureReason,

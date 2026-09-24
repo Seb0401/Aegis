@@ -1,6 +1,7 @@
 import {
   DEFAULT_POLICY_CONFIG,
   FIXTURE_DESTINATIONS,
+  FIXTURE_PRICE_SNAPSHOT,
   type AccountInfo,
   type Balance,
   type HistoryStats,
@@ -58,6 +59,8 @@ function scenario(overrides: Partial<GuardianInput> = {}): GuardianInput {
     destinations: overrides.destinations ?? FIXTURE_DESTINATIONS,
     balances: overrides.balances ?? BALANCES,
     config: overrides.config ?? DEFAULT_POLICY_CONFIG,
+    // Con precios, que es el caso normal. La ausencia se prueba aparte, en G-10.
+    prices: overrides.prices ?? FIXTURE_PRICE_SNAPSHOT,
     stats: overrides.stats ?? STATS,
     accountInfoByAddress:
       overrides.accountInfoByAddress ??
@@ -354,5 +357,76 @@ describe('explicación de respaldo', () => {
 
     expect(explanation.summary).toContain('50 USDC_TEST');
     expect(explanation.summary).toContain('en 4 pagos');
+  });
+});
+
+describe('G-10 · sin precio', () => {
+  it('avisa cuando no se puede valorar el activo y hay topes en dólares', () => {
+    const report = assessRisk(scenario({ prices: { capturedAt: NOW.toISOString(), quotes: [] } }));
+
+    const signal = report.signals.find((s) => s.id === 'G-10');
+    expect(signal?.severity).toBe('WARN');
+    expect(signal?.data).toMatchObject({ assetsWithoutPrice: ['USDC_TEST'] });
+  });
+
+  it('no dice nada si el usuario no tiene topes en dólares', () => {
+    // Una advertencia que no cambia ninguna decisión solo enseña a ignorarlas.
+    const ids = signalIds(
+      scenario({
+        prices: { capturedAt: NOW.toISOString(), quotes: [] },
+        config: {
+          ...DEFAULT_POLICY_CONFIG,
+          maxAmountPerOperationUsd: null,
+          maxDailyAmountUsd: null,
+          minimumReserveUsd: null,
+        },
+      }),
+    );
+
+    expect(ids).not.toContain('G-10');
+  });
+
+  it('deja los totales en dólares a null en vez de inventarlos', () => {
+    const report = assessRisk(scenario({ prices: { capturedAt: NOW.toISOString(), quotes: [] } }));
+
+    expect(report.totalUsd).toBeNull();
+    expect(report.balanceAfterUsd).toBeNull();
+  });
+});
+
+describe('valores en dólares', () => {
+  it('calcula el total y el saldo posterior con el precio de la foto', () => {
+    // USDC_TEST vale 1 dólar en el fixture, así que 10 unidades son 10 dólares.
+    const report = assessRisk(scenario());
+
+    expect(report.totalUsd).toBe('10.0000000');
+    expect(report.balanceAfterUsd).toBe('240.0000000');
+  });
+
+  it('convierte XLM a su precio real, no a la par', () => {
+    // XLM cotiza a 0.12 en el fixture: 100 XLM son 12 dólares, no 100.
+    const report = assessRisk(
+      scenario({
+        actions: [action({ asset: 'XLM', amount: '100' })],
+        balances: [{ asset: 'XLM', total: '1000', available: '1000' }],
+        stats: { ...STATS, usedAssets: ['XLM'] },
+      }),
+    );
+
+    expect(report.totalUsd).toBe('12.0000000');
+  });
+
+  it('el explicador menciona el valor en dólares cuando existe', () => {
+    const input = scenario();
+    const explanation = buildTemplateExplanation(assessRisk(input), input.actions);
+
+    expect(explanation.summary).toContain('$10.00');
+  });
+
+  it('el explicador omite los dólares si no se pudieron calcular', () => {
+    const input = scenario({ prices: { capturedAt: NOW.toISOString(), quotes: [] } });
+    const explanation = buildTemplateExplanation(assessRisk(input), input.actions);
+
+    expect(explanation.summary).not.toContain('$');
   });
 });

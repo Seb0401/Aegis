@@ -37,8 +37,21 @@ const decision = evaluatePolicy({
 | P-09 | Propuesta caducada                     | `DENY`                              |
 
 El criterio para elegir entre `DENY` y `REQUIRE_USER` está razonado en
-[ADR 0005](../../docs/adr/0005-deny-vs-require-user.md). Los límites se aplican
-por activo, sin conversión: [ADR 0003](../../docs/adr/0003-limites-por-activo.md).
+[ADR 0005](../../docs/adr/0005-deny-vs-require-user.md).
+
+## Dos unidades, dos barreras
+
+P-01, P-02 y P-06 se comprueban dos veces: contra el límite del propio activo y
+contra el tope en dólares. Se queda **la más restrictiva**, así que añadir
+precios nunca puede aflojar un límite que ya existía. Cada razón lleva un campo
+`unit` (`asset` o `usd`) para que el frontend pueda distinguirlas.
+
+Poner un tope en dólares a `null` lo desactiva y deja solo el del activo.
+
+Si falta el precio de algún activo de la propuesta, **no se evalúa ninguna regla
+en dólares** y salta P-10. El razonamiento está en
+[ADR 0011](../../docs/adr/0011-precios-en-dolares.md), que sustituye al
+[ADR 0003](../../docs/adr/0003-limites-por-activo.md).
 
 ## Dos detalles de diseño
 
@@ -48,5 +61,5 @@ por activo, sin conversión: [ADR 0003](../../docs/adr/0003-limites-por-activo.m
 
 ## Tests
 
-`pnpm test` — 22 casos, incluido el ejemplo de referencia del PLAN ("$50 entre
+`pnpm test` — 30 casos, incluido el ejemplo de referencia del PLAN ("$50 entre
 3 objetivos + $10 de emergencia").

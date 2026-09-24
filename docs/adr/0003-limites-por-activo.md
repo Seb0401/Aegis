@@ -1,7 +1,7 @@
 # 0003 · Los límites se aplican por activo, sin conversión
 
 - **Fecha:** 2026-09-19
-- **Estado:** **Asumida** — falta confirmación del equipo (`BE2-Q3`)
+- **Estado:** **Sustituida** por [ADR 0011](0011-precios-en-dolares.md) el 2026-09-24
 - **Decide:** BE2, pendiente de validar
 
 ## Contexto
@@ -38,3 +38,16 @@ que revisarlo** (§15).
 
 Hay que confirmar con el equipo si los valores por defecto de §8.1 se leen como
 "unidades del activo" o si se quiere fijar un activo de referencia.
+
+---
+
+## Epílogo
+
+Esta decisión se tomó como _asumida_ y su propio apartado de consecuencias
+señalaba el problema: con un XLM a un precio muy distinto del de USDC, el mismo
+límite numérico protege de forma desigual.
+
+El [ADR 0011](0011-precios-en-dolares.md) lo cierra añadiendo topes en dólares
+que conviven con los límites por activo. Los límites por activo **siguen
+existiendo** y siguen aplicándose: lo que cambia es que ya no son la única
+barrera.

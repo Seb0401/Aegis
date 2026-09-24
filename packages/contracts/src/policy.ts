@@ -19,6 +19,7 @@ export const PolicyRuleIdSchema = z.enum([
   'P-07', // Modo de operación
   'P-08', // Kill switch
   'P-09', // Expiración de propuestas
+  'P-10', // Sin precio para convertir a dólares
 ]);
 export type PolicyRuleId = z.infer<typeof PolicyRuleIdSchema>;
 
@@ -44,6 +45,21 @@ export const PolicyConfigSchema = z.object({
   paused: z.boolean().default(false),
   /** P-09 · minutos de validez de una propuesta. */
   proposalTtlMinutes: z.number().int().positive().default(10),
+
+  // ── Topes en dólares (ADR 0011) ──────────────────────────────────
+  //
+  // Conviven con los de arriba en vez de sustituirlos: los límites por activo
+  // siguen aplicándose y se queda la restricción más severa de las dos. Así,
+  // añadir precios nunca puede AFLOJAR un límite que ya existía.
+  //
+  // `null` desactiva el tope en dólares y deja solo el del activo.
+
+  /** P-01 en dólares. */
+  maxAmountPerOperationUsd: AmountSchema.nullable().default('5'),
+  /** P-02 en dólares, sumando todos los activos. */
+  maxDailyAmountUsd: AmountSchema.nullable().default('20'),
+  /** P-06 en dólares. */
+  minimumReserveUsd: AmountSchema.nullable().default('10'),
 });
 export type PolicyConfig = z.infer<typeof PolicyConfigSchema>;
 
@@ -56,8 +72,21 @@ export type UpdatePolicyInput = z.infer<typeof UpdatePolicyInputSchema>;
 export const PolicyDecisionKindSchema = z.enum(['AUTO_APPROVE', 'REQUIRE_USER', 'DENY']);
 export type PolicyDecisionKind = z.infer<typeof PolicyDecisionKindSchema>;
 
+/**
+ * Unidad en la que se comprobó una regla.
+ *
+ * P-01, P-02 y P-06 existen dos veces: una contra el límite del propio activo y
+ * otra contra el tope en dólares. Sin este campo, el frontend no podría
+ * distinguir "excede tu límite de 5 USDC" de "excede tu límite de $5", que son
+ * la misma regla pero dos barreras distintas.
+ */
+export const PolicyReasonUnitSchema = z.enum(['asset', 'usd']);
+export type PolicyReasonUnit = z.infer<typeof PolicyReasonUnitSchema>;
+
 export const PolicyReasonSchema = z.object({
   ruleId: PolicyRuleIdSchema,
+  /** Por defecto `asset`: la comprobación contra el límite del propio activo. */
+  unit: PolicyReasonUnitSchema.default('asset'),
   /** Efecto que esta regla tuvo sobre la decisión final. */
   effect: PolicyDecisionKindSchema,
   /** Mensaje en lenguaje natural, apto para mostrar al usuario. */
@@ -84,5 +113,9 @@ export const PolicySummarySchema = z.object({
   allowedAssets: z.array(AssetCodeSchema),
   /** Cuánto queda del límite diario en esta ventana. */
   remainingDailyAmount: AmountSchema,
+  /** Tope por operación en dólares, si está configurado. */
+  maxAmountPerOperationUsd: AmountSchema.nullable(),
+  /** Lo que queda del tope diario en dólares. */
+  remainingDailyAmountUsd: AmountSchema.nullable(),
 });
 export type PolicySummary = z.infer<typeof PolicySummarySchema>;

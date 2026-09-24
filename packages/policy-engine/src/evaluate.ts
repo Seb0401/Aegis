@@ -1,10 +1,13 @@
 import {
   addAmounts,
+  assetsWithoutPrice,
   compareAmounts,
   formatAmount,
+  formatUsd,
   isGreaterThan,
   isLessThan,
   subtractAmounts,
+  toUsd,
   type AssetCode,
   type Destination,
   type PolicyDecision,
@@ -15,7 +18,7 @@ import {
 import { DECISION_PRECEDENCE, type PolicyEvaluationInput } from './types.js';
 
 /**
- * Evalúa una propuesta contra las reglas P-01…P-09.
+ * Evalúa una propuesta contra las reglas P-01…P-10.
  *
  * Contrato del motor:
  *  - Es puro y síncrono. La misma entrada siempre da la misma salida.
@@ -29,7 +32,12 @@ import { DECISION_PRECEDENCE, type PolicyEvaluationInput } from './types.js';
  *    y la reserva mínima intocable.
  *  - `REQUIRE_USER` es para lo que solo significa "esto excede lo que el agente
  *    puede hacer solo": montos por encima del límite, destino sin historial,
- *    demasiadas operaciones por hora y el modo MANUAL.
+ *    demasiadas operaciones por hora, el modo MANUAL y no saber el precio de un
+ *    activo (P-10).
+ *
+ * Sobre los topes en dólares (ADR 0011): conviven con los límites por activo en
+ * vez de sustituirlos, y se aplica el más restrictivo. Añadir precios nunca
+ * puede aflojar un límite que ya existía.
  */
 export function evaluatePolicy(input: PolicyEvaluationInput): PolicyDecision {
   const now = input.now ?? new Date();
@@ -47,6 +55,7 @@ export function evaluatePolicy(input: PolicyEvaluationInput): PolicyDecision {
       reasons: [
         {
           ruleId: 'P-08',
+          unit: 'asset',
           effect: 'DENY',
           message: 'El agente está en pausa. Reactívalo para poder operar.',
         },
@@ -62,6 +71,7 @@ export function evaluatePolicy(input: PolicyEvaluationInput): PolicyDecision {
       reasons: [
         {
           ruleId: 'P-09',
+          unit: 'asset',
           effect: 'DENY',
           message: 'La propuesta caducó. Pídele al agente que la vuelva a generar.',
         },
@@ -75,6 +85,7 @@ export function evaluatePolicy(input: PolicyEvaluationInput): PolicyDecision {
   if (operationsLastHour + input.actions.length > input.config.maxOperationsPerHour) {
     reasons.push({
       ruleId: 'P-05',
+      unit: 'asset',
       effect: 'REQUIRE_USER',
       message:
         `Esta propuesta superaría el máximo de ${input.config.maxOperationsPerHour} ` +
@@ -106,6 +117,7 @@ export function evaluatePolicy(input: PolicyEvaluationInput): PolicyDecision {
     if (isGreaterThan(projected, input.config.maxDailyAmount)) {
       reasons.push({
         ruleId: 'P-02',
+        unit: 'asset',
         effect: 'REQUIRE_USER',
         message:
           `Con esto llegarías a ${formatAmount(projected)} ${asset} en 24 h y ` +
@@ -121,6 +133,7 @@ export function evaluatePolicy(input: PolicyEvaluationInput): PolicyDecision {
     if (!balance) {
       reasons.push({
         ruleId: 'P-06',
+        unit: 'asset',
         effect: 'DENY',
         message: `No tienes saldo de ${asset}.`,
       });
@@ -130,6 +143,7 @@ export function evaluatePolicy(input: PolicyEvaluationInput): PolicyDecision {
     if (isGreaterThan(total, balance.available)) {
       reasons.push({
         ruleId: 'P-06',
+        unit: 'asset',
         effect: 'DENY',
         message:
           `Fondos insuficientes: la propuesta suma ${formatAmount(total)} ${asset} ` +
@@ -142,10 +156,75 @@ export function evaluatePolicy(input: PolicyEvaluationInput): PolicyDecision {
     if (isLessThan(remaining, input.config.minimumReserve)) {
       reasons.push({
         ruleId: 'P-06',
+        unit: 'asset',
         effect: 'DENY',
         message:
           `Te quedarían ${formatAmount(remaining)} ${asset} y tu reserva mínima ` +
           `intocable es ${formatAmount(input.config.minimumReserve)}.`,
+      });
+    }
+  }
+
+  // ── P-10 · Sin precio no se puede aplicar un tope en dólares ──────
+  //
+  // Solo importa si hay algún tope en dólares configurado. Si no lo hay, no
+  // saber el precio no impide comprobar nada y molestar al usuario sería ruido.
+  const usesUsdCaps = Boolean(
+    input.config.maxAmountPerOperationUsd ||
+    input.config.maxDailyAmountUsd ||
+    input.config.minimumReserveUsd,
+  );
+
+  const unpriced = usesUsdCaps ? assetsWithoutPrice([...totalByAsset.keys()], input.prices) : [];
+
+  if (unpriced.length > 0) {
+    reasons.push({
+      ruleId: 'P-10',
+      unit: 'usd',
+      effect: 'REQUIRE_USER',
+      message:
+        `No he podido saber cuánto vale ${unpriced.join(' ni ')} en dólares, así que ` +
+        'no puedo comprobar tus límites. Revísalo tú.',
+    });
+  }
+
+  // ── P-02 · Límite diario en dólares, sumando todos los activos ────
+  const dailyCapUsd = input.config.maxDailyAmountUsd;
+  if (dailyCapUsd && unpriced.length === 0) {
+    const proposalUsd = sumUsd(totalByAsset, input);
+
+    if (proposalUsd !== null) {
+      const projectedUsd = addAmounts(input.dailySpentUsd ?? '0', proposalUsd);
+
+      if (isGreaterThan(projectedUsd, dailyCapUsd)) {
+        reasons.push({
+          ruleId: 'P-02',
+          unit: 'usd',
+          effect: 'REQUIRE_USER',
+          message:
+            `Con esto llegarías a unos ${formatUsd(projectedUsd)} en 24 h y tu ` +
+            `límite diario es ${formatUsd(dailyCapUsd)}.`,
+        });
+      }
+    }
+  }
+
+  // ── P-06 · Reserva mínima en dólares ──────────────────────────────
+  const reserveUsd = input.config.minimumReserveUsd;
+  if (reserveUsd && unpriced.length === 0) {
+    const remainingUsd = remainingBalanceUsd(input, totalByAsset);
+
+    // `null` significa que falta el precio de algún activo del saldo. Un total
+    // parcial haría saltar la reserva sin motivo, así que aquí no se decide
+    // nada: de la ausencia ya se encargó P-10.
+    if (remainingUsd !== null && isLessThan(remainingUsd, reserveUsd)) {
+      reasons.push({
+        ruleId: 'P-06',
+        unit: 'usd',
+        effect: 'DENY',
+        message:
+          `Te quedarían unos ${formatUsd(remainingUsd)} y tu reserva mínima ` +
+          `intocable es ${formatUsd(reserveUsd)}.`,
       });
     }
   }
@@ -155,6 +234,7 @@ export function evaluatePolicy(input: PolicyEvaluationInput): PolicyDecision {
   if (input.config.mode === 'MANUAL') {
     reasons.push({
       ruleId: 'P-07',
+      unit: 'asset',
       effect: 'REQUIRE_USER',
       message: 'El agente está en modo manual: todas las operaciones necesitan tu confirmación.',
     });
@@ -169,6 +249,7 @@ export function evaluatePolicy(input: PolicyEvaluationInput): PolicyDecision {
   if (decision === 'AUTO_APPROVE' && reasons.length === 0) {
     reasons.push({
       ruleId: 'P-07',
+      unit: 'asset',
       effect: 'AUTO_APPROVE',
       message: 'La propuesta cabe dentro de los límites que configuraste.',
     });
@@ -198,6 +279,7 @@ function evaluateAction({
   if (!input.config.allowedAssets.includes(action.asset)) {
     reasons.push({
       ruleId: 'P-04',
+      unit: 'asset',
       effect: 'DENY',
       actionIndex,
       message: `El activo ${action.asset} no está en tu lista de activos permitidos.`,
@@ -208,12 +290,32 @@ function evaluateAction({
   if (compareAmounts(action.amount, input.config.maxAmountPerOperation) === 1) {
     reasons.push({
       ruleId: 'P-01',
+      unit: 'asset',
       effect: 'REQUIRE_USER',
       actionIndex,
       message:
         `"${action.label}" es de ${formatAmount(action.amount)} ${action.asset} y ` +
         `tu límite por operación es ${formatAmount(input.config.maxAmountPerOperation)}.`,
     });
+  }
+
+  // ── P-01 en dólares ───────────────────────────────────────────────
+  // Convive con el límite por activo: se queda el más restrictivo de los dos.
+  const capUsd = input.config.maxAmountPerOperationUsd;
+  if (capUsd) {
+    const amountUsd = toUsd(action.amount, action.asset, input.prices);
+
+    if (amountUsd && compareAmounts(amountUsd, capUsd) === 1) {
+      reasons.push({
+        ruleId: 'P-01',
+        unit: 'usd',
+        effect: 'REQUIRE_USER',
+        actionIndex,
+        message:
+          `"${action.label}" son unos ${formatUsd(amountUsd)} y tu límite por ` +
+          `operación es ${formatUsd(capUsd)}.`,
+      });
+    }
   }
 
   // ── P-03 · Destino registrado, no bloqueado y con historial ───────
@@ -224,6 +326,7 @@ function evaluateAction({
     // Si pasa, es un fallo grave (bug o inyección) y se corta en seco.
     reasons.push({
       ruleId: 'P-03',
+      unit: 'asset',
       effect: 'DENY',
       actionIndex,
       message: 'La propuesta apunta a un destino que no está registrado.',
@@ -234,6 +337,7 @@ function evaluateAction({
   if (destination.blocked) {
     reasons.push({
       ruleId: 'P-03',
+      unit: 'asset',
       effect: 'DENY',
       actionIndex,
       message: `"${destination.label}" está en tu lista de bloqueo.`,
@@ -247,9 +351,49 @@ function evaluateAction({
   if (isNewDestination && input.config.requireConfirmationForNewDestination) {
     reasons.push({
       ruleId: 'P-03',
+      unit: 'asset',
       effect: 'REQUIRE_USER',
       actionIndex,
       message: `Nunca has enviado nada a "${destination.label}". Los destinos nuevos necesitan tu confirmación.`,
     });
   }
+}
+
+/** Suma en dólares los totales por activo. `null` si falta algún precio. */
+function sumUsd(totals: Map<AssetCode, string>, input: PolicyEvaluationInput): string | null {
+  let sum = '0';
+
+  for (const [asset, total] of totals) {
+    const usd = toUsd(total, asset, input.prices);
+    if (usd === null) return null;
+    sum = addAmounts(sum, usd);
+  }
+
+  return sum;
+}
+
+/**
+ * Valor en dólares del saldo que quedaría tras ejecutar la propuesta.
+ *
+ * Mira TODOS los activos del usuario, no solo los que aparecen en la propuesta:
+ * la reserva mínima es sobre el patrimonio, no sobre lo que se está moviendo.
+ * Devuelve `null` si falta el precio de cualquiera de ellos, porque un total
+ * parcial se parecería demasiado a uno completo.
+ */
+function remainingBalanceUsd(
+  input: PolicyEvaluationInput,
+  totals: Map<AssetCode, string>,
+): string | null {
+  let sum = '0';
+
+  for (const balance of input.balances) {
+    const spent = totals.get(balance.asset) ?? '0';
+    const remaining = subtractAmounts(balance.available, spent);
+    const usd = toUsd(remaining, balance.asset, input.prices);
+
+    if (usd === null) return null;
+    sum = addAmounts(sum, usd);
+  }
+
+  return sum;
 }

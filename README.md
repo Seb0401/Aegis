@@ -124,8 +124,9 @@ aegis/
 ├── packages/
 │   ├── contracts/          Zod, tipos, puertos, fixtures            → compartido
 │   ├── stellar/            Cliente Stellar + fakes                  → BE1
-│   ├── policy-engine/      Reglas P-01…P-09                         → BE2
-│   ├── guardian/           Señales G-01…G-09, score, explicación    → BE2
+│   ├── policy-engine/      Reglas P-01…P-10                         → BE2
+│   ├── guardian/           Señales G-01…G-10, score, explicación    → BE2
+│   ├── prices/             Precio en dólares de los activos         → BE2
 │   └── agent/              Agente y explicador                      → AI
 ├── docs/{adr,api,runbooks}
 ├── images/                 Mockup y sprites de Jupi (fuente de diseño)      → FE
@@ -141,8 +142,9 @@ Cada paquete tiene su propio README con lo que hace y lo que le falta.
 | Área                     | Dueño      | Estado                                                                                                                                                                                      |
 | ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/contracts`     | Compartido | **v0 listo.** Entidades, endpoints, puertos y fixtures. Contract freeze al final de S2                                                                                                      |
-| `packages/policy-engine` | BE2        | **Funcional.** P-01…P-09 con 22 tests                                                                                                                                                       |
-| `packages/guardian`      | BE2        | **Funcional.** G-01…G-09, score y explicación de respaldo, con 22 tests                                                                                                                     |
+| `packages/policy-engine` | BE2        | **Funcional.** P-01…P-10, incluidos los topes en dólares. 30 tests                                                                                                                          |
+| `packages/guardian`      | BE2        | **Funcional.** G-01…G-10, score y explicación de respaldo. 29 tests                                                                                                                         |
+| `packages/prices`        | BE2        | **Funcional.** Precio en dólares con caché y respaldo fijo. 19 tests                                                                                                                        |
 | `apps/api`               | BE2        | **Funcional.** Auth, destinos, propuestas con máquina de estados, política, Guardian, auditoría encadenada y barrido de caducidad. 59 tests, casi todos de integración contra Postgres real |
 | `packages/stellar`       | BE1        | **M1 listo.** Horizon real para cuenta/saldo, delegación, pago XLM, firma y envío en testnet; API mantiene el fake hasta la integración M2                                                  |
 | `packages/agent`         | AI         | **Andamiaje.** Agente de reglas sin LLM, suficiente para la demo end-to-end                                                                                                                 |
@@ -179,8 +181,10 @@ Nadie está bloqueado: cada consumidor tiene un mock del que depende
    importa `@stellar/stellar-sdk` es `@aegis/stellar`.
 4. **El Guardian corre siempre**, también en modo autónomo. Riesgo `MEDIUM` o
    superior devuelve el control al usuario.
-5. **Todo queda auditado** en una bitácora append-only con hash encadenado.
-6. **Testnet.** Nada de mainnet en el MVP.
+5. **Si no se sabe el precio, decide la persona.** Los límites en dólares no se
+   aplican nunca con una conversión inventada: se escala al usuario (P-10).
+6. **Todo queda auditado** en una bitácora append-only con hash encadenado.
+7. **Testnet.** Nada de mainnet en el MVP.
 
 ### Límite importante y honesto
 

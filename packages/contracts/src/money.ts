@@ -44,6 +44,18 @@ export function subtractAmounts(a: string, b: string): string {
   return fromStroops(toStroops(a) - toStroops(b));
 }
 
+/**
+ * Multiplica dos montos decimales, por ejemplo una cantidad por su precio.
+ *
+ * Se divide entre SCALE porque multiplicar dos valores escalados por 10^7 da un
+ * resultado escalado por 10^14. La división trunca, así que el resultado nunca
+ * sobrestima un valor: al comprobar límites, redondear hacia abajo es el lado
+ * seguro del error.
+ */
+export function multiplyAmounts(a: string, b: string): string {
+  return fromStroops((toStroops(a) * toStroops(b)) / SCALE);
+}
+
 /** Multiplica un monto por un entero. */
 export function multiplyAmount(amount: string, factor: number): string {
   if (!Number.isInteger(factor)) {

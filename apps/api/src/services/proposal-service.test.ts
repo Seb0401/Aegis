@@ -12,6 +12,8 @@ function risk(level: RiskReport['level'], score: number): RiskReport {
     level,
     signals: [],
     balanceAfter: '100.0000000',
+    totalUsd: '10.0000000',
+    balanceAfterUsd: '100.0000000',
     evaluatedAt: '2026-09-19T12:00:00.000Z',
   };
 }

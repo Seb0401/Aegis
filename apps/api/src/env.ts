@@ -29,6 +29,18 @@ const EnvSchema = z
       .transform((v) => v === 'true'),
 
     STELLAR_NETWORK: z.enum(['testnet', 'mainnet']).default('testnet'),
+
+    // ── Precios (ADR 0011) ──────────────────────────────────────────
+    // `fixed` no sale a la red y es determinista: es lo que usan los tests y
+    // lo que permite una demo sin depender de que un tercero esté en pie.
+    PRICE_SOURCE: z.enum(['market', 'fixed']).default('market'),
+    PRICE_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(60),
+    PRICE_TIMEOUT_MS: z.coerce.number().int().positive().default(4000),
+    MARKET_PRICE_BASE_URL: z.string().optional(),
+    /** Tasa fija de XLM. Solo se usa si el mercado no responde. */
+    PRICE_XLM_USD: z.string().optional(),
+    /** USDC_TEST lo emitimos nosotros: su precio es una convención. */
+    PRICE_USDC_TEST_USD: z.string().default('1'),
     AI_GATEWAY_API_KEY: z
       .string()
       .optional()

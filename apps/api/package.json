@@ -21,6 +21,7 @@
     "@aegis/contracts": "workspace:*",
     "@aegis/guardian": "workspace:*",
     "@aegis/policy-engine": "workspace:*",
+    "@aegis/prices": "workspace:*",
     "@aegis/stellar": "workspace:*",
     "@fastify/cors": "^10.0.1",
     "@fastify/jwt": "^9.0.2",

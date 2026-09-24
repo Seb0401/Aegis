@@ -18,6 +18,7 @@ export const RiskSignalIdSchema = z.enum([
   'G-07', // Activo que nunca se usó
   'G-08', // Velocidad inusual de operaciones
   'G-09', // Destino en lista de bloqueo local
+  'G-10', // Sin precio: no se puede valorar la operación en dólares
 ]);
 export type RiskSignalId = z.infer<typeof RiskSignalIdSchema>;
 
@@ -46,6 +47,13 @@ export const RiskReportSchema = z.object({
   signals: z.array(RiskSignalSchema),
   /** Saldo estimado tras ejecutar la propuesta completa (incluye fees). */
   balanceAfter: AmountSchema,
+  /**
+   * Valor total de la propuesta en dólares. `null` si falta el precio de algún
+   * activo: un total parcial sería peor que no darlo, porque parecería completo.
+   */
+  totalUsd: AmountSchema.nullish(),
+  /** Saldo en dólares tras ejecutar, cuando se puede calcular. */
+  balanceAfterUsd: AmountSchema.nullish(),
   evaluatedAt: z.string().datetime(),
 });
 export type RiskReport = z.infer<typeof RiskReportSchema>;

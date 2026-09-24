@@ -965,8 +965,17 @@
                                         "P-06",
                                         "P-07",
                                         "P-08",
-                                        "P-09"
+                                        "P-09",
+                                        "P-10"
                                       ]
+                                    },
+                                    "unit": {
+                                      "type": "string",
+                                      "enum": [
+                                        "asset",
+                                        "usd"
+                                      ],
+                                      "default": "asset"
                                     },
                                     "effect": {
                                       "type": "string",
@@ -1038,7 +1047,8 @@
                                         "G-06",
                                         "G-07",
                                         "G-08",
-                                        "G-09"
+                                        "G-09",
+                                        "G-10"
                                       ]
                                     },
                                     "severity": {
@@ -1069,6 +1079,16 @@
                               "balanceAfter": {
                                 "type": "string",
                                 "pattern": "^\\d+(\\.\\d{1,7})?$"
+                              },
+                              "totalUsd": {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d{1,7})?$",
+                                "nullable": true
+                              },
+                              "balanceAfterUsd": {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d{1,7})?$",
+                                "nullable": true
                               },
                               "evaluatedAt": {
                                 "type": "string",
@@ -1107,7 +1127,8 @@
                                         "G-06",
                                         "G-07",
                                         "G-08",
-                                        "G-09"
+                                        "G-09",
+                                        "G-10"
                                       ]
                                     },
                                     "text": {
@@ -1133,6 +1154,59 @@
                               "summary",
                               "warnings",
                               "generatedBy"
+                            ],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
+                          "prices": {
+                            "type": "object",
+                            "properties": {
+                              "capturedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "quotes": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "asset": {
+                                      "type": "string",
+                                      "enum": [
+                                        "XLM",
+                                        "USDC_TEST"
+                                      ]
+                                    },
+                                    "usd": {
+                                      "type": "string",
+                                      "pattern": "^\\d+(\\.\\d{1,7})?$"
+                                    },
+                                    "source": {
+                                      "type": "string",
+                                      "enum": [
+                                        "market",
+                                        "fixed",
+                                        "cache"
+                                      ]
+                                    },
+                                    "asOf": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  },
+                                  "required": [
+                                    "asset",
+                                    "usd",
+                                    "source",
+                                    "asOf"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": [
+                              "capturedAt",
+                              "quotes"
                             ],
                             "additionalProperties": false,
                             "nullable": true
@@ -1320,8 +1394,17 @@
                                       "P-06",
                                       "P-07",
                                       "P-08",
-                                      "P-09"
+                                      "P-09",
+                                      "P-10"
                                     ]
+                                  },
+                                  "unit": {
+                                    "type": "string",
+                                    "enum": [
+                                      "asset",
+                                      "usd"
+                                    ],
+                                    "default": "asset"
                                   },
                                   "effect": {
                                     "type": "string",
@@ -1393,7 +1476,8 @@
                                       "G-06",
                                       "G-07",
                                       "G-08",
-                                      "G-09"
+                                      "G-09",
+                                      "G-10"
                                     ]
                                   },
                                   "severity": {
@@ -1424,6 +1508,16 @@
                             "balanceAfter": {
                               "type": "string",
                               "pattern": "^\\d+(\\.\\d{1,7})?$"
+                            },
+                            "totalUsd": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$",
+                              "nullable": true
+                            },
+                            "balanceAfterUsd": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$",
+                              "nullable": true
                             },
                             "evaluatedAt": {
                               "type": "string",
@@ -1462,7 +1556,8 @@
                                       "G-06",
                                       "G-07",
                                       "G-08",
-                                      "G-09"
+                                      "G-09",
+                                      "G-10"
                                     ]
                                   },
                                   "text": {
@@ -1488,6 +1583,59 @@
                             "summary",
                             "warnings",
                             "generatedBy"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "prices": {
+                          "type": "object",
+                          "properties": {
+                            "capturedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "quotes": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "asset": {
+                                    "type": "string",
+                                    "enum": [
+                                      "XLM",
+                                      "USDC_TEST"
+                                    ]
+                                  },
+                                  "usd": {
+                                    "type": "string",
+                                    "pattern": "^\\d+(\\.\\d{1,7})?$"
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": [
+                                      "market",
+                                      "fixed",
+                                      "cache"
+                                    ]
+                                  },
+                                  "asOf": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  }
+                                },
+                                "required": [
+                                  "asset",
+                                  "usd",
+                                  "source",
+                                  "asOf"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "capturedAt",
+                            "quotes"
                           ],
                           "additionalProperties": false,
                           "nullable": true
@@ -1695,8 +1843,17 @@
                                       "P-06",
                                       "P-07",
                                       "P-08",
-                                      "P-09"
+                                      "P-09",
+                                      "P-10"
                                     ]
+                                  },
+                                  "unit": {
+                                    "type": "string",
+                                    "enum": [
+                                      "asset",
+                                      "usd"
+                                    ],
+                                    "default": "asset"
                                   },
                                   "effect": {
                                     "type": "string",
@@ -1768,7 +1925,8 @@
                                       "G-06",
                                       "G-07",
                                       "G-08",
-                                      "G-09"
+                                      "G-09",
+                                      "G-10"
                                     ]
                                   },
                                   "severity": {
@@ -1799,6 +1957,16 @@
                             "balanceAfter": {
                               "type": "string",
                               "pattern": "^\\d+(\\.\\d{1,7})?$"
+                            },
+                            "totalUsd": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$",
+                              "nullable": true
+                            },
+                            "balanceAfterUsd": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$",
+                              "nullable": true
                             },
                             "evaluatedAt": {
                               "type": "string",
@@ -1837,7 +2005,8 @@
                                       "G-06",
                                       "G-07",
                                       "G-08",
-                                      "G-09"
+                                      "G-09",
+                                      "G-10"
                                     ]
                                   },
                                   "text": {
@@ -1863,6 +2032,59 @@
                             "summary",
                             "warnings",
                             "generatedBy"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "prices": {
+                          "type": "object",
+                          "properties": {
+                            "capturedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "quotes": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "asset": {
+                                    "type": "string",
+                                    "enum": [
+                                      "XLM",
+                                      "USDC_TEST"
+                                    ]
+                                  },
+                                  "usd": {
+                                    "type": "string",
+                                    "pattern": "^\\d+(\\.\\d{1,7})?$"
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": [
+                                      "market",
+                                      "fixed",
+                                      "cache"
+                                    ]
+                                  },
+                                  "asOf": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  }
+                                },
+                                "required": [
+                                  "asset",
+                                  "usd",
+                                  "source",
+                                  "asOf"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "capturedAt",
+                            "quotes"
                           ],
                           "additionalProperties": false,
                           "nullable": true
@@ -2067,8 +2289,17 @@
                                       "P-06",
                                       "P-07",
                                       "P-08",
-                                      "P-09"
+                                      "P-09",
+                                      "P-10"
                                     ]
+                                  },
+                                  "unit": {
+                                    "type": "string",
+                                    "enum": [
+                                      "asset",
+                                      "usd"
+                                    ],
+                                    "default": "asset"
                                   },
                                   "effect": {
                                     "type": "string",
@@ -2140,7 +2371,8 @@
                                       "G-06",
                                       "G-07",
                                       "G-08",
-                                      "G-09"
+                                      "G-09",
+                                      "G-10"
                                     ]
                                   },
                                   "severity": {
@@ -2171,6 +2403,16 @@
                             "balanceAfter": {
                               "type": "string",
                               "pattern": "^\\d+(\\.\\d{1,7})?$"
+                            },
+                            "totalUsd": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$",
+                              "nullable": true
+                            },
+                            "balanceAfterUsd": {
+                              "type": "string",
+                              "pattern": "^\\d+(\\.\\d{1,7})?$",
+                              "nullable": true
                             },
                             "evaluatedAt": {
                               "type": "string",
@@ -2209,7 +2451,8 @@
                                       "G-06",
                                       "G-07",
                                       "G-08",
-                                      "G-09"
+                                      "G-09",
+                                      "G-10"
                                     ]
                                   },
                                   "text": {
@@ -2235,6 +2478,59 @@
                             "summary",
                             "warnings",
                             "generatedBy"
+                          ],
+                          "additionalProperties": false,
+                          "nullable": true
+                        },
+                        "prices": {
+                          "type": "object",
+                          "properties": {
+                            "capturedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "quotes": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "asset": {
+                                    "type": "string",
+                                    "enum": [
+                                      "XLM",
+                                      "USDC_TEST"
+                                    ]
+                                  },
+                                  "usd": {
+                                    "type": "string",
+                                    "pattern": "^\\d+(\\.\\d{1,7})?$"
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": [
+                                      "market",
+                                      "fixed",
+                                      "cache"
+                                    ]
+                                  },
+                                  "asOf": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  }
+                                },
+                                "required": [
+                                  "asset",
+                                  "usd",
+                                  "source",
+                                  "asOf"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "capturedAt",
+                            "quotes"
                           ],
                           "additionalProperties": false,
                           "nullable": true
@@ -2362,6 +2658,24 @@
                           "exclusiveMinimum": true,
                           "minimum": 0,
                           "default": 10
+                        },
+                        "maxAmountPerOperationUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": "5"
+                        },
+                        "maxDailyAmountUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": "20"
+                        },
+                        "minimumReserveUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": "10"
                         }
                       },
                       "additionalProperties": false
@@ -2404,6 +2718,16 @@
                         "remainingDailyAmount": {
                           "type": "string",
                           "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "maxAmountPerOperationUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true
+                        },
+                        "remainingDailyAmountUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true
                         }
                       },
                       "required": [
@@ -2413,7 +2737,9 @@
                         "maxDailyAmount",
                         "minimumReserve",
                         "allowedAssets",
-                        "remainingDailyAmount"
+                        "remainingDailyAmount",
+                        "maxAmountPerOperationUsd",
+                        "remainingDailyAmountUsd"
                       ],
                       "additionalProperties": false
                     }
@@ -2498,6 +2824,24 @@
                     "exclusiveMinimum": true,
                     "minimum": 0,
                     "default": 10
+                  },
+                  "maxAmountPerOperationUsd": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,7})?$",
+                    "nullable": true,
+                    "default": "5"
+                  },
+                  "maxDailyAmountUsd": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,7})?$",
+                    "nullable": true,
+                    "default": "20"
+                  },
+                  "minimumReserveUsd": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,7})?$",
+                    "nullable": true,
+                    "default": "10"
                   }
                 },
                 "additionalProperties": false
@@ -2573,6 +2917,24 @@
                           "exclusiveMinimum": true,
                           "minimum": 0,
                           "default": 10
+                        },
+                        "maxAmountPerOperationUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": "5"
+                        },
+                        "maxDailyAmountUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": "20"
+                        },
+                        "minimumReserveUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": "10"
                         }
                       },
                       "additionalProperties": false
@@ -2615,6 +2977,16 @@
                         "remainingDailyAmount": {
                           "type": "string",
                           "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "maxAmountPerOperationUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true
+                        },
+                        "remainingDailyAmountUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true
                         }
                       },
                       "required": [
@@ -2624,7 +2996,9 @@
                         "maxDailyAmount",
                         "minimumReserve",
                         "allowedAssets",
-                        "remainingDailyAmount"
+                        "remainingDailyAmount",
+                        "maxAmountPerOperationUsd",
+                        "remainingDailyAmountUsd"
                       ],
                       "additionalProperties": false
                     }
@@ -2734,6 +3108,24 @@
                           "exclusiveMinimum": true,
                           "minimum": 0,
                           "default": 10
+                        },
+                        "maxAmountPerOperationUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": "5"
+                        },
+                        "maxDailyAmountUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": "20"
+                        },
+                        "minimumReserveUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true,
+                          "default": "10"
                         }
                       },
                       "additionalProperties": false
@@ -2776,6 +3168,16 @@
                         "remainingDailyAmount": {
                           "type": "string",
                           "pattern": "^\\d+(\\.\\d{1,7})?$"
+                        },
+                        "maxAmountPerOperationUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true
+                        },
+                        "remainingDailyAmountUsd": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "nullable": true
                         }
                       },
                       "required": [
@@ -2785,7 +3187,9 @@
                         "maxDailyAmount",
                         "minimumReserve",
                         "allowedAssets",
-                        "remainingDailyAmount"
+                        "remainingDailyAmount",
+                        "maxAmountPerOperationUsd",
+                        "remainingDailyAmountUsd"
                       ],
                       "additionalProperties": false
                     }
@@ -3091,8 +3495,17 @@
                                         "P-06",
                                         "P-07",
                                         "P-08",
-                                        "P-09"
+                                        "P-09",
+                                        "P-10"
                                       ]
+                                    },
+                                    "unit": {
+                                      "type": "string",
+                                      "enum": [
+                                        "asset",
+                                        "usd"
+                                      ],
+                                      "default": "asset"
                                     },
                                     "effect": {
                                       "type": "string",
@@ -3164,7 +3577,8 @@
                                         "G-06",
                                         "G-07",
                                         "G-08",
-                                        "G-09"
+                                        "G-09",
+                                        "G-10"
                                       ]
                                     },
                                     "severity": {
@@ -3195,6 +3609,16 @@
                               "balanceAfter": {
                                 "type": "string",
                                 "pattern": "^\\d+(\\.\\d{1,7})?$"
+                              },
+                              "totalUsd": {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d{1,7})?$",
+                                "nullable": true
+                              },
+                              "balanceAfterUsd": {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d{1,7})?$",
+                                "nullable": true
                               },
                               "evaluatedAt": {
                                 "type": "string",
@@ -3233,7 +3657,8 @@
                                         "G-06",
                                         "G-07",
                                         "G-08",
-                                        "G-09"
+                                        "G-09",
+                                        "G-10"
                                       ]
                                     },
                                     "text": {
@@ -3259,6 +3684,59 @@
                               "summary",
                               "warnings",
                               "generatedBy"
+                            ],
+                            "additionalProperties": false,
+                            "nullable": true
+                          },
+                          "prices": {
+                            "type": "object",
+                            "properties": {
+                              "capturedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "quotes": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "asset": {
+                                      "type": "string",
+                                      "enum": [
+                                        "XLM",
+                                        "USDC_TEST"
+                                      ]
+                                    },
+                                    "usd": {
+                                      "type": "string",
+                                      "pattern": "^\\d+(\\.\\d{1,7})?$"
+                                    },
+                                    "source": {
+                                      "type": "string",
+                                      "enum": [
+                                        "market",
+                                        "fixed",
+                                        "cache"
+                                      ]
+                                    },
+                                    "asOf": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  },
+                                  "required": [
+                                    "asset",
+                                    "usd",
+                                    "source",
+                                    "asOf"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": [
+                              "capturedAt",
+                              "quotes"
                             ],
                             "additionalProperties": false,
                             "nullable": true
@@ -3306,6 +3784,85 @@
                     "conversationId",
                     "reply",
                     "proposals"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prices": {
+      "get": {
+        "summary": "Precio en dólares de los activos soportados",
+        "tags": [
+          "prices"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "assets",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "capturedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "quotes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "asset": {
+                            "type": "string",
+                            "enum": [
+                              "XLM",
+                              "USDC_TEST"
+                            ]
+                          },
+                          "usd": {
+                            "type": "string",
+                            "pattern": "^\\d+(\\.\\d{1,7})?$"
+                          },
+                          "source": {
+                            "type": "string",
+                            "enum": [
+                              "market",
+                              "fixed",
+                              "cache"
+                            ]
+                          },
+                          "asOf": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "asset",
+                          "usd",
+                          "source",
+                          "asOf"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "capturedAt",
+                    "quotes"
                   ],
                   "additionalProperties": false
                 }

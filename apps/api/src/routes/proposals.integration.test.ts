@@ -214,6 +214,11 @@ describe('degradación por riesgo y confirmación reforzada', () => {
       mode: 'AUTONOMOUS',
       maxAmountPerOperation: '1000',
       maxDailyAmount: '100000',
+      // Los topes en dólares también se apartan: lo que se prueba aquí es la
+      // degradación por riesgo, no los límites.
+      maxAmountPerOperationUsd: '100000',
+      maxDailyAmountUsd: '100000',
+      minimumReserveUsd: null,
     });
 
     // 200 USDC_TEST sobre un saldo de 250: G-02 HIGH y G-03 HIGH → riesgo HIGH.
@@ -229,6 +234,11 @@ describe('degradación por riesgo y confirmación reforzada', () => {
       mode: 'AUTONOMOUS',
       maxAmountPerOperation: '1000',
       maxDailyAmount: '100000',
+      // Los topes en dólares también se apartan: lo que se prueba aquí es la
+      // degradación por riesgo, no los límites.
+      maxAmountPerOperationUsd: '100000',
+      maxDailyAmountUsd: '100000',
+      minimumReserveUsd: null,
     });
 
     const proposal = await propose([{ destinationId: destinations.viaje, amount: '200' }]);
@@ -338,6 +348,10 @@ describe('límite diario acumulado (P-02)', () => {
       maxAmountPerOperation: '100',
       maxDailyAmount: '10',
       minimumReserve: '0',
+      // El tope en dólares se aparta para que el test mida solo el del activo.
+      maxAmountPerOperationUsd: '100',
+      maxDailyAmountUsd: '100',
+      minimumReserveUsd: null,
     });
   });
 

@@ -1,10 +1,12 @@
 import {
   addAmounts,
+  assetsWithoutPrice,
   compareAmounts,
   percentageOf,
   ratioOf,
   subtractAmounts,
   isLessThan,
+  toUsd,
   RISK_THRESHOLDS,
   type AssetCode,
   type Destination,
@@ -87,6 +89,7 @@ export function assessRisk(input: GuardianInput): RiskReport {
             asset: action.asset,
             medianAmount: median,
             ratio: Math.round(ratio * 100) / 100,
+            ...usdField('amountUsd', toUsd(action.amount, action.asset, input.prices)),
           },
         });
       }
@@ -164,6 +167,9 @@ export function assessRisk(input: GuardianInput): RiskReport {
         percentageOfBalance: percentage,
         amount: total,
         availableBalance: balance.available,
+        // Se incluye solo si hay precio: un `null` en los datos sería una cifra
+        // que el explicador podría acabar mencionando.
+        ...usdField('amountUsd', toUsd(total, asset, input.prices)),
       },
     });
   }
@@ -198,6 +204,30 @@ export function assessRisk(input: GuardianInput): RiskReport {
     });
   }
 
+  // ── G-10 · No se ha podido valorar la operación en dólares ────────
+  //
+  // Solo se avisa si el usuario tiene topes en dólares configurados. Sin ellos,
+  // desconocer el precio no impide comprobar nada, y una advertencia que no
+  // cambia ninguna decisión es ruido que enseña a ignorar las advertencias.
+  const usesUsdCaps = Boolean(
+    input.config.maxAmountPerOperationUsd ||
+    input.config.maxDailyAmountUsd ||
+    input.config.minimumReserveUsd,
+  );
+
+  const unpriced = usesUsdCaps ? assetsWithoutPrice([...totalByAsset.keys()], input.prices) : [];
+
+  if (unpriced.length > 0) {
+    signals.push({
+      id: 'G-10',
+      severity: 'WARN',
+      data: { assetsWithoutPrice: unpriced },
+    });
+  }
+
+  const totalUsd = sumUsd(totalByAsset, input);
+  const balanceAfterUsd = primary ? toUsd(balanceAfter, primary, input.prices) : null;
+
   const score = computeScore(signals);
 
   return {
@@ -205,8 +235,34 @@ export function assessRisk(input: GuardianInput): RiskReport {
     level: levelFromScore(score),
     signals,
     balanceAfter,
+    totalUsd,
+    balanceAfterUsd,
     evaluatedAt: now.toISOString(),
   };
+}
+
+/**
+ * Incluye un dato en dólares solo si existe.
+ *
+ * Las claves de `data` son la única fuente de cifras del explicador. Meter un
+ * `amountUsd: null` sería tentar a que el LLM lo mencione como si fuera un
+ * valor; omitir la clave no deja esa puerta abierta.
+ */
+function usdField(key: string, value: string | null): Record<string, string> {
+  return value === null ? {} : { [key]: value };
+}
+
+/** Suma en dólares los totales por activo. `null` si falta algún precio. */
+function sumUsd(totals: Map<AssetCode, string>, input: GuardianInput): string | null {
+  let sum = '0';
+
+  for (const [asset, total] of totals) {
+    const usd = toUsd(total, asset, input.prices);
+    if (usd === null) return null;
+    sum = addAmounts(sum, usd);
+  }
+
+  return sum;
 }
 
 /** Suma ponderada de las señales, acotada a 100. */

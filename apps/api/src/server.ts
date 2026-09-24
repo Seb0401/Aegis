@@ -22,6 +22,7 @@ import { agentRoutes } from './routes/agent.routes.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { destinationRoutes } from './routes/destinations.routes.js';
 import { policyRoutes } from './routes/policy.routes.js';
+import { priceRoutes } from './routes/prices.routes.js';
 import { proposalRoutes } from './routes/proposals.routes.js';
 
 /** Se publica en `/health` y en el OpenAPI para poder correlacionar despliegues. */
@@ -188,6 +189,7 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
   await app.register(proposalRoutes);
   await app.register(policyRoutes);
   await app.register(agentRoutes);
+  await app.register(priceRoutes);
 
   return app;
 }

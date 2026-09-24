@@ -1,6 +1,7 @@
 import {
   addAmounts,
   formatAmount,
+  formatUsd,
   type AssetCode,
   type Explanation,
   type ResolvedAction,
@@ -53,9 +54,17 @@ function buildSummary(report: RiskReport, actions: ResolvedAction[]): string {
       ? uniqueDestinations.join(', ')
       : `${uniqueDestinations.slice(0, 3).join(', ')} y ${uniqueDestinations.length - 3} más`;
 
+  // El valor en dólares solo aparece si el informe lo calculó. Es la cifra que
+  // la mayoría de la gente entiende de un vistazo, pero inventarla sería peor
+  // que omitirla.
+  const usdText = report.totalUsd ? ` (unos ${formatUsd(report.totalUsd)})` : '';
+  const balanceUsdText = report.balanceAfterUsd
+    ? ` (unos ${formatUsd(report.balanceAfterUsd)})`
+    : '';
+
   return (
-    `Vas a enviar ${totalText} ${paymentsText} a ${destinationsText}. ` +
-    `Después te quedarían ${formatAmount(report.balanceAfter)}.`
+    `Vas a enviar ${totalText}${usdText} ${paymentsText} a ${destinationsText}. ` +
+    `Después te quedarían ${formatAmount(report.balanceAfter)}${balanceUsdText}.`
   );
 }
 
@@ -100,6 +109,12 @@ function describeSignal(signal: RiskSignal): string {
 
     case 'G-09':
       return `${label} está en tu lista de bloqueo.`;
+
+    case 'G-10':
+      return (
+        'No he podido saber cuánto vale esto en dólares, así que no he podido ' +
+        'comprobar tus límites en esa moneda.'
+      );
 
     default: {
       // Si aparece una señal nueva sin texto, se avisa en vez de callar.

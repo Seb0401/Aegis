@@ -10,6 +10,7 @@ import {
   safeText,
 } from './common.js';
 import { PolicyDecisionSchema } from './policy.js';
+import { PriceSnapshotSchema } from './prices.js';
 import { ExplanationSchema, RiskReportSchema } from './risk.js';
 
 /** Ciclo de vida de una propuesta (§4.3). */
@@ -94,6 +95,13 @@ export const ProposalSchema = z.object({
   policy: PolicyDecisionSchema.nullish(),
   risk: RiskReportSchema.nullish(),
   explanation: ExplanationSchema.nullish(),
+  /**
+   * Foto de precios usada para evaluar esta propuesta (ADR 0011).
+   *
+   * Se guarda con la propuesta y no se recalcula: para explicar dentro de un
+   * mes por qué algo se aprobó hace falta el precio de entonces, no el de hoy.
+   */
+  prices: PriceSnapshotSchema.nullish(),
   /**
    * XDR sin firmar, presente cuando la propuesta espera la firma del usuario.
    * El frontend se lo pasa a Freighter y devuelve el resultado en /approve.

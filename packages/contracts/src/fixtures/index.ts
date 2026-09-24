@@ -1,5 +1,6 @@
 import type { Balance, TxSummary } from '../common.js';
 import type { Destination } from '../destination.js';
+import type { PriceSnapshot } from '../prices.js';
 import type { RiskReport } from '../risk.js';
 
 /**
@@ -139,6 +140,8 @@ export const FIXTURE_RISK_LOW: RiskReport = {
     },
   ],
   balanceAfter: '200.0000000',
+  totalUsd: '50.0000000',
+  balanceAfterUsd: '200.0000000',
   evaluatedAt: '2026-09-19T10:00:00.000Z',
 };
 
@@ -165,6 +168,8 @@ export const FIXTURE_RISK_HIGH: RiskReport = {
     },
   ],
   balanceAfter: '3.0000000',
+  totalUsd: '247.0000000',
+  balanceAfterUsd: '3.0000000',
   evaluatedAt: '2026-09-19T10:05:00.000Z',
 };
 
@@ -193,6 +198,8 @@ export const FIXTURE_RISK_CRITICAL: RiskReport = {
     },
   ],
   balanceAfter: '0.0000000',
+  totalUsd: '250.0000000',
+  balanceAfterUsd: '0.0000000',
   evaluatedAt: '2026-09-19T10:10:00.000Z',
 };
 
@@ -201,3 +208,29 @@ export const FIXTURE_RISK_REPORTS = {
   high: FIXTURE_RISK_HIGH,
   critical: FIXTURE_RISK_CRITICAL,
 } as const;
+
+/** Caso en el que el oráculo no responde: no se puede valorar en dólares. */
+export const FIXTURE_RISK_NO_PRICE: RiskReport = {
+  score: 15,
+  level: 'LOW',
+  signals: [
+    {
+      id: 'G-10',
+      severity: 'WARN',
+      data: { assetsWithoutPrice: ['XLM'] },
+    },
+  ],
+  balanceAfter: '80.0000000',
+  totalUsd: null,
+  balanceAfterUsd: null,
+  evaluatedAt: '2026-09-19T10:15:00.000Z',
+};
+
+/** Foto de precios de ejemplo para el frontend y los tests. */
+export const FIXTURE_PRICE_SNAPSHOT: PriceSnapshot = {
+  capturedAt: '2026-09-19T10:00:00.000Z',
+  quotes: [
+    { asset: 'XLM', usd: '0.1200000', source: 'market', asOf: '2026-09-19T09:59:00.000Z' },
+    { asset: 'USDC_TEST', usd: '1.0000000', source: 'fixed', asOf: '2026-09-19T10:00:00.000Z' },
+  ],
+};

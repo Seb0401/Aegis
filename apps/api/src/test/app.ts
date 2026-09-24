@@ -36,6 +36,10 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
     USE_FAKE_STELLAR: 'true',
     // Ventana corta para que los tests de caducidad no tengan que esperar.
     AUTH_CHALLENGE_TTL_SECONDS: '300',
+    // Precios fijos: los tests no salen a la red ni dependen del mercado.
+    PRICE_SOURCE: 'fixed',
+    PRICE_XLM_USD: '0.12',
+    PRICE_USDC_TEST_USD: '1',
   });
 
   const app = await buildServer({

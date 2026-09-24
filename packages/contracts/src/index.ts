@@ -6,4 +6,5 @@ export * from './proposal.js';
 export * from './ports.js';
 export * from './api.js';
 export * from './money.js';
+export * from './prices.js';
 export * from './fixtures/index.js';

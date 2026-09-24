@@ -67,6 +67,7 @@ export const SIGNAL_NAME: Record<RiskSignalId, string> = {
   'G-07': 'Activo nunca usado',
   'G-08': 'Velocidad inusual',
   'G-09': 'Destino bloqueado',
+  'G-10': 'Sin precio en dólares',
 };
 
 /**

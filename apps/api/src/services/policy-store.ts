@@ -1,8 +1,10 @@
 import {
   DEFAULT_POLICY_CONFIG,
   PolicyConfigSchema,
+  PriceSnapshotSchema,
   ProposedActionSchema,
   addAmounts,
+  toUsd,
   type AssetCode,
   type PolicyConfig,
   type UpdatePolicyInput,
@@ -81,6 +83,37 @@ export class PolicyStore {
     return totals;
   }
 
+  /**
+   * Valor en dólares comprometido en las últimas 24 h (P-02 en USD).
+   *
+   * Cada propuesta se valora con **su propia** foto de precios, no con la de
+   * hoy. Si XLM se dobla de precio por la tarde, lo que gastaste por la mañana
+   * no pasa a contar el doble contra tu límite: el acumulado refleja lo que
+   * valía cada operación cuando se autorizó.
+   *
+   * Las propuestas anteriores a que existieran los precios no tienen foto y se
+   * omiten. Contarlas a la paridad de hoy sería inventar un dato.
+   */
+  async getDailySpentUsd(userId: string, now = new Date()): Promise<string> {
+    const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const rows = await this.committedSince(userId, since);
+
+    let total = '0';
+
+    for (const row of rows) {
+      const actions = ActionsSchema.safeParse(row.actions);
+      const snapshot = PriceSnapshotSchema.safeParse(row.prices);
+      if (!actions.success || !snapshot.success) continue;
+
+      for (const action of actions.data) {
+        const usd = toUsd(action.amount, action.asset, snapshot.data);
+        if (usd !== null) total = addAmounts(total, usd);
+      }
+    }
+
+    return total;
+  }
+
   /** Operaciones comprometidas en la última hora (P-05). */
   async getOperationsLastHour(userId: string, now = new Date()): Promise<number> {
     const since = new Date(now.getTime() - 60 * 60 * 1000);
@@ -94,7 +127,7 @@ export class PolicyStore {
 
   private async committedSince(userId: string, since: Date) {
     return this.db
-      .select({ actions: proposals.actions })
+      .select({ actions: proposals.actions, prices: proposals.prices })
       .from(proposals)
       .where(
         and(

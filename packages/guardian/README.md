@@ -43,6 +43,17 @@ derecho a mencionarlo. `buildTemplateExplanation` genera el texto solo con esos
 valores y es también el camino de respaldo cuando el modelo falla o su salida no
 valida (`AI-Q5`).
 
+## Valores en dólares
+
+Cuando hay foto de precios, el informe trae `totalUsd` y `balanceAfterUsd`, y las
+señales incluyen el valor en dólares entre sus datos. Si falta el precio, esos
+campos son `null` y la clave ni siquiera aparece en `data`: un `null` ahí sería
+tentar al explicador a mencionarlo como si fuera una cifra.
+
+G-10 solo salta si el usuario tiene topes en dólares configurados. Sin ellos,
+desconocer el precio no impide comprobar nada, y una advertencia que no cambia
+ninguna decisión solo enseña a ignorar las advertencias.
+
 ## Tests
 
-`pnpm test` — 22 casos, uno por señal más score, niveles y explicación.
+`pnpm test` — 29 casos, uno por señal más score, niveles y explicación.

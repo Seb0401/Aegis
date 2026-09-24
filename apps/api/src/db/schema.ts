@@ -95,6 +95,8 @@ export const proposals = pgTable(
     policy: jsonb('policy'),
     risk: jsonb('risk'),
     explanation: jsonb('explanation'),
+    /** Foto de precios con la que se evaluó, para poder auditarla después. */
+    prices: jsonb('prices'),
     /** XDR preparado para que lo firme el usuario con su wallet. */
     unsignedXdr: text('unsigned_xdr'),
     txHash: text('tx_hash'),

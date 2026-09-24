@@ -1,4 +1,5 @@
-import type { StellarExecutor, StellarReader } from '@aegis/contracts';
+import type { PriceProvider, StellarExecutor, StellarReader } from '@aegis/contracts';
+import { createPriceProvider } from '@aegis/prices';
 import {
   createGatewayAgent,
   createGatewayExplainer,
@@ -34,6 +35,7 @@ export interface Services {
   executor: StellarExecutor;
   agent: Agent;
   sweeper: ProposalSweeper;
+  prices: PriceProvider;
 }
 
 export interface BuildServicesOptions {
@@ -41,7 +43,7 @@ export interface BuildServicesOptions {
   env: Env;
   metricsLogger?: (event: string, metrics: object) => void;
   /** Sustituciones para los tests. */
-  overrides?: Partial<Pick<Services, 'reader' | 'executor' | 'agent'>>;
+  overrides?: Partial<Pick<Services, 'reader' | 'executor' | 'agent' | 'prices'>>;
 }
 
 export function buildServices({
@@ -66,6 +68,8 @@ export function buildServices({
         onMetrics: (metrics) => metricsLogger?.('aegis_explainer_metrics', metrics),
       })
     : undefined;
+  const prices = overrides?.prices ?? defaultPriceProvider(env);
+
   const proposals = new ProposalService({
     db,
     audit,
@@ -73,6 +77,7 @@ export function buildServices({
     destinations,
     reader,
     executor,
+    prices,
     ...(aiExplainer ? { explain: aiExplainer.explain } : {}),
   });
   const sweeper = new ProposalSweeper({ db, audit });
@@ -87,6 +92,7 @@ export function buildServices({
     reader,
     executor,
     sweeper,
+    prices,
     agent:
       overrides?.agent ??
       (env.AI_GATEWAY_API_KEY
@@ -116,4 +122,24 @@ function defaultReader(env: Env): StellarReader {
 
 function defaultExecutor(env: Env): StellarExecutor {
   return env.USE_FAKE_STELLAR ? new FakeStellarExecutor() : new NotImplementedStellarExecutor();
+}
+
+/**
+ * Proveedor de precios de la aplicación.
+ *
+ * En `market` consulta la API pública con caché y cae a las tasas fijas para lo
+ * que no cotiza. En `fixed` no sale a la red, que es lo que quieren los tests y
+ * una demo que no dependa de que un tercero esté en pie.
+ */
+function defaultPriceProvider(env: Env): PriceProvider {
+  return createPriceProvider({
+    source: env.PRICE_SOURCE,
+    fixedPrices: {
+      USDC_TEST: env.PRICE_USDC_TEST_USD,
+      ...(env.PRICE_XLM_USD ? { XLM: env.PRICE_XLM_USD } : {}),
+    },
+    cacheTtlMs: env.PRICE_CACHE_TTL_SECONDS * 1000,
+    timeoutMs: env.PRICE_TIMEOUT_MS,
+    ...(env.MARKET_PRICE_BASE_URL ? { marketBaseUrl: env.MARKET_PRICE_BASE_URL } : {}),
+  });
 }

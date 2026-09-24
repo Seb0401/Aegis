@@ -1,6 +1,7 @@
 import {
   DEFAULT_POLICY_CONFIG,
   FIXTURE_DESTINATIONS,
+  FIXTURE_PRICE_SNAPSHOT,
   type Balance,
   type Destination,
   type PolicyConfig,
@@ -56,6 +57,9 @@ function scenario(overrides: Partial<PolicyEvaluationInput> = {}): PolicyEvaluat
     destinations,
     balances: overrides.balances ?? RICH_BALANCES,
     dailySpentByAsset: overrides.dailySpentByAsset ?? {},
+    // Con precios, que es el caso normal. La ausencia se prueba aparte, en P-10.
+    prices: overrides.prices ?? FIXTURE_PRICE_SNAPSHOT,
+    dailySpentUsd: overrides.dailySpentUsd ?? '0',
     operationsLastHour: overrides.operationsLastHour ?? 0,
     knownCounterparties: overrides.knownCounterparties ?? destinations.map((d) => d.address),
     now: overrides.now ?? NOW,
@@ -349,8 +353,157 @@ describe('caso de referencia del PLAN §1.4', () => {
 
     expect(result.decision).toBe('REQUIRE_USER');
     // Ninguna acción se puede ejecutar sola: las cuatro superan el tope de 5.
-    expect(result.reasons.filter((r) => r.ruleId === 'P-01')).toHaveLength(4);
+    expect(result.reasons.filter((r) => r.ruleId === 'P-01' && r.unit === 'asset')).toHaveLength(4);
+    // Y como USDC_TEST vale un dólar, también superan el tope de $5.
+    expect(result.reasons.filter((r) => r.ruleId === 'P-01' && r.unit === 'usd')).toHaveLength(4);
     // Y el conjunto rompe el límite diario de 20.
     expect(result.reasons.some((r) => r.ruleId === 'P-02')).toBe(true);
+  });
+});
+
+describe('topes en dólares (ADR 0011)', () => {
+  it('escala al usuario aunque el monto quepa en el límite del activo', () => {
+    // 100 XLM caben de sobra en un límite de 1000 XLM, pero a 0.12 el XLM son
+    // 12 dólares y el tope es de 5. Este es exactamente el agujero que el
+    // ADR 0003 dejaba abierto.
+    const result = evaluatePolicy(
+      scenario({
+        actions: [action({ asset: 'XLM', amount: '100' })],
+        config: {
+          ...DEFAULT_POLICY_CONFIG,
+          mode: 'AUTONOMOUS',
+          maxAmountPerOperation: '1000',
+          maxDailyAmount: '10000',
+          // La reserva por activo se desactiva para aislar el tope en dólares.
+          minimumReserve: '0',
+          maxAmountPerOperationUsd: '5',
+          maxDailyAmountUsd: '1000',
+          minimumReserveUsd: null,
+        },
+      }),
+    );
+
+    expect(result.decision).toBe('REQUIRE_USER');
+    const razon = result.reasons.find((r) => r.ruleId === 'P-01' && r.unit === 'usd');
+    expect(razon?.message).toContain('$12.00');
+  });
+
+  it('el tope en dólares nunca afloja el del activo', () => {
+    // 10 USDC son 10 dólares: cabe en el tope de $50 pero no en el de 5 USDC.
+    const result = evaluatePolicy(
+      scenario({
+        actions: [action({ amount: '10' })],
+        config: {
+          ...DEFAULT_POLICY_CONFIG,
+          mode: 'AUTONOMOUS',
+          maxAmountPerOperation: '5',
+          maxAmountPerOperationUsd: '50',
+          maxDailyAmountUsd: '1000',
+        },
+      }),
+    );
+
+    expect(result.decision).toBe('REQUIRE_USER');
+    expect(result.reasons.some((r) => r.ruleId === 'P-01' && r.unit === 'asset')).toBe(true);
+    expect(result.reasons.some((r) => r.ruleId === 'P-01' && r.unit === 'usd')).toBe(false);
+  });
+
+  it('el límite diario en dólares suma activos distintos', () => {
+    // 50 XLM (6 dólares) + 10 USDC (10 dólares) = 16, más 10 ya gastados = 26.
+    const result = evaluatePolicy(
+      scenario({
+        actions: [
+          action({ asset: 'XLM', amount: '50', destinationId: VIAJE.id }),
+          action({ amount: '10', destinationId: LAPTOP.id }),
+        ],
+        dailySpentUsd: '10',
+        config: {
+          ...DEFAULT_POLICY_CONFIG,
+          mode: 'AUTONOMOUS',
+          maxAmountPerOperation: '1000',
+          maxDailyAmount: '10000',
+          maxAmountPerOperationUsd: '100',
+          maxDailyAmountUsd: '20',
+          minimumReserveUsd: null,
+        },
+      }),
+    );
+
+    const razon = result.reasons.find((r) => r.ruleId === 'P-02' && r.unit === 'usd');
+    expect(razon?.message).toContain('$26.00');
+    expect(result.decision).toBe('REQUIRE_USER');
+  });
+
+  it('la reserva en dólares mira todo el patrimonio, no solo el activo enviado', () => {
+    // Manda USDC hasta dejar ese saldo a cero; el XLM que queda vale 1.2
+    // dólares, por debajo de la reserva de 10.
+    const result = evaluatePolicy(
+      scenario({
+        actions: [action({ amount: '250' })],
+        balances: [
+          { asset: 'XLM', total: '10', available: '10' },
+          { asset: 'USDC_TEST', total: '250', available: '250' },
+        ],
+        config: {
+          ...DEFAULT_POLICY_CONFIG,
+          mode: 'AUTONOMOUS',
+          maxAmountPerOperation: '1000',
+          maxDailyAmount: '10000',
+          minimumReserve: '0',
+          maxAmountPerOperationUsd: null,
+          maxDailyAmountUsd: null,
+          minimumReserveUsd: '10',
+        },
+      }),
+    );
+
+    expect(result.decision).toBe('DENY');
+    expect(result.reasons.some((r) => r.ruleId === 'P-06' && r.unit === 'usd')).toBe(true);
+  });
+});
+
+describe('P-10 · sin precio', () => {
+  const sinPrecios = { capturedAt: NOW.toISOString(), quotes: [] };
+
+  it('escala al usuario en vez de comprobar el límite a ciegas', () => {
+    const result = evaluatePolicy(scenario({ prices: sinPrecios }));
+
+    expect(result.decision).toBe('REQUIRE_USER');
+    expect(result.reasons.find((r) => r.ruleId === 'P-10')?.message).toContain('USDC_TEST');
+  });
+
+  it('no deniega: una caída del oráculo no inutiliza el producto', () => {
+    expect(evaluatePolicy(scenario({ prices: sinPrecios })).decision).not.toBe('DENY');
+  });
+
+  it('no molesta si no hay ningún tope en dólares configurado', () => {
+    const result = evaluatePolicy(
+      scenario({
+        prices: sinPrecios,
+        config: {
+          ...DEFAULT_POLICY_CONFIG,
+          mode: 'AUTONOMOUS',
+          maxAmountPerOperationUsd: null,
+          maxDailyAmountUsd: null,
+          minimumReserveUsd: null,
+        },
+      }),
+    );
+
+    expect(result.decision).toBe('AUTO_APPROVE');
+  });
+
+  it('sin precio no se aplica ninguna regla en dólares a ciegas', () => {
+    const result = evaluatePolicy(
+      scenario({
+        actions: [action({ amount: '10000' })],
+        balances: [{ asset: 'USDC_TEST', total: '100000', available: '100000' }],
+        prices: sinPrecios,
+      }),
+    );
+
+    expect(result.reasons.some((r) => r.ruleId === 'P-10')).toBe(true);
+    // Ninguna razón en dólares: sin precio no se inventa una conversión.
+    expect(result.reasons.filter((r) => r.unit === 'usd' && r.ruleId !== 'P-10')).toEqual([]);
   });
 });

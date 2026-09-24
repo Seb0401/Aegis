@@ -4,6 +4,7 @@ import type {
   Destination,
   PolicyConfig,
   PolicyDecisionKind,
+  PriceSnapshot,
   ProposedAction,
 } from '@aegis/contracts';
 
@@ -33,6 +34,24 @@ export interface PolicyEvaluationInput {
   now?: Date;
   /** Caducidad de la propuesta, si ya se fijó (P-09). */
   expiresAt?: string;
+
+  /**
+   * Foto de precios para los topes en dólares (ADR 0011).
+   *
+   * Llega como dato ya obtenido: el motor sigue siendo una función pura y no
+   * consulta ningún oráculo. Si falta, o si falta el precio de algún activo de
+   * la propuesta, se dispara P-10 y la decisión pasa al usuario.
+   */
+  prices?: PriceSnapshot;
+
+  /**
+   * Valor en dólares ya comprometido en las últimas 24 h (P-02 en USD).
+   *
+   * Lo calcula quien llama usando el precio que se registró con cada propuesta,
+   * no el de hoy: así el acumulado refleja lo que valía cada operación cuando
+   * se autorizó.
+   */
+  dailySpentUsd?: string;
 }
 
 /** Severidad relativa: DENY manda sobre REQUIRE_USER, que manda sobre AUTO_APPROVE. */

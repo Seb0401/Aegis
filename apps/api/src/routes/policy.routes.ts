@@ -128,12 +128,13 @@ export const policyRoutes: FastifyPluginAsyncZod = async (app) => {
 };
 
 async function respondWithPolicy(app: Parameters<FastifyPluginAsyncZod>[0], userId: string) {
-  const [config, dailySpent] = await Promise.all([
+  const [config, dailySpent, dailySpentUsd] = await Promise.all([
     app.services.policies.getConfig(userId),
     app.services.policies.getDailySpentByAsset(userId),
+    app.services.policies.getDailySpentUsd(userId),
   ]);
 
-  return { config, summary: buildPolicySummary(config, dailySpent) };
+  return { config, summary: buildPolicySummary(config, dailySpent, dailySpentUsd) };
 }
 
 /** Diferencias entre dos configuraciones, para que la auditoría sea legible. */

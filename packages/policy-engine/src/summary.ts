@@ -17,6 +17,7 @@ import {
 export function buildPolicySummary(
   config: PolicyConfig,
   dailySpentByAsset: Partial<Record<AssetCode, string>> = {},
+  dailySpentUsd = '0',
 ): PolicySummary {
   // El límite diario se comparte entre activos en el MVP, así que se resta el
   // total gastado en la ventana. Ver ADR 0003 sobre el tratamiento multi-activo.
@@ -27,6 +28,10 @@ export function buildPolicySummary(
 
   const remaining = maxAmount('0', subtractAmounts(config.maxDailyAmount, totalSpent));
 
+  const remainingUsd = config.maxDailyAmountUsd
+    ? maxAmount('0', subtractAmounts(config.maxDailyAmountUsd, dailySpentUsd))
+    : null;
+
   return {
     mode: config.mode,
     paused: config.paused,
@@ -35,5 +40,7 @@ export function buildPolicySummary(
     minimumReserve: config.minimumReserve,
     allowedAssets: config.allowedAssets,
     remainingDailyAmount: remaining,
+    maxAmountPerOperationUsd: config.maxAmountPerOperationUsd,
+    remainingDailyAmountUsd: remainingUsd,
   };
 }
