@@ -84,18 +84,18 @@ Delegar dinero a un agente de IA da miedo por buenas razones: puede equivocarse,
 
 ## 3. Stack propuesto (por confirmar en el kickoff)
 
-| Capa               | Propuesta                                                       | Notas                                                                                                                                                            |
-| ------------------ | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Lenguaje           | TypeScript en todo el monorepo                                  | Un solo lenguaje y SDK oficial de Stellar para JS. Si el rol AI prefiere Python, el agente puede correr como servicio aparte detrás del mismo contrato (`AI-Q1`) |
-| Monorepo           | pnpm workspaces                                                 | Paquetes independientes = menos choques                                                                                                                          |
-| Frontend           | Next.js + Tailwind + shadcn/ui                                  | `FE-Q1`                                                                                                                                                          |
-| Wallet del usuario | Freighter (`@stellar/freighter-api`)                            | `FE-Q2`                                                                                                                                                          |
-| Backend            | Node.js (NestJS o Fastify) + PostgreSQL + ORM (Prisma/Drizzle)  | `BE2-Q1`                                                                                                                                                         |
-| Stellar            | `@stellar/stellar-sdk` + Horizon o Stellar RPC para lectura     | Verificar en la documentación oficial qué API de lectura está vigente (`BE1-Q1`)                                                                                 |
-| Agente             | LLM con _tool calling_ (p. ej. Claude API) + validación con Zod | `AI-Q1`, `AI-Q2`                                                                                                                                                 |
-| Contratos          | Zod → tipos TS + OpenAPI                                        | Fuente única de verdad en `packages/contracts`                                                                                                                   |
-| Mocks              | Prism/MSW (API), fixtures (Stellar), LLM fake                   | Cada rol desarrolla sin esperar a los demás                                                                                                                      |
-| CI                 | GitHub Actions: lint, typecheck, test, build                    | Obligatorio para hacer merge                                                                                                                                     |
+| Capa               | Propuesta                                                         | Notas                                                                                                                                                            |
+| ------------------ | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lenguaje           | TypeScript en todo el monorepo                                    | Un solo lenguaje y SDK oficial de Stellar para JS. Si el rol AI prefiere Python, el agente puede correr como servicio aparte detrás del mismo contrato (`AI-Q1`) |
+| Monorepo           | pnpm workspaces                                                   | Paquetes independientes = menos choques                                                                                                                          |
+| Frontend           | Next.js + Tailwind + shadcn/ui                                    | `FE-Q1`                                                                                                                                                          |
+| Wallet del usuario | Freighter (`@stellar/freighter-api`)                              | `FE-Q2`                                                                                                                                                          |
+| Backend            | Node.js (NestJS o Fastify) + PostgreSQL + ORM (Prisma/Drizzle)    | `BE2-Q1`                                                                                                                                                         |
+| Stellar            | `@stellar/stellar-sdk` + Horizon o Stellar RPC para lectura       | Verificar en la documentación oficial qué API de lectura está vigente (`BE1-Q1`)                                                                                 |
+| Agente             | Vercel AI SDK + Gateway (Gemini/Groq candidatos) + JEv para evals | `AI-Q1`, `AI-Q2`                                                                                                                                                 |
+| Contratos          | Zod → tipos TS + OpenAPI                                          | Fuente única de verdad en `packages/contracts`                                                                                                                   |
+| Mocks              | Prism/MSW (API), fixtures (Stellar), LLM fake                     | Cada rol desarrolla sin esperar a los demás                                                                                                                      |
+| CI                 | GitHub Actions: lint, typecheck, test, build                      | Obligatorio para hacer merge                                                                                                                                     |
 
 ---
 
@@ -480,16 +480,16 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 
 ### AI Agent (AI)
 
-- [ ] AI-01 · Spike de _tool calling_ y elección de proveedor/modelo · S1
-- [ ] AI-02 · Definición de tools (`AgentTools`) y `FakeAgentTools` · S1
-- [ ] AI-03 · Dataset de evaluación (≥30 casos) y arnés de evals · S1
-- [ ] AI-04 · Intención → `Proposal` (caso "$50 entre 3 objetivos + $10") · S2
-- [ ] AI-05 · Validaciones: suma de acciones ≤ monto pedido, solo IDs de destinos · S2
-- [ ] AI-06 · Explicador con plantillas de respaldo · S3
-- [ ] AI-07 · Evals de explicaciones (sin cifras inventadas) · S3
-- [ ] AI-08 · Conversación multi-turno y preguntas de aclaración · S4
-- [ ] AI-09 · Pruebas adversariales: inyección vía memo, nombres de objetivos y texto libre · S4
-- [ ] AI-10 · Métricas de costo/latencia y _fallbacks_ · S5
+- [x] AI-01 · Spike de _tool calling_ y elección de proveedor/modelo · S1
+- [x] AI-02 · Definición de tools (`AgentTools`) y `FakeAgentTools` · S1
+- [x] AI-03 · Dataset de evaluación (≥30 casos) y arnés de evals · S1
+- [x] AI-04 · Intención → `Proposal` (caso "$50 entre 3 objetivos + $10") · S2
+- [x] AI-05 · Validaciones: suma de acciones ≤ monto pedido, solo IDs de destinos · S2
+- [x] AI-06 · Explicador con plantillas de respaldo · S3
+- [x] AI-07 · Evals de explicaciones (sin cifras inventadas) · S3
+- [x] AI-08 · Conversación multi-turno y preguntas de aclaración · S4
+- [x] AI-09 · Pruebas adversariales: inyección vía memo, nombres de objetivos y texto libre · S4
+- [x] AI-10 · Métricas de costo/latencia y _fallbacks_ · S5
 
 ### Transversal (todos)
 
@@ -622,14 +622,14 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 
 **AI Agent (AI)**
 
-| ID    | Pregunta                                                                                  |
-| ----- | ----------------------------------------------------------------------------------------- |
-| AI-Q1 | ¿Proveedor y modelo LLM? ¿TypeScript o Python para el agente?                             |
-| AI-Q2 | ¿SDK del proveedor, Vercel AI SDK, LangGraph o un bucle propio ligero?                    |
-| AI-Q3 | ¿Memoria de preferencias/hábitos del usuario en el MVP o queda para después?              |
-| AI-Q4 | ¿Quién ayuda a construir el dataset de evaluación (≥30 casos reales)?                     |
-| AI-Q5 | ¿Explicaciones "plantilla primero + LLM para redactar" (recomendado) o generativas puras? |
-| AI-Q6 | ¿Qué datos se pueden enviar al LLM (saldos, direcciones, historial)?                      |
+| ID    | Pregunta                                                                                                                                                                                                  |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AI-Q1 | ~~¿Proveedor/modelo y TypeScript o Python?~~ Resuelto en [ADR-0010](adr/0010-gateway-y-evaluacion-jev.md): Gateway con Gemini y Groq como candidatos, TypeScript.                                         |
+| AI-Q2 | ~~¿SDK o bucle propio?~~ Resuelto en [ADR-0010](adr/0010-gateway-y-evaluacion-jev.md): Vercel AI SDK con tools Zod y Gateway.                                                                             |
+| AI-Q3 | ~~¿Memoria de preferencias/hábitos en el MVP?~~ Resuelto en [ADR-0009](adr/0009-agente-llm-y-evaluaciones.md): sin memoria persistente; se conservan hasta 12 mensajes previos de la conversación activa. |
+| AI-Q4 | ¿Quién ayuda a construir el dataset de evaluación (≥30 casos reales)?                                                                                                                                     |
+| AI-Q5 | ~~¿Explicaciones plantilla primero o generativas puras?~~ Resuelto en [ADR-0009](adr/0009-agente-llm-y-evaluaciones.md): plantilla primero.                                                               |
+| AI-Q6 | ~~¿Qué datos se pueden enviar al LLM?~~ Resuelto en [ADR-0009](adr/0009-agente-llm-y-evaluaciones.md): saldos consultados y datos mínimos de destinos, sin direcciones ni historial.                      |
 
 ### 14.4 Registro de decisiones
 

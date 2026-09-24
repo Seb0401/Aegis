@@ -1,5 +1,10 @@
 import type { StellarExecutor, StellarReader } from '@aegis/contracts';
-import { createRuleBasedAgent, type Agent } from '@aegis/agent';
+import {
+  createGatewayAgent,
+  createGatewayExplainer,
+  createRuleBasedAgent,
+  type Agent,
+} from '@aegis/agent';
 import { NotImplementedStellarExecutor, NotImplementedStellarReader } from '@aegis/stellar';
 import { FakeStellarExecutor, FakeStellarReader } from '@aegis/stellar/testing';
 import type { Database } from './db/client.js';
@@ -34,11 +39,17 @@ export interface Services {
 export interface BuildServicesOptions {
   db: Database;
   env: Env;
+  metricsLogger?: (event: string, metrics: object) => void;
   /** Sustituciones para los tests. */
   overrides?: Partial<Pick<Services, 'reader' | 'executor' | 'agent'>>;
 }
 
-export function buildServices({ db, env, overrides }: BuildServicesOptions): Services {
+export function buildServices({
+  db,
+  env,
+  overrides,
+  metricsLogger,
+}: BuildServicesOptions): Services {
   const reader = overrides?.reader ?? defaultReader(env);
   const executor = overrides?.executor ?? defaultExecutor(env);
 
@@ -46,7 +57,24 @@ export function buildServices({ db, env, overrides }: BuildServicesOptions): Ser
   const policies = new PolicyStore(db);
   const destinations = new DestinationStore(db);
 
-  const proposals = new ProposalService({ db, audit, policies, destinations, reader, executor });
+  const aiExplainer = env.AI_GATEWAY_API_KEY
+    ? createGatewayExplainer({
+        apiKey: env.AI_GATEWAY_API_KEY,
+        model: env.AGENT_MODEL,
+        providerOrder: providerOrder(env.AGENT_PROVIDER_ORDER),
+        timeoutMs: env.AGENT_TIMEOUT_MS,
+        onMetrics: (metrics) => metricsLogger?.('aegis_explainer_metrics', metrics),
+      })
+    : undefined;
+  const proposals = new ProposalService({
+    db,
+    audit,
+    policies,
+    destinations,
+    reader,
+    executor,
+    ...(aiExplainer ? { explain: aiExplainer.explain } : {}),
+  });
   const sweeper = new ProposalSweeper({ db, audit });
 
   return {
@@ -59,9 +87,27 @@ export function buildServices({ db, env, overrides }: BuildServicesOptions): Ser
     reader,
     executor,
     sweeper,
-    // Sustituto temporal hasta que AI entregue el agente con tool calling (AI-01).
-    agent: overrides?.agent ?? createRuleBasedAgent(),
+    agent:
+      overrides?.agent ??
+      (env.AI_GATEWAY_API_KEY
+        ? createGatewayAgent({
+            apiKey: env.AI_GATEWAY_API_KEY,
+            model: env.AGENT_MODEL,
+            fallbackModel: env.AGENT_FALLBACK_MODEL,
+            modelProviderOrder: providerOrder(env.AGENT_PROVIDER_ORDER),
+            fallbackProviderOrder: providerOrder(env.AGENT_FALLBACK_PROVIDER_ORDER),
+            timeoutMs: env.AGENT_TIMEOUT_MS,
+            onMetrics: (metrics) => metricsLogger?.('aegis_agent_metrics', metrics),
+          })
+        : createRuleBasedAgent()),
   };
+}
+
+function providerOrder(value: string): string[] {
+  return value
+    .split(',')
+    .map((provider) => provider.trim())
+    .filter(Boolean);
 }
 
 function defaultReader(env: Env): StellarReader {

@@ -29,6 +29,15 @@ const EnvSchema = z
       .transform((v) => v === 'true'),
 
     STELLAR_NETWORK: z.enum(['testnet', 'mainnet']).default('testnet'),
+    AI_GATEWAY_API_KEY: z
+      .string()
+      .optional()
+      .transform((value) => value?.trim() || undefined),
+    AGENT_MODEL: z.string().min(1).default('google/gemini-3.1-flash-lite'),
+    AGENT_FALLBACK_MODEL: z.string().min(1).default('openai/gpt-oss-20b'),
+    AGENT_PROVIDER_ORDER: z.string().default('google'),
+    AGENT_FALLBACK_PROVIDER_ORDER: z.string().default('groq'),
+    AGENT_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
   })
   .superRefine((env, ctx) => {
     // Dos puertas traseras cómodas en desarrollo que serían un desastre en
