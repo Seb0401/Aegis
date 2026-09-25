@@ -1,4 +1,4 @@
-import { createGateway } from '@ai-sdk/gateway';
+import { createGroq } from '@ai-sdk/groq';
 import { generateText, type LanguageModel } from 'ai';
 import { buildTemplateExplanation } from '@aegis/guardian';
 import type { Explanation, ResolvedAction, RiskReport } from '@aegis/contracts';
@@ -6,7 +6,6 @@ import type { Explanation, ResolvedAction, RiskReport } from '@aegis/contracts';
 export interface ExplainerOptions {
   model: LanguageModel;
   modelName: string;
-  providerOrder?: string[];
   timeoutMs?: number;
   onMetrics?: (metrics: {
     model: string;
@@ -18,20 +17,18 @@ export interface ExplainerOptions {
   }) => void;
 }
 
-export interface GatewayExplainerOptions {
+export interface GroqExplainerOptions {
   apiKey: string;
   model: string;
-  providerOrder?: string[];
   timeoutMs?: number;
   onMetrics?: ExplainerOptions['onMetrics'];
 }
 
-export function createGatewayExplainer(options: GatewayExplainerOptions) {
-  const provider = createGateway({ apiKey: options.apiKey });
+export function createGroqExplainer(options: GroqExplainerOptions) {
+  const provider = createGroq({ apiKey: options.apiKey });
   return createAiExplainer({
     model: provider(options.model),
     modelName: options.model,
-    providerOrder: options.providerOrder,
     timeoutMs: options.timeoutMs,
     onMetrics: options.onMetrics,
   });
@@ -48,9 +45,6 @@ export function createAiExplainer(options: ExplainerOptions) {
         const result = await generateText({
           model: options.model,
           abortSignal: AbortSignal.timeout(options.timeoutMs ?? 10_000),
-          ...(options.providerOrder?.length
-            ? { providerOptions: { gateway: { order: options.providerOrder } } }
-            : {}),
           system: [
             'Reescribe en español claro y breve la explicación recibida.',
             'No agregues, cambies ni calcules importes, porcentajes, cantidades, nombres ni destinos.',
@@ -106,10 +100,10 @@ export function createAiExplainer(options: ExplainerOptions) {
 
 function estimateCost(modelName: string, inputTokens: number, outputTokens: number): number | null {
   const rates =
-    modelName === 'google/gemini-3.1-flash-lite'
-      ? { input: 0.25, output: 1.5 }
-      : modelName === 'openai/gpt-oss-20b'
-        ? { input: 0.07, output: 0.3 }
+    modelName === 'openai/gpt-oss-20b'
+      ? { input: 0.075, output: 0.3 }
+      : modelName === 'openai/gpt-oss-120b'
+        ? { input: 0.15, output: 0.6 }
         : null;
   if (!rates) return null;
   return (inputTokens * rates.input + outputTokens * rates.output) / 1_000_000;

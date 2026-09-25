@@ -39,7 +39,7 @@ describe('explanation numeric guard', () => {
         warnings: [],
       },
     });
-    const explainer = createAiExplainer({ model, modelName: 'google/gemini-3.1-flash-lite' });
+    const explainer = createAiExplainer({ model, modelName: 'openai/gpt-oss-20b' });
 
     const explanation = await explainer.explain(FIXTURE_RISK_LOW, [
       {

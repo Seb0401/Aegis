@@ -65,14 +65,16 @@ const EnvSchema = z
     PRICE_XLM_USD: z.string().optional(),
     /** USDC_TEST lo emitimos nosotros: su precio es una convención. */
     PRICE_USDC_TEST_USD: z.string().default('1'),
-    AI_GATEWAY_API_KEY: z
+    GROQ_API_KEY: z
       .string()
       .optional()
       .transform((value) => value?.trim() || undefined),
-    AGENT_MODEL: z.string().min(1).default('google/gemini-3.1-flash-lite'),
-    AGENT_FALLBACK_MODEL: z.string().min(1).default('openai/gpt-oss-20b'),
-    AGENT_PROVIDER_ORDER: z.string().default('google'),
-    AGENT_FALLBACK_PROVIDER_ORDER: z.string().default('groq'),
+    AGENT_MODEL: z
+      .enum(['openai/gpt-oss-20b', 'openai/gpt-oss-120b'])
+      .default('openai/gpt-oss-20b'),
+    AGENT_FALLBACK_MODEL: z
+      .enum(['openai/gpt-oss-20b', 'openai/gpt-oss-120b'])
+      .default('openai/gpt-oss-120b'),
     AGENT_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
   })
   .superRefine((env, ctx) => {

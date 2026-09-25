@@ -1,6 +1,11 @@
+import { config as loadDotEnv } from 'dotenv';
 import { createDatabase } from './db/client.js';
 import { loadEnv } from './env.js';
 import { buildServer } from './server.js';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+loadDotEnv({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
 
 /**
  * Arranque del proceso.

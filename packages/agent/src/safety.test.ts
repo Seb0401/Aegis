@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createFakeAgentTools } from './fake-tools.js';
 import {
   extractRequestedBudget,
+  extractRequestedAsset,
   redactStellarAddresses,
   UnsafeProposalError,
   validateProposalInput,
@@ -76,6 +77,21 @@ describe('requested budgets', () => {
     expect(extractRequestedBudget([{ role: 'user', content: 'Paga a Ana.' }])).toBeUndefined();
     expect(
       extractRequestedBudget([{ role: 'user', content: 'Reparte entre mis 3 objetivos.' }]),
+    ).toBeUndefined();
+  });
+
+  it('resolves only assets the user explicitly named for the payment', () => {
+    expect(extractRequestedAsset([{ role: 'user', content: 'Mándale 2 XLM a Ana.' }])).toBe('XLM');
+    expect(extractRequestedAsset([{ role: 'user', content: 'Envía $5 a Viaje.' }])).toBe(
+      'USDC_TEST',
+    );
+    expect(
+      extractRequestedAsset([{ role: 'user', content: 'Transfiere 10 a Ana.' }]),
+    ).toBeUndefined();
+    expect(
+      extractRequestedAsset([
+        { role: 'user', content: 'Mándale 10 a Ana; dudo entre XLM y USDC_TEST.' },
+      ]),
     ).toBeUndefined();
   });
 
@@ -253,5 +269,20 @@ describe('proposal validation', () => {
     await expect(validateProposalInput(splitProposal, { tools })).rejects.toThrow(
       'monto solicitado explícitamente',
     );
+  });
+
+  it('rejects a proposal that guesses the payment asset', async () => {
+    const tools = createFakeAgentTools();
+    const proposal = {
+      ...splitProposal,
+      actions: [{ ...splitProposal.actions[0]!, amount: '10' }],
+    };
+    await expect(
+      validateProposalInput(proposal, {
+        tools,
+        requestedBudget: '10',
+        messages: [{ role: 'user', content: 'Transfiere 10 a Viaje.' }],
+      }),
+    ).rejects.toThrow('activo debe estar especificado');
   });
 });

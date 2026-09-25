@@ -2,6 +2,7 @@ import {
   addAmounts,
   ProposalInputSchema,
   toStroops,
+  type AssetCode,
   type AgentTools,
   type ProposalInput,
 } from '@aegis/contracts';
@@ -14,16 +15,17 @@ export class UnsafeProposalError extends Error {
   }
 }
 
+const PAYMENT_ACTION_PATTERN =
+  /\b(?:repart\w*|divid\w*|distribu\w*|envi\w*|mand\w*|transf\w*|pag\w*|guard\w*|ahorr\w*|separ\w*|mov\w*|muev\w*|hac\w*|pon\w*|pas\w*|agreg\w*|apart\w*|traslad\w*)\b/;
+
 /** Extracts a conservative explicit budget from the user's own turns. */
 export function extractRequestedBudget(messages: AgentMessage[]): string | undefined {
   let requestedBudget: string | undefined;
 
   for (const message of messages) {
     if (message.role !== 'user') continue;
-    const text = message.content.toLowerCase();
-    const actionPattern =
-      /\b(reparte|repartir|reparta|divide|dividir|distribuye|distribuir|env[ií]a|enviar|envíe|manda|mandar|transfiere|transferir|paga|pagar|guarda|guardar|ahorra|ahorrar|separa|separar|mueve|mover|haz|hace|hacer)\b/;
-    const hasAction = actionPattern.test(text);
+    const text = normalizeUserText(message.content);
+    const hasAction = PAYMENT_ACTION_PATTERN.test(text);
     const correctionIndex = Math.max(
       text.lastIndexOf('mejor'),
       text.lastIndexOf('en realidad'),
@@ -59,7 +61,7 @@ export function extractRequestedBudget(messages: AgentMessage[]): string | undef
     }
 
     const leadingAmount = text.match(
-      /\b(?:reparte|repartir|reparta|divide|dividir|distribuye|distribuir|env[ií]a|enviar|manda|mandar|transfiere|transferir|paga|pagar|guarda|guardar|ahorra|ahorrar|separa|separar|mueve|mover|haz|hace|hacer)\s+(?:(?:un total de|exactamente)\s+)?(\d+(?:[.,]\d{1,7})?)\b/,
+      /\b(?:repart\w*|divid\w*|distribu\w*|envi\w*|mand\w*|transf\w*|pag\w*|guard\w*|ahorr\w*|separ\w*|mov\w*|muev\w*|hac\w*|pon\w*|pas\w*|agreg\w*|apart\w*|traslad\w*)\s+(?:(?:un total de|exactamente)\s+)?(\d+(?:[.,]\d{1,7})?)\b/,
     );
     if (leadingAmount?.[1]) requestedBudget = leadingAmount[1].replace(',', '.');
   }
@@ -119,6 +121,10 @@ export async function validateProposalInput(
     throw new UnsafeProposalError(
       'No se puede verificar un presupuesto repartido entre activos distintos.',
     );
+  }
+  const requestedAsset = extractRequestedAsset(input.messages ?? []);
+  if (!requestedAsset || parsed.data.actions.some((action) => action.asset !== requestedAsset)) {
+    throw new UnsafeProposalError('El activo debe estar especificado claramente por el usuario.');
   }
   const totalStroops = [...totalsByAsset.values()].reduce(
     (total, amount) => total + toStroops(amount),
@@ -181,6 +187,38 @@ export function redactStellarAddresses(text: string): string {
   return text.replace(/\bG[A-Z2-7]{55}\b/g, '[dirección omitida]');
 }
 
+/** Resolve only explicit assets from the active payment intent, never by guessing. */
+export function extractRequestedAsset(messages: AgentMessage[]): AssetCode | undefined {
+  let paymentIntentIsActive = false;
+  let requestedAsset: AssetCode | undefined;
+
+  for (const message of messages) {
+    if (message.role !== 'user') continue;
+    const text = normalizeUserText(message.content);
+    const isPaymentAction = PAYMENT_ACTION_PATTERN.test(text);
+    const isBalanceQuestion = /\b(saldo|balance|cuanto tengo|cuanto me queda)\b/.test(text);
+
+    if (!isPaymentAction && isBalanceQuestion) {
+      paymentIntentIsActive = false;
+      requestedAsset = undefined;
+      continue;
+    }
+
+    if (isPaymentAction) {
+      paymentIntentIsActive = true;
+      requestedAsset = undefined;
+    }
+    if (!paymentIntentIsActive) continue;
+
+    const hasXlm = /\bxlm\b/.test(text);
+    const hasUsdc = /\busdc(?:_test)?\b/.test(text) || /\$|\busd\b|\bdolares?\b/.test(text);
+    if (hasXlm !== hasUsdc) requestedAsset = hasXlm ? 'XLM' : 'USDC_TEST';
+    else if (hasXlm && hasUsdc) requestedAsset = undefined;
+  }
+
+  return requestedAsset;
+}
+
 function isDestinationRequested(
   destination: { kind: string; label: string },
   messages: AgentMessage[],
@@ -201,6 +239,13 @@ function isDestinationRequested(
 }
 
 function normalize(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function normalizeUserText(value: string): string {
   return value
     .toLowerCase()
     .normalize('NFD')

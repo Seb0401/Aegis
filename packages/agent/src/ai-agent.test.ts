@@ -90,8 +90,7 @@ describe('agent response grounding', () => {
     const tools = createFakeAgentTools({ now: () => new Date('2026-09-22T00:00:00.000Z') });
     const agent = createAiAgent({
       model,
-      modelName: 'google/gemini-3.1-flash-lite',
-      modelProviderOrder: ['google'],
+      modelName: 'openai/gpt-oss-20b',
     });
 
     const result = await agent.handleMessage({
@@ -104,7 +103,6 @@ describe('agent response grounding', () => {
     expect(result.proposals[0]!.summary).not.toContain('$900');
     expect(result.reply).toContain('$50');
     expect(model.doGenerateCalls).toHaveLength(3);
-    expect(model.doGenerateCalls[0]!.providerOptions?.gateway).toMatchObject({ order: ['google'] });
     expect(JSON.stringify(model.doGenerateCalls)).not.toContain(FIXTURE_DESTINATIONS[0]!.address);
   });
 });

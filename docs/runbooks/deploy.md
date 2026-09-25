@@ -73,7 +73,7 @@ Apunta la dirección que imprime el `seed`: es con la que entrará el jurado.
 | `ALLOW_DEV_LOGIN`              | `true` o `false`                      | ver más abajo                                                              |
 | `PRICE_SOURCE`                 | `fixed`                               | ver más abajo                                                              |
 | `PRICE_XLM_USD`                | p. ej. `0.12`                         | solo si `PRICE_SOURCE=fixed`                                               |
-| `AI_GATEWAY_API_KEY`           | tu clave                              | sin ella el agente cae al modo de reglas                                   |
+| `GROQ_API_KEY`                 | tu clave de Groq Cloud                | sin ella el agente cae al modo de reglas                                   |
 
 **Sobre `ALLOW_DEV_LOGIN`.** Con `true`, cualquiera puede entrar con una
 dirección sin firmar nada. Para que un jurado pruebe sin instalar Freighter es

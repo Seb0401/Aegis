@@ -8,15 +8,14 @@ Policy Engine. Nunca escribe direcciones Stellar: solo `destinationId`.
 
 ## Inicio rápido
 
-Configura `AI_GATEWAY_API_KEY` y, opcionalmente, `AGENT_MODEL`,
-`AGENT_FALLBACK_MODEL`, sus órdenes de proveedor y `AGENT_TIMEOUT_MS`. El modelo
-principal por defecto es `google/gemini-3.1-flash-lite`; el fallback es
-`openai/gpt-oss-20b` enrutado a Groq. Sin la clave, la API usa el agente
-determinista `createRuleBasedAgent`.
+Configura `GROQ_API_KEY` y, opcionalmente, `AGENT_MODEL`,
+`AGENT_FALLBACK_MODEL` y `AGENT_TIMEOUT_MS`. El modelo principal por defecto es
+`openai/gpt-oss-20b`; el fallback es `openai/gpt-oss-120b`, ambos llamados
+directamente en Groq Cloud. Sin la clave, la API usa el agente determinista
+`createRuleBasedAgent`.
 
-La integración usa Vercel AI SDK y Vercel AI Gateway. El ID `openai/gpt-oss-20b`
-identifica el modelo de pesos abiertos; la orden de proveedor `groq` determina
-dónde se ejecuta. La API conserva `Agent` como puerto para que los tests puedan
+La integración usa Vercel AI SDK con el proveedor Groq directo, sin depender de
+Vercel AI Gateway. La API conserva `Agent` como puerto para que los tests puedan
 inyectar una implementación sin llamar a proveedores externos.
 
 ## Seguridad y comportamiento
@@ -33,8 +32,9 @@ inyectar una implementación sin llamar a proveedores externos.
   cambiada invalida la reescritura y conserva la plantilla.
 - El historial enviado al modelo se limita a 12 mensajes previos y no incluye direcciones,
   transacciones ni claves.
-- JEv solo califica las evals sintéticas (intención, seguridad y calidad); nunca
-  participa en el pipeline de propuestas ni en decisiones financieras.
+- JEv está temporalmente desactivado: Vercel requiere un método de pago y aún no
+  hay acceso a una cuenta TypeSafe. La evaluación temporal usa controles
+  deterministas, con una pasada opcional de Laya local y revisión humana.
 
 ## Contrato del agente
 
@@ -44,18 +44,29 @@ interface Agent {
 }
 ```
 
-`createAiAgent` recibe modelos AI SDK por inyección; `createGatewayAgent` arma
-los modelos elegidos desde la configuración del backend. `createFakeAgentTools`
+`createAiAgent` recibe modelos AI SDK por inyección; `createGroqAgent` arma los
+modelos elegidos desde la configuración del backend. `createFakeAgentTools`
 provee datos sintéticos en memoria para pruebas y evals.
 
 ## Pruebas y evals
 
 ```sh
 pnpm --filter @aegis/agent test
-AI_GATEWAY_API_KEY=... pnpm --filter @aegis/agent eval
+pnpm --filter @aegis/agent eval
+python -m pip install laya
+python packages/agent/src/evals/laya_review.py --input .ai-agent-eval-results.jsonl
 ```
 
-El corpus tiene 35 casos sintéticos, con casos multi-turno y adversariales. La
-evaluación en vivo compara Gemini y Groq por separado con checks deterministas y
-JEv. Requiere una clave de Gateway y falla si no alcanza los umbrales; nunca usa
-dinero ni destinos reales. AI-Q4 sigue pendiente de casos reales del equipo.
+La evaluación carga `GROQ_API_KEY` desde el `.env` local o desde el entorno del
+proceso. Compara GPT-OSS 20B y GPT-OSS 120B con checks deterministas sobre 35
+casos sintéticos y 30 casos humanos anonimizados, cuyo registro editable está en
+[`docs/evals/ai-q4-cases.txt`](../../docs/evals/ai-q4-cases.txt). Guarda las
+respuestas en `.ai-agent-eval-results.jsonl` para revisión manual. El paso
+opcional de Laya carga `laya-multilingual` localmente (sin una API key) y añade
+probabilidades de intención/seguridad y una puntuación de calidad a
+`.ai-agent-eval-results-laya.jsonl`. Su primer uso descarga los pesos de
+Hugging Face y necesita Python 3.10 o superior. Laya es un juez auxiliar, no una
+fuente de verdad ni un autorizador financiero. Si se pasa más de un reporte,
+Laya combina los casos y el archivo posterior reemplaza duplicados del mismo
+modelo/caso. JEv podrá reincorporarse cuando haya acceso a TypeSafe o Vercel AI
+Gateway.

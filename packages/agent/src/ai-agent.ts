@@ -22,15 +22,13 @@ export interface AiAgentOptions {
   modelName: string;
   fallbackModel?: LanguageModel;
   fallbackModelName?: string;
-  modelProviderOrder?: string[];
-  fallbackProviderOrder?: string[];
   timeoutMs?: number;
   onMetrics?: (metrics: AgentCallMetrics) => void;
 }
 
 const MODEL_PRICING_USD_PER_MILLION_TOKENS: Record<string, { input: number; output: number }> = {
-  'google/gemini-3.1-flash-lite': { input: 0.25, output: 1.5 },
-  'openai/gpt-oss-20b': { input: 0.07, output: 0.3 },
+  'openai/gpt-oss-20b': { input: 0.075, output: 0.3 },
+  'openai/gpt-oss-120b': { input: 0.15, output: 0.6 },
 };
 
 /**
@@ -58,7 +56,6 @@ export function createAiAgent(options: AiAgentOptions): Agent {
           requestedBudget,
           createdProposals,
           options.timeoutMs,
-          options.modelProviderOrder,
         );
         if (
           !replyUsesGroundedNumbers(
@@ -102,7 +99,6 @@ export function createAiAgent(options: AiAgentOptions): Agent {
               requestedBudget,
               createdProposals,
               options.timeoutMs,
-              options.fallbackProviderOrder,
             );
             if (
               !replyUsesGroundedNumbers(
@@ -167,13 +163,11 @@ async function runModel(
   requestedBudget?: string,
   createdProposals: Proposal[] = [],
   timeoutMs = 15_000,
-  providerOrder?: string[],
 ): Promise<ModelRun> {
   let destinationsListed = false;
   const result = await generateText({
     model,
     abortSignal: AbortSignal.timeout(timeoutMs),
-    ...(providerOrder?.length ? { providerOptions: { gateway: { order: providerOrder } } } : {}),
     system: [
       'Eres Aegis, un asistente financiero en español. Interpreta solicitudes y consulta información solo con las herramientas disponibles.',
       'Nunca autorizas, deniegas ni ejecutas pagos. El Policy Engine y el Guardian toman esas decisiones.',

@@ -110,12 +110,12 @@ Si queda un segundo: la bitácora, con su cadena de hashes verificable.
 
 ## Si algo falla en directo
 
-| Falla                           | Qué hacer                                                                                                     |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| El agente no responde           | Sin `AI_GATEWAY_API_KEY` cae al agente de reglas, que entiende "reparte N entre mis objetivos". La demo sigue |
-| Todo sale pendiente con `P-10`  | No hay precios. `PRICE_SOURCE=fixed`                                                                          |
-| El pago falla con `op_no_trust` | La cuenta destino no admite ese activo. En testnet, usar XLM                                                  |
-| La cuenta demo no existe        | Testnet se reinició. Rehacer el paso 2 de [`deploy.md`](deploy.md)                                            |
+| Falla                           | Qué hacer                                                                                               |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| El agente no responde           | Sin `GROQ_API_KEY` cae al agente de reglas, que entiende "reparte N entre mis objetivos". La demo sigue |
+| Todo sale pendiente con `P-10`  | No hay precios. `PRICE_SOURCE=fixed`                                                                    |
+| El pago falla con `op_no_trust` | La cuenta destino no admite ese activo. En testnet, usar XLM                                            |
+| La cuenta demo no existe        | Testnet se reinició. Rehacer el paso 2 de [`deploy.md`](deploy.md)                                      |
 
 ---
 

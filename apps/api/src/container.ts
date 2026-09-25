@@ -1,8 +1,8 @@
 import type { PriceProvider, StellarExecutor, StellarReader } from '@aegis/contracts';
 import { createPriceProvider } from '@aegis/prices';
 import {
-  createGatewayAgent,
-  createGatewayExplainer,
+  createGroqAgent,
+  createGroqExplainer,
   createRuleBasedAgent,
   type Agent,
 } from '@aegis/agent';
@@ -59,11 +59,10 @@ export function buildServices({
   const policies = new PolicyStore(db);
   const destinations = new DestinationStore(db);
 
-  const aiExplainer = env.AI_GATEWAY_API_KEY
-    ? createGatewayExplainer({
-        apiKey: env.AI_GATEWAY_API_KEY,
+  const aiExplainer = env.GROQ_API_KEY
+    ? createGroqExplainer({
+        apiKey: env.GROQ_API_KEY,
         model: env.AGENT_MODEL,
-        providerOrder: providerOrder(env.AGENT_PROVIDER_ORDER),
         timeoutMs: env.AGENT_TIMEOUT_MS,
         onMetrics: (metrics) => metricsLogger?.('aegis_explainer_metrics', metrics),
       })
@@ -95,25 +94,16 @@ export function buildServices({
     prices,
     agent:
       overrides?.agent ??
-      (env.AI_GATEWAY_API_KEY
-        ? createGatewayAgent({
-            apiKey: env.AI_GATEWAY_API_KEY,
+      (env.GROQ_API_KEY
+        ? createGroqAgent({
+            apiKey: env.GROQ_API_KEY,
             model: env.AGENT_MODEL,
             fallbackModel: env.AGENT_FALLBACK_MODEL,
-            modelProviderOrder: providerOrder(env.AGENT_PROVIDER_ORDER),
-            fallbackProviderOrder: providerOrder(env.AGENT_FALLBACK_PROVIDER_ORDER),
             timeoutMs: env.AGENT_TIMEOUT_MS,
             onMetrics: (metrics) => metricsLogger?.('aegis_agent_metrics', metrics),
           })
         : createRuleBasedAgent()),
   };
-}
-
-function providerOrder(value: string): string[] {
-  return value
-    .split(',')
-    .map((provider) => provider.trim())
-    .filter(Boolean);
 }
 
 /**

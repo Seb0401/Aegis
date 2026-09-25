@@ -31,6 +31,7 @@ coverage/
 .vitest/
 test-results/
 playwright-report/
+.ai-agent-eval-results*.jsonl
 # Sesión guardada por los E2E: lleva un token de verdad.
 # Sin barra inicial y con `**`, porque el patrón `e2e/.auth/` queda anclado a
 # la raíz del repo y no cubría `apps/web/e2e/.auth/`.
