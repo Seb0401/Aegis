@@ -68,6 +68,7 @@ Ver [ADR 0012](docs/adr/0012-hackathon-track-agentes.md).
 - Guardian: señales de riesgo, score, explicación en lenguaje natural y confirmación.
 - Ejecución de pagos (clásicos) en Stellar testnet, con estado y historial.
 - Registro de auditoría.
+- Servidor MCP: otros agentes de IA pueden proponer pagos, nunca ejecutarlos ([ADR 0012](docs/adr/0012-hackathon-track-agentes.md)).
 
 **Fuera del MVP** (ver §15)
 
@@ -90,18 +91,20 @@ Ver [ADR 0012](docs/adr/0012-hackathon-track-agentes.md).
 
 ## 3. Stack propuesto (por confirmar en el kickoff)
 
-| Capa               | Propuesta                                                         | Notas                                                                                                                                                            |
-| ------------------ | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Lenguaje           | TypeScript en todo el monorepo                                    | Un solo lenguaje y SDK oficial de Stellar para JS. Si el rol AI prefiere Python, el agente puede correr como servicio aparte detrás del mismo contrato (`AI-Q1`) |
-| Monorepo           | pnpm workspaces                                                   | Paquetes independientes = menos choques                                                                                                                          |
-| Frontend           | Next.js + Tailwind + shadcn/ui                                    | `FE-Q1`                                                                                                                                                          |
-| Wallet del usuario | Freighter (`@stellar/freighter-api`)                              | `FE-Q2`                                                                                                                                                          |
-| Backend            | Node.js (NestJS o Fastify) + PostgreSQL + ORM (Prisma/Drizzle)    | `BE2-Q1`                                                                                                                                                         |
-| Stellar            | `@stellar/stellar-sdk` + Horizon o Stellar RPC para lectura       | Verificar en la documentación oficial qué API de lectura está vigente (`BE1-Q1`)                                                                                 |
-| Agente             | Vercel AI SDK + Gateway (Gemini/Groq candidatos) + JEv para evals | `AI-Q1`, `AI-Q2`                                                                                                                                                 |
-| Contratos          | Zod → tipos TS + OpenAPI                                          | Fuente única de verdad en `packages/contracts`                                                                                                                   |
-| Mocks              | Prism/MSW (API), fixtures (Stellar), LLM fake                     | Cada rol desarrolla sin esperar a los demás                                                                                                                      |
-| CI                 | GitHub Actions: lint, typecheck, test, build                      | Obligatorio para hacer merge                                                                                                                                     |
+| Capa               | Propuesta                                                                                        | Notas                                                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lenguaje           | TypeScript en todo el monorepo                                                                   | Un solo lenguaje y SDK oficial de Stellar para JS. Si el rol AI prefiere Python, el agente puede correr como servicio aparte detrás del mismo contrato (`AI-Q1`) |
+| Monorepo           | pnpm workspaces                                                                                  | Paquetes independientes = menos choques                                                                                                                          |
+| Frontend           | Next.js + Tailwind + shadcn/ui                                                                   | `FE-Q1`                                                                                                                                                          |
+| Wallet del usuario | Freighter (`@stellar/freighter-api`)                                                             | `FE-Q2`                                                                                                                                                          |
+| Backend            | Fastify 5 + PostgreSQL 16 + Drizzle, con Zod como única validación                               | Decidido en [ADR 0002](docs/adr/0002-stack-backend.md)                                                                                                           |
+| Stellar            | `@stellar/stellar-sdk` + Horizon o Stellar RPC para lectura                                      | Verificar en la documentación oficial qué API de lectura está vigente (`BE1-Q1`)                                                                                 |
+| Agente             | Vercel AI SDK + Gateway (Gemini/Groq candidatos) + JEv para evals                                | `AI-Q1`, `AI-Q2`                                                                                                                                                 |
+| Precios            | API pública con caché, detrás de un puerto                                                       | `packages/prices`. Ver [ADR 0011](docs/adr/0011-precios-en-dolares.md)                                                                                           |
+| MCP                | `@modelcontextprotocol/sdk` sobre stdio                                                          | `apps/mcp`. Expone Aegis a otros agentes sin dejarles mover dinero                                                                                               |
+| Contratos          | Zod → tipos TS + OpenAPI                                                                         | Fuente única de verdad en `packages/contracts`                                                                                                                   |
+| Mocks              | Prism/MSW (API), fixtures (Stellar), LLM fake                                                    | Cada rol desarrolla sin esperar a los demás                                                                                                                      |
+| CI                 | GitHub Actions: lint, formato, typecheck, test, build, E2E, imagen Docker y búsqueda de secretos | Obligatorio para hacer merge                                                                                                                                     |
 
 ---
 
@@ -292,15 +295,17 @@ interface AgentTools {
 ## 7. Estructura del repositorio
 
 ```
-stellarguard/
+aegis/
 ├── apps/
 │   ├── web/                  # Frontend (Next.js)                       → FE
-│   └── api/                  # API + orquestación                       → BE2
+│   ├── api/                  # API + orquestación                       → BE2
+│   └── mcp/                  # Servidor MCP para agentes externos       → BE2
 ├── packages/
 │   ├── contracts/            # Zod, tipos, OpenAPI, mocks, fixtures     → compartido
 │   ├── stellar/              # Cliente Stellar + testing/FakeReader     → BE1
 │   ├── policy-engine/        # Reglas de autorización                   → BE2
 │   ├── guardian/             # Señales y score de riesgo                → BE2
+│   ├── prices/               # Precio en dólares de los activos         → BE2
 │   └── agent/                # Agente, tools, explicador, evals         → AI
 ├── docs/
 │   ├── adr/                  # Decisiones de arquitectura (1 archivo por decisión)
@@ -325,17 +330,20 @@ Todos los valores son **configurables** y provisionales. Confirmar con el equipo
 
 ### 8.1 Policy Engine
 
-| ID   | Regla                                          | Valor por defecto                                               |
-| ---- | ---------------------------------------------- | --------------------------------------------------------------- |
-| P-01 | Monto máximo por operación                     | **$5**                                                          |
-| P-02 | Límite diario acumulado                        | $20                                                             |
-| P-03 | Destino nuevo (no registrado o sin historial)  | **Siempre requiere confirmación del usuario**                   |
-| P-04 | Activos permitidos                             | `XLM`, `USDC_TEST`                                              |
-| P-05 | Máx. operaciones por hora                      | 10                                                              |
-| P-06 | Reserva mínima intocable (fondo de emergencia) | $10                                                             |
-| P-07 | Modo de operación                              | `MANUAL` (siempre confirmar) o `AUTONOMOUS` (dentro de límites) |
-| P-08 | Kill switch                                    | Pausa inmediata del agente                                      |
-| P-09 | Expiración de propuestas                       | 10 minutos                                                      |
+| ID   | Regla                                          | Valor por defecto                                                   |
+| ---- | ---------------------------------------------- | ------------------------------------------------------------------- |
+| P-01 | Monto máximo por operación                     | **$5**                                                              |
+| P-02 | Límite diario acumulado                        | $20                                                                 |
+| P-03 | Destino nuevo (no registrado o sin historial)  | **Siempre requiere confirmación del usuario**                       |
+| P-04 | Activos permitidos                             | `XLM`, `USDC_TEST`                                                  |
+| P-05 | Máx. operaciones por hora                      | 10                                                                  |
+| P-06 | Reserva mínima intocable (fondo de emergencia) | $10                                                                 |
+| P-07 | Modo de operación                              | `MANUAL` (siempre confirmar) o `AUTONOMOUS` (dentro de límites)     |
+| P-08 | Kill switch                                    | Pausa inmediata del agente                                          |
+| P-09 | Expiración de propuestas                       | 10 minutos                                                          |
+| P-10 | Sin precio para convertir a dólares            | Escala al usuario ([ADR 0011](docs/adr/0011-precios-en-dolares.md)) |
+
+Desde el [ADR 0011](docs/adr/0011-precios-en-dolares.md), P-01, P-02 y P-06 se comprueban **dos veces**: contra el límite del propio activo y contra un tope en dólares. Se aplica el más restrictivo, así que añadir precios nunca afloja un límite que ya existía. Cada razón lleva `unit` (`asset` o `usd`) para poder distinguirlas.
 
 ### 8.2 Señales del Guardian
 
@@ -350,6 +358,7 @@ Todos los valores son **configurables** y provisionales. Confirmar con el equipo
 | G-07 | Activo que nunca usaste                             | —                                                                          |
 | G-08 | Velocidad inusual de operaciones                    | —                                                                          |
 | G-09 | Destino en lista de bloqueo local                   | —                                                                          |
+| G-10 | No se pudo valorar la operación en dólares          | "No he podido saber cuánto vale esto en dólares."                          |
 
 **Score:** suma ponderada 0–100 → `LOW` (<30), `MEDIUM` (30–59), `HIGH` (60–84), `CRITICAL` (≥85). `HIGH` y `CRITICAL` exigen confirmación reforzada (p. ej. escribir el monto). Umbrales por afinar con datos reales.
 
@@ -618,13 +627,13 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 
 **Backend 2 — API y reglas (BE2)**
 
-| ID     | Pregunta                                                                            |
-| ------ | ----------------------------------------------------------------------------------- |
-| BE2-Q1 | ¿NestJS o Fastify/Hono? ¿Prisma o Drizzle? ¿Postgres o SQLite para la demo?         |
-| BE2-Q2 | ¿Necesitamos cola de trabajos (BullMQ/Redis) o basta con procesamiento síncrono?    |
-| BE2-Q3 | ¿Valores por defecto de P-01…P-09 y umbrales del score? ¿Configurables por usuario? |
-| BE2-Q4 | ¿La auditoría debe ser inmutable (append-only con hash encadenado)?                 |
-| BE2-Q5 | ¿Qué nivel de observabilidad necesitamos (logs, métricas, trazas)?                  |
+| ID         | Pregunta                                                                                                                |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| ~~BE2-Q1~~ | **Respondida** en [ADR 0002](docs/adr/0002-stack-backend.md): Fastify + Drizzle + Postgres                              |
+| BE2-Q2     | ¿Necesitamos cola de trabajos (BullMQ/Redis) o basta con procesamiento síncrono?                                        |
+| BE2-Q3     | ¿Valores por defecto de P-01…P-09 y umbrales del score? ¿Configurables por usuario?                                     |
+| ~~BE2-Q4~~ | **Respondida** en [ADR 0004](docs/adr/0004-auditoria-encadenada.md): sí, con hash encadenado y verificación por ventana |
+| BE2-Q5     | ¿Qué nivel de observabilidad necesitamos (logs, métricas, trazas)?                                                      |
 
 **AI Agent (AI)**
 
