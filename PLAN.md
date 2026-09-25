@@ -512,7 +512,7 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [x] ALL-02 · `contracts` v0 y contract freeze · S1–S2 · **contracts v0 publicado; freeze pendiente de acordar**
 - [x] ALL-03 · CI, `CODEOWNERS`, plantillas de PR/issues · S1 · **CI con 3 jobs; CODEOWNERS pendiente de repartir**
 - [x] ALL-04 · Pruebas E2E del flujo completo · S4–S5 — frontend hecho (`apps/web/e2e`); falta la firma real con wallet
-- [x] ALL-05 · README, guía de demo y roadmap a mainnet · S6 · **runbooks de despliegue y demo + [roadmap a mainnet](docs/roadmap-mainnet.md)**
+- [x] ALL-05 · README, guía de demo y roadmap a mainnet · S6 · **runbooks de despliegue y demo, [guion para presentar](docs/guion-presentacion.md) y [roadmap a mainnet](docs/roadmap-mainnet.md)**
 
 ---
 

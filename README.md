@@ -29,8 +29,9 @@ Cualquier agente de IA puede conectarse por **MCP** y proponer pagos. Ninguno
 puede enviar dinero: heredan tus límites, tu Guardian y tu auditoría.
 
 El plan completo está en [`PLAN.md`](PLAN.md). Las decisiones tomadas desde
-entonces están en [`docs/adr/`](docs/adr/README.md), y lo que falta para mainnet
-en [`docs/roadmap-mainnet.md`](docs/roadmap-mainnet.md).
+entonces están en [`docs/adr/`](docs/adr/README.md), lo que falta para mainnet
+en [`docs/roadmap-mainnet.md`](docs/roadmap-mainnet.md), y cómo enseñarlo en
+tres minutos en [`docs/guion-presentacion.md`](docs/guion-presentacion.md).
 
 > **Solo testnet.** Mainnet queda fuera del MVP (§15 del PLAN). La API se niega
 > a arrancar en producción con `STELLAR_NETWORK=mainnet`.
@@ -108,6 +109,10 @@ pnpm db:seed        # usuario de demo con 3 objetivos + fondo de emergencia
 
 # 4. API
 pnpm dev:api        # http://localhost:3001 · documentación en /docs
+
+# 5. Frontend, en otra terminal
+cp apps/web/.env.local.example apps/web/.env.local
+pnpm dev:web        # http://localhost:3000
 ```
 
 > Los tests de integración **necesitan Docker levantado**: crean su propia base
@@ -160,17 +165,17 @@ Cada paquete tiene su propio README con lo que hace y lo que le falta.
 
 ## Estado por área
 
-| Área                     | Dueño      | Estado                                                                                                                                                                                      |
-| ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/contracts`     | Compartido | **v0 listo.** Entidades, endpoints, puertos y fixtures. Contract freeze al final de S2                                                                                                      |
-| `packages/policy-engine` | BE2        | **Funcional.** P-01…P-10, incluidos los topes en dólares. 30 tests                                                                                                                          |
-| `packages/guardian`      | BE2        | **Funcional.** G-01…G-10, score y explicación de respaldo. 29 tests                                                                                                                         |
-| `packages/prices`        | BE2        | **Funcional.** Precio en dólares con caché y respaldo fijo. 19 tests                                                                                                                        |
-| `apps/api`               | BE2        | **Funcional.** Auth, destinos, propuestas con máquina de estados, política, Guardian, auditoría encadenada y barrido de caducidad. 59 tests, casi todos de integración contra Postgres real |
-| `apps/mcp`               | BE2        | **Funcional.** Servidor MCP con 6 herramientas; ninguna envía dinero. 9 tests                                                                                                               |
-| `packages/stellar`       | BE1        | **Funcional.** Horizon real: saldos, historial, estadísticas, antigüedad de cuentas, simulación, firma y envío en testnet. 32 tests                                                         |
-| `packages/agent`         | AI         | **Andamiaje.** Agente de reglas sin LLM, suficiente para la demo end-to-end                                                                                                                 |
-| `apps/web`               | FE         | **Completo (FE-01…FE-13).** Sesión con Freighter, propuestas con firma, panel del Guardian, límites, destinos, historial, configuración y delegación. Interfaz según `images/mockup.png`    |
+| Área                     | Dueño      | Estado                                                                                                                                                                                                     |
+| ------------------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/contracts`     | Compartido | **v0 listo.** Entidades, endpoints, puertos y fixtures. Contract freeze al final de S2                                                                                                                     |
+| `packages/policy-engine` | BE2        | **Funcional.** P-01…P-10, incluidos los topes en dólares. 30 tests                                                                                                                                         |
+| `packages/guardian`      | BE2        | **Funcional.** G-01…G-10, score y explicación de respaldo. 29 tests                                                                                                                                        |
+| `packages/prices`        | BE2        | **Funcional.** Precio en dólares con caché y respaldo fijo. 19 tests                                                                                                                                       |
+| `apps/api`               | BE2        | **Funcional.** Auth, destinos, propuestas con máquina de estados, política, Guardian, auditoría encadenada y barrido de caducidad. 81 tests, casi todos de integración contra Postgres real                |
+| `apps/mcp`               | BE2        | **Funcional.** Servidor MCP con 6 herramientas; ninguna envía dinero. 9 tests                                                                                                                              |
+| `packages/stellar`       | BE1        | **Funcional.** Horizon real: saldos, historial, estadísticas, antigüedad de cuentas, simulación, firma y envío en testnet, pagos en lote y reconciliación. 56 tests                                        |
+| `packages/agent`         | AI         | **Andamiaje.** Agente de reglas sin LLM, suficiente para la demo end-to-end                                                                                                                                |
+| `apps/web`               | FE         | **Completo (FE-01…FE-13).** Sesión con cualquier wallet de Stellar, propuestas con firma, panel del Guardian, límites, destinos, historial, configuración y delegación. Interfaz según `images/mockup.png` |
 
 Nadie está bloqueado: cada consumidor tiene un mock del que depende
 (§6.2 del PLAN).
