@@ -27,6 +27,44 @@ pnpm dev:api        # http://localhost:3001/docs
 
 Deja `USE_FAKE_STELLAR=true` y `ALLOW_DEV_LOGIN=true` en el `.env`.
 
+## Levantar el frontend
+
+El `.env` de la raíz es de la API; el frontend tiene el suyo, y **solo admite
+variables `NEXT_PUBLIC_*`** porque todo lo que haya ahí acaba en el navegador.
+
+```bash
+cp apps/web/.env.local.example apps/web/.env.local
+pnpm dev:web        # http://localhost:3000
+```
+
+`NEXT_PUBLIC_ALLOW_DEV_LOGIN` tiene que coincidir con el `ALLOW_DEV_LOGIN` de
+la API. Si solo está en uno, o el botón de "entrar sin wallet" no aparece, o
+aparece y la API responde 403.
+
+Next lee ese fichero **al arrancar**: si lo cambias, reinicia el servidor.
+
+## Correr los E2E
+
+Prueban el flujo real de punta a punta, así que necesitan la pila entera
+levantada: Postgres, la API y el frontend.
+
+```bash
+pnpm --filter @aegis/web test:e2e
+```
+
+Playwright arranca el frontend él solo, pero la API no. Si falta algo, el
+arranque lo dice antes de abrir el navegador en vez de dejarte 30 segundos de
+espera contra un botón que no existe.
+
+Usan el **Chrome instalado** en el sistema, no los navegadores de Playwright:
+son ~150 MB y en algunas redes esa descarga no llega. Si prefieres los suyos,
+`pnpm exec playwright install chromium` y quita `channel: 'chrome'` de
+`playwright.config.ts`.
+
+Un test sale siempre como `skipped`: el de aprobar firmando con la wallet. No
+hay forma de automatizar la firma de una extensión de navegador, y ese paso se
+comprueba a mano con el guion de `demo.md`.
+
 ## Prueba del flujo completo
 
 ```bash
@@ -95,6 +133,7 @@ A partir de ahí, cualquier propuesta nueva sale `DENIED` con la razón P-08.
 | `Configuración inválida` nombrando `STELLAR_AGENT_SIGNER_SECRET` | `USE_FAKE_STELLAR=false` sin credenciales         | Ponlo en `true` para desarrollar, o completa las credenciales (ver `deploy.md`) |
 | `DEV_LOGIN_DISABLED`                                             | `ALLOW_DEV_LOGIN=false`                           | Actívalo en `.env` (solo en desarrollo)                                         |
 | Cambié una ruta y la CI falla                                    | `docs/api/openapi.json` desactualizado            | `pnpm --filter @aegis/api openapi`                                              |
+| El botón de "entrar sin wallet" no sale                          | Falta `apps/web/.env.local`                       | Cópialo del `.example` y reinicia `pnpm dev:web`                                |
 
 ## Reiniciar desde cero
 

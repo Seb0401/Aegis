@@ -152,7 +152,7 @@ export function DelegationCard() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Instalar {wallet.name}
+                  {wallet.installLabel}
                 </a>
               ) : null}
             </div>

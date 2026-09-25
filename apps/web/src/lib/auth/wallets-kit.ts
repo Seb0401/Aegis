@@ -1,10 +1,5 @@
-import { Networks, StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
-import { AlbedoModule } from '@creit.tech/stellar-wallets-kit/modules/albedo';
-import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freighter';
-import { HanaModule } from '@creit.tech/stellar-wallets-kit/modules/hana';
-import { LobstrModule } from '@creit.tech/stellar-wallets-kit/modules/lobstr';
-import { RabetModule } from '@creit.tech/stellar-wallets-kit/modules/rabet';
-import { xBullModule } from '@creit.tech/stellar-wallets-kit/modules/xbull';
+// `import type` se borra al compilar: no arrastra el kit al bundle inicial.
+import type { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
 import { REQUIRED_NETWORK, WalletError, type WalletAccount, type WalletAdapter } from './wallet';
 
 /**
@@ -22,45 +17,57 @@ import { REQUIRED_NETWORK, WalletError, type WalletAccount, type WalletAdapter }
  */
 
 /**
- * Wallets que se ofrecen.
+ * El kit se carga con `import()` dinámico, no con un import normal.
  *
- * Solo extensiones de navegador y wallets web: nada de hardware ni de puentes
- * móviles, que en una demo añaden pasos y formas de fallar sin aportar nada.
- */
-function browserModules() {
-  return [
-    new FreighterModule(),
-    new xBullModule(),
-    new AlbedoModule(),
-    new RabetModule(),
-    new LobstrModule(),
-    new HanaModule(),
-  ];
-}
-
-/**
- * El kit se inicializa perezosamente.
+ * Dos motivos. Uno: al importarse **registra web components e inyecta estilos**
+ * en el documento; con un import estático eso pasa mientras Next hidrata y el
+ * servidor de desarrollo avisa de que el HTML servido y el del cliente no
+ * coinciden. Dos: son el kit y seis módulos de wallet en el bundle inicial de
+ * una pantalla donde la mayoría de la gente aún no ha decidido conectar nada.
  *
- * Es una API estática que toca `window`: inicializarla al importar el módulo
- * rompería el renderizado en servidor de Next.
+ * Cargándolo cuando alguien va a usar la wallet, el primer render es HTML
+ * limpio y el kit entra después, con la página ya viva.
  */
-let initialized = false;
+type Kit = typeof StellarWalletsKit;
 
-function ensureInitialized(): void {
+let kit: Kit | null = null;
+
+async function ensureInitialized(): Promise<Kit> {
   if (typeof window === 'undefined') {
     throw new WalletError('FAILED', 'La wallet solo está disponible en el navegador.');
   }
 
-  if (initialized) return;
+  if (kit) return kit;
+
+  const [{ Networks, StellarWalletsKit }, freighter, xbull, albedo, rabet, lobstr, hana] =
+    await Promise.all([
+      import('@creit.tech/stellar-wallets-kit'),
+      import('@creit.tech/stellar-wallets-kit/modules/freighter'),
+      import('@creit.tech/stellar-wallets-kit/modules/xbull'),
+      import('@creit.tech/stellar-wallets-kit/modules/albedo'),
+      import('@creit.tech/stellar-wallets-kit/modules/rabet'),
+      import('@creit.tech/stellar-wallets-kit/modules/lobstr'),
+      import('@creit.tech/stellar-wallets-kit/modules/hana'),
+    ]);
 
   StellarWalletsKit.init({
     // Aegis es solo testnet (§15 del PLAN). Fijarlo aquí evita que alguien
     // firme con una cuenta de mainnet por error.
     network: Networks.TESTNET,
-    modules: browserModules(),
+    // Solo extensiones de navegador y wallets web: nada de hardware ni de
+    // puentes móviles, que añaden pasos y formas de fallar sin aportar nada.
+    modules: [
+      new freighter.FreighterModule(),
+      new xbull.xBullModule(),
+      new albedo.AlbedoModule(),
+      new rabet.RabetModule(),
+      new lobstr.LobstrModule(),
+      new hana.HanaModule(),
+    ],
   });
 
-  initialized = true;
+  kit = StellarWalletsKit;
+  return kit;
 }
 
 /** ¿Ya eligió el usuario una wallet en esta sesión? */
@@ -75,8 +82,12 @@ function fail(error: unknown, fallback: string): never {
 
 export const walletsKitAdapter: WalletAdapter = {
   id: 'stellar-wallets-kit',
-  name: 'Stellar Wallets Kit',
+  // Genérico a propósito: el botón dice «Conectar wallet» y el usuario elige
+  // cuál en el selector. Poner aquí «Stellar Wallets Kit» le pediría conectar
+  // algo cuyo nombre no significa nada para él.
+  name: 'wallet',
   installUrl: 'https://stellarwalletskit.dev',
+  installLabel: 'Ver wallets compatibles',
 
   /**
    * Hay wallets disponibles si al menos una está instalada.
@@ -86,8 +97,8 @@ export const walletsKitAdapter: WalletAdapter = {
    */
   async isAvailable() {
     try {
-      ensureInitialized();
-      const soportadas = await StellarWalletsKit.refreshSupportedWallets();
+      const k = await ensureInitialized();
+      const soportadas = await k.refreshSupportedWallets();
       return soportadas.some((wallet) => wallet.isAvailable);
     } catch {
       return false;
@@ -102,8 +113,8 @@ export const walletsKitAdapter: WalletAdapter = {
    */
   async connect(): Promise<WalletAccount> {
     try {
-      ensureInitialized();
-      const { address } = await StellarWalletsKit.authModal();
+      const k = await ensureInitialized();
+      const { address } = await k.authModal();
 
       if (!address) {
         throw new WalletError('FAILED', 'La wallet no devolvió ninguna dirección.');
@@ -120,10 +131,10 @@ export const walletsKitAdapter: WalletAdapter = {
 
   /** Sin conexión previa no hay cuenta: no se abre el selector por las buenas. */
   async getAccount(): Promise<WalletAccount | null> {
-    if (!connected) return null;
+    if (!connected || !kit) return null;
 
     try {
-      const { address } = await StellarWalletsKit.getAddress();
+      const { address } = await kit.getAddress();
       return address ? { address, network: REQUIRED_NETWORK } : null;
     } catch {
       return null;
@@ -132,8 +143,8 @@ export const walletsKitAdapter: WalletAdapter = {
 
   async signChallenge(challenge: string, address: string): Promise<string> {
     try {
-      ensureInitialized();
-      const { signedMessage } = await StellarWalletsKit.signMessage(challenge, { address });
+      const k = await ensureInitialized();
+      const { signedMessage } = await k.signMessage(challenge, { address });
 
       if (!signedMessage) {
         throw new WalletError('FAILED', 'La wallet no devolvió ninguna firma.');
@@ -148,8 +159,8 @@ export const walletsKitAdapter: WalletAdapter = {
 
   async signXdr(xdr: string, address: string, networkPassphrase?: string): Promise<string> {
     try {
-      ensureInitialized();
-      const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdr, {
+      const k = await ensureInitialized();
+      const { signedTxXdr } = await k.signTransaction(xdr, {
         address,
         ...(networkPassphrase ? { networkPassphrase } : {}),
       });
@@ -170,8 +181,8 @@ export const walletsKitAdapter: WalletAdapter = {
 export function resetSelectedWallet(): void {
   connected = false;
 
-  if (initialized) {
-    void StellarWalletsKit.disconnect().catch(() => {
+  if (kit) {
+    void kit.disconnect().catch(() => {
       // Desconectar es una cortesía con la wallet: si falla, la sesión de
       // Aegis se cierra igual y eso es lo que le importa al usuario.
     });

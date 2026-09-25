@@ -65,7 +65,7 @@ test.describe('sesión', () => {
     await entrar(page);
 
     await page.getByRole('button', { name: /cerrar sesión/i }).click();
-    await expect(page.getByRole('button', { name: /conectar freighter/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /conectar wallet/i })).toBeVisible();
   });
 
   test.describe('sin sesión', () => {
@@ -74,7 +74,7 @@ test.describe('sesión', () => {
 
     test('una ruta privada devuelve a la pantalla de conexión', async ({ page }) => {
       await page.goto('/limites');
-      await expect(page.getByRole('button', { name: /conectar freighter/i })).toBeVisible();
+      await expect(page.getByRole('button', { name: /conectar wallet/i })).toBeVisible();
     });
   });
 });

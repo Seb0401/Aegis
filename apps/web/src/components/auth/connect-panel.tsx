@@ -87,7 +87,7 @@ export function ConnectPanel() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Instalar {wallet.name}
+                  {wallet.installLabel}
                 </a>
               ) : null}
             </div>

@@ -24,7 +24,12 @@ const rejectMutate = vi.fn();
 vi.mock('@/lib/auth/auth-context', () => ({
   useAuth: () => ({
     session: { token: 't', user: { id: 'user_1', address: ADDRESS } },
-    wallet: { name: 'Freighter', installUrl: 'https://www.freighter.app/', signXdr },
+    wallet: {
+      name: 'Freighter',
+      installUrl: 'https://www.freighter.app/',
+      installLabel: 'Instalar Freighter',
+      signXdr,
+    },
   }),
 }));
 

@@ -248,7 +248,7 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Instalar {wallet.name}
+                      {wallet.installLabel}
                     </a>
                   ) : null}
                 </div>

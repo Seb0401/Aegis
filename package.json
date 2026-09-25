@@ -17,6 +17,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yml,yaml}\"",
     "dev:api": "pnpm --filter @aegis/api dev",
+    "dev:web": "pnpm --filter @aegis/web dev",
     "db:up": "docker compose -f infra/docker-compose.yml up -d",
     "db:down": "docker compose -f infra/docker-compose.yml down",
     "db:generate": "pnpm --filter @aegis/api db:generate",

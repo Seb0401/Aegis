@@ -23,8 +23,16 @@ export interface WalletAccount {
 
 export interface WalletAdapter {
   readonly id: string;
+  /** Cómo se nombra en «Conectar …». Puede ser genérico, como «wallet». */
   readonly name: string;
   readonly installUrl: string;
+  /**
+   * Texto del enlace de instalación.
+   *
+   * Existe porque «Instalar {name}» no siempre funciona: con un selector de
+   * varias wallets no hay una que instalar, sino una lista que mirar.
+   */
+  readonly installLabel: string;
   /** ¿Está la extensión instalada en este navegador? */
   isAvailable(): Promise<boolean>;
   /** Pide permiso al usuario y devuelve la cuenta activa. */
@@ -135,6 +143,7 @@ export const freighterAdapter: WalletAdapter = {
   id: 'freighter',
   name: 'Freighter',
   installUrl: 'https://www.freighter.app/',
+  installLabel: 'Instalar Freighter',
 
   async isAvailable() {
     try {
