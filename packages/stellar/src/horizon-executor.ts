@@ -132,6 +132,11 @@ export class HorizonStellarExecutor implements StellarExecutor {
     return new Asset(ON_CHAIN_ASSET_CODE.USDC_TEST, this.usdcTestIssuer);
   }
 
+  /** Clave pública derivada de la seed custodiada. Nunca llega del cliente. */
+  getAgentPublicKey(): string {
+    return this.agentPublicKey;
+  }
+
   async buildUnsigned(accountId: string, actions: ResolvedAction[]): Promise<{ xdr: string }> {
     this.assertAllowedSource(accountId);
     validatePaymentActions(actions);

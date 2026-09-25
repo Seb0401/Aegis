@@ -10,8 +10,16 @@ import type { ResolvedAction, StellarExecutor } from '@aegis/contracts';
  *
  * Nunca debe usarse con `NODE_ENV=production`: la API lo impide al arrancar.
  */
+/** Clave pública del "agente" de mentira. Es válida, pero nadie tiene su seed. */
+export const FAKE_AGENT_PUBLIC_KEY = 'GBH5AQXXYIHEUMGEHOQZTPM7P3JOQFVEGQU3TUX6PVSXL5SBIVGYF4DO';
+
 export class FakeStellarExecutor implements StellarExecutor {
   private readonly submitted = new Map<string, string>();
+
+  /** Dirección fija y válida: los tests necesitan que sea estable. */
+  getAgentPublicKey(): string {
+    return FAKE_AGENT_PUBLIC_KEY;
+  }
 
   async buildUnsigned(accountId: string, actions: ResolvedAction[]): Promise<{ xdr: string }> {
     return { xdr: encode({ kind: 'unsigned', accountId, actions }) };

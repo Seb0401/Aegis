@@ -75,6 +75,14 @@ export interface StellarExecutor {
   submit(xdr: string): Promise<{ hash: string }>;
   /** XDR para que el usuario añada el signer del agente a su cuenta (BE1-05). */
   buildDelegationXdr(accountId: string, agentPublicKey: string): Promise<{ xdr: string }>;
+  /**
+   * Clave pública del signer que el backend custodia.
+   *
+   * La expone el ejecutor porque es **derivada de la seed**, no elegida: si el
+   * cliente pudiera indicar qué clave delegar, podría hacer que el usuario
+   * autorizara a firmar a una cuenta que no es la nuestra.
+   */
+  getAgentPublicKey(): string;
 }
 
 /** Herramientas que el agente puede invocar. Lo implementa BE2; lo consume AI. */

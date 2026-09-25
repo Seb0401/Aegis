@@ -471,13 +471,13 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [x] BE1-02 · Cliente base: balances y cuenta · S1
 - [x] BE1-03 · Construcción, firma y envío de transacciones · S1
 - [x] BE1-04 · `FakeStellarReader` con fixtures para BE2 y AI · S1
-- [ ] BE1-05 · Preparación de XDR de delegación · S2 · **XDR listo en M1; falta integración API/UI**
+- [x] BE1-05 · Preparación de XDR de delegación · S2 · **XDR listo en M1; falta integración API/UI** · **la clave la deriva el servidor, ya no llega del cliente**
 - [x] BE1-06 · Pagos en lote (multi-operación) y manejo de trustlines · S2 · **hecho por BE2, revisar: lote multi-operación y activos de crédito**
 - [x] BE1-07 · Historial y estadísticas (mediana, direcciones conocidas, edad de cuenta) · S3 · **hecho por BE2, revisar**
 - [x] BE1-08 · Simulación previa (fee, saldo posterior, errores) · S3 · **hecho por BE2, revisar**
 - [x] BE1-09 · Seguimiento de confirmación y reintentos · S4 · **parcial: reconcilia SUBMITTED con hash**
-- [ ] BE1-10 · Custodia y rotación de la clave del signer · S4
-- [ ] BE1-11 · Activo de prueba `USDC_TEST` (emisor y trustlines) · S2
+- [x] BE1-10 · Custodia y rotación de la clave del signer · S4 · **custodia en el gestor de secretos + `demo:signer verify|rotate` ([ADR 0013](docs/adr/0013-custodia-del-signer.md))**
+- [x] BE1-11 · Activo de prueba `USDC_TEST` (emisor y trustlines) · S2 · **comandos `demo:usdc` + [runbook](docs/runbooks/usdc-test.md); falta ejecutarlos en testnet**
 
 ### Backend 2 — API, políticas y Guardian (BE2)
 
@@ -617,13 +617,13 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 
 **Backend 1 — Stellar (BE1)**
 
-| ID     | Pregunta                                                                                                  |
-| ------ | --------------------------------------------------------------------------------------------------------- |
-| BE1-Q1 | ¿Horizon o Stellar RPC para lectura de historial? (verificar soporte vigente en la documentación oficial) |
-| BE1-Q2 | ¿Dónde se custodia la clave del signer: variable cifrada, KMS o Vault?                                    |
-| BE1-Q3 | ¿Un signer por usuario o uno global del servicio? (recomendado: por usuario y rotable)                    |
-| BE1-Q4 | ¿Quién paga las comisiones? ¿Se usa fee-bump o sponsorship?                                               |
-| BE1-Q5 | Resultado del spike `SP-1`: ¿signer en la cuenta principal o cuenta-bolsillo del agente?                  |
+| ID         | Pregunta                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| BE1-Q1     | ¿Horizon o Stellar RPC para lectura de historial? (verificar soporte vigente en la documentación oficial)                      |
+| ~~BE1-Q2~~ | **Respondida (asumida)** en [ADR 0013](docs/adr/0013-custodia-del-signer.md): gestor de secretos del proveedor, no KMS todavía |
+| ~~BE1-Q3~~ | **Respondida** en [ADR 0013](docs/adr/0013-custodia-del-signer.md): un signer global del servicio, con peso 1                  |
+| BE1-Q4     | ¿Quién paga las comisiones? ¿Se usa fee-bump o sponsorship?                                                                    |
+| BE1-Q5     | Resultado del spike `SP-1`: ¿signer en la cuenta principal o cuenta-bolsillo del agente?                                       |
 
 **Backend 2 — API y reglas (BE2)**
 

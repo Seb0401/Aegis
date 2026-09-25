@@ -24,13 +24,16 @@
     "dev": "tsc -p tsconfig.build.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
-    "demo:m1": "tsx src/demo-m1.ts"
+    "demo:m1": "tsx src/demo-m1.ts",
+    "demo:usdc": "tsx src/demo-usdc.ts",
+    "demo:signer": "tsx src/demo-signer.ts"
   },
   "dependencies": {
     "@aegis/contracts": "workspace:*",
     "@stellar/stellar-sdk": "^13.1.0"
   },
   "devDependencies": {
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }

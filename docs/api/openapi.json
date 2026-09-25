@@ -294,25 +294,6 @@
         "tags": [
           "account"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "agentPublicKey": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "agentPublicKey"
-                ],
-                "additionalProperties": false
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Default Response",

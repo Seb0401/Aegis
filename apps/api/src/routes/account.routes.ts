@@ -32,14 +32,15 @@ export const accountRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags: ['account'],
         summary: 'XDR sin firmar para añadir el signer delegado del agente',
-        body: z.object({ agentPublicKey: z.string() }),
         response: { 200: DelegationPrepareResponseSchema },
       },
     },
     async (request) => {
-      // La clave pública del agente la decide BE1 (BE1-Q3: ¿una por usuario o
-      // una global del servicio?). Hasta que se responda, llega en el cuerpo.
-      const { agentPublicKey } = request.body;
+      // La clave la deriva el servidor de la seed que custodia. Antes llegaba
+      // en el cuerpo, y eso permitía que un cliente hiciera firmar al usuario
+      // una delegación a favor de una cuenta que no es la nuestra: la víctima
+      // habría autorizado a un tercero a mover su dinero creyendo que era Aegis.
+      const agentPublicKey = app.services.executor.getAgentPublicKey();
 
       const { xdr } = await app.services.executor.buildDelegationXdr(
         request.user.address,

@@ -203,3 +203,60 @@ describe('con el oráculo caído', () => {
     expect(enDolares).toEqual([]);
   });
 });
+
+describe('delegación del signer (BE1-05)', () => {
+  let harness: TestApp;
+  let app: FastifyInstance;
+  let headers: { authorization: string };
+
+  beforeAll(async () => {
+    const montaje = await montar();
+    harness = montaje.harness;
+    app = harness.app;
+    headers = montaje.headers;
+  });
+
+  afterAll(async () => {
+    await harness.close();
+  });
+
+  it('la clave del agente la pone el servidor, no el cliente', async () => {
+    // Si el cliente pudiera elegirla, podría hacer que el usuario firmara una
+    // delegación a favor de una cuenta ajena creyendo que era Aegis.
+    const propia = app.services.executor.getAgentPublicKey();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/account/delegation/prepare',
+      headers,
+      payload: { agentPublicKey: 'GDRX6ATFBUJMFDUBRAD7OV535ZADFSVPF2GRUR6EA37LFEJUQ2KIU66D' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.body) as { agentPublicKey: string; xdr: string };
+
+    expect(body.agentPublicKey).toBe(propia);
+    expect(body.xdr).toBeTruthy();
+  });
+
+  it('funciona sin enviar nada en el cuerpo', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/account/delegation/prepare',
+      headers,
+      payload: {},
+    });
+
+    expect(response.statusCode).toBe(200);
+  });
+
+  it('exige sesión', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/account/delegation/prepare',
+      payload: {},
+    });
+
+    expect(response.statusCode).toBe(401);
+  });
+});

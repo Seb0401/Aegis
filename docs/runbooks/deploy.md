@@ -44,7 +44,10 @@ Apunta la dirección que imprime el `seed`: es con la que entrará el jurado.
    [Friendbot](https://friendbot.stellar.org/).
 2. Genera una seed aparte para el signer del agente. **No reutilices la seed de
    la cuenta demo**: el backend solo debe tener la del agente.
-3. Delega el signer siguiendo [`stellar-m1.md`](stellar-m1.md).
+3. Delega el signer siguiendo [`stellar-m1.md`](stellar-m1.md) y compruébalo con
+   `demo:signer verify` ([signer.md](signer.md)).
+4. Emite el activo de prueba siguiendo [`usdc-test.md`](usdc-test.md). Sin esto
+   la demo solo puede mover XLM, y el producto habla de dólares.
 
 > ⚠️ **Testnet se reinicia cada ~3 meses.** Verifica la cuenta en
 > [Stellar Expert](https://stellar.expert/explorer/testnet) el día antes de
