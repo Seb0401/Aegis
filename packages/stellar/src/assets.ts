@@ -12,24 +12,45 @@ import type { AssetCode } from '@aegis/contracts';
  * test de ida y vuelta lo vigila.
  */
 
-/** Código con el que cada activo viaja por la red. */
+/** Código con el que cada activo viaja por la red, por defecto. */
 export const ON_CHAIN_ASSET_CODE: Record<AssetCode, string> = {
   XLM: 'XLM',
   USDC_TEST: 'USDCTEST',
 };
 
-/** El camino inverso: de lo que devuelve Horizon a lo que entiende Aegis. */
-const FROM_ON_CHAIN: Record<string, AssetCode> = Object.fromEntries(
-  Object.entries(ON_CHAIN_ASSET_CODE).map(([interno, cadena]) => [cadena, interno as AssetCode]),
-);
+/**
+ * USDC canónico de testnet.
+ *
+ * Existe y cualquiera puede usarlo: es el mismo que usa el protocolo x402. Sale
+ * más barato que emitir uno propio —no hay emisor que mantener ni trustline que
+ * explicar— y un jurado reconoce el nombre. Para usarlo:
+ *
+ *   USDC_TEST_ASSET_CODE=USDC
+ *   USDC_TEST_ISSUER=GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
+ *
+ * El inconveniente: hay que conseguir saldo de algún sitio, mientras que del
+ * propio se emite lo que haga falta.
+ */
+export const TESTNET_USDC = {
+  code: 'USDC',
+  issuer: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
+} as const;
 
 /**
  * Traduce un código de la red al nuestro.
+ *
+ * `usdcTestAssetCode` permite apuntar a otro activo sin tocar el contrato:
+ * dentro de Aegis sigue llamándose `USDC_TEST` valga lo que valga el código de
+ * la cadena.
  *
  * Devuelve `null` para lo que no soportamos, en vez de forzarlo: un activo
  * desconocido tratado como conocido ensuciaría el historial y las estadísticas
  * sobre las que el Guardian decide.
  */
-export function toInternalAssetCode(onChainCode: string): AssetCode | null {
-  return FROM_ON_CHAIN[onChainCode] ?? null;
+export function toInternalAssetCode(
+  onChainCode: string,
+  usdcTestAssetCode: string = ON_CHAIN_ASSET_CODE.USDC_TEST,
+): AssetCode | null {
+  if (onChainCode === ON_CHAIN_ASSET_CODE.XLM) return 'XLM';
+  return onChainCode === usdcTestAssetCode ? 'USDC_TEST' : null;
 }

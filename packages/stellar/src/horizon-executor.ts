@@ -29,6 +29,11 @@ export interface HorizonStellarExecutorOptions {
    * haber creado cualquiera.
    */
   usdcTestIssuer?: string;
+  /**
+   * Código del activo en la red. Por defecto `USDCTEST`, el nuestro; ponlo a
+   * `USDC` para usar el USDC canónico de testnet.
+   */
+  usdcTestAssetCode?: string;
   server?: Horizon.Server;
 }
 
@@ -56,6 +61,7 @@ export class HorizonStellarExecutor implements StellarExecutor {
   private readonly allowedSourceAccount: string;
   private readonly timeoutSeconds: number;
   private readonly usdcTestIssuer: string | undefined;
+  private readonly usdcTestAssetCode: string;
 
   constructor(options: HorizonStellarExecutorOptions) {
     validateHorizonUrl(options.horizonUrl);
@@ -83,6 +89,7 @@ export class HorizonStellarExecutor implements StellarExecutor {
 
     if (options.usdcTestIssuer) validateAddress(options.usdcTestIssuer);
     this.usdcTestIssuer = options.usdcTestIssuer;
+    this.usdcTestAssetCode = options.usdcTestAssetCode ?? ON_CHAIN_ASSET_CODE.USDC_TEST;
   }
 
   /**
@@ -108,10 +115,7 @@ export class HorizonStellarExecutor implements StellarExecutor {
       );
     }
 
-    if (
-      asset.getCode() !== ON_CHAIN_ASSET_CODE.USDC_TEST ||
-      asset.getIssuer() !== this.usdcTestIssuer
-    ) {
+    if (asset.getCode() !== this.usdcTestAssetCode || asset.getIssuer() !== this.usdcTestIssuer) {
       throw new StellarClientError(
         'UNSUPPORTED_ASSET',
         'El activo no es XLM ni el USDC_TEST del emisor configurado.',
@@ -129,7 +133,7 @@ export class HorizonStellarExecutor implements StellarExecutor {
       );
     }
 
-    return new Asset(ON_CHAIN_ASSET_CODE.USDC_TEST, this.usdcTestIssuer);
+    return new Asset(this.usdcTestAssetCode, this.usdcTestIssuer);
   }
 
   /** Clave pública derivada de la seed custodiada. Nunca llega del cliente. */

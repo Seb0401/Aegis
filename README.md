@@ -29,7 +29,8 @@ Cualquier agente de IA puede conectarse por **MCP** y proponer pagos. Ninguno
 puede enviar dinero: heredan tus límites, tu Guardian y tu auditoría.
 
 El plan completo está en [`PLAN.md`](PLAN.md). Las decisiones tomadas desde
-entonces están en [`docs/adr/`](docs/adr/README.md).
+entonces están en [`docs/adr/`](docs/adr/README.md), y lo que falta para mainnet
+en [`docs/roadmap-mainnet.md`](docs/roadmap-mainnet.md).
 
 > **Solo testnet.** Mainnet queda fuera del MVP (§15 del PLAN). La API se niega
 > a arrancar en producción con `STELLAR_NETWORK=mainnet`.

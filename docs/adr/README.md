@@ -23,3 +23,4 @@ el viejo.
 | [0011](0011-precios-en-dolares.md)        | Precios en dólares; cierra el agujero del ADR 0003        | Aceptada    |
 | [0012](0012-hackathon-track-agentes.md)   | Hackathon de Stellar, track Agentes y el problema en Perú | Aceptada    |
 | [0013](0013-custodia-del-signer.md)       | Custodia y rotación de la clave del signer                | **Asumida** |
+| [0014](0014-x402-y-soroban.md)            | x402 y límites on-chain: qué costaría                     | Informe     |

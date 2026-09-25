@@ -512,7 +512,7 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [x] ALL-02 · `contracts` v0 y contract freeze · S1–S2 · **contracts v0 publicado; freeze pendiente de acordar**
 - [x] ALL-03 · CI, `CODEOWNERS`, plantillas de PR/issues · S1 · **CI con 3 jobs; CODEOWNERS pendiente de repartir**
 - [x] ALL-04 · Pruebas E2E del flujo completo · S4–S5 — frontend hecho (`apps/web/e2e`); falta la firma real con wallet
-- [ ] ALL-05 · README, guía de demo y roadmap a mainnet · S6 · **runbooks de despliegue y demo hechos; falta el roadmap a mainnet**
+- [x] ALL-05 · README, guía de demo y roadmap a mainnet · S6 · **runbooks de despliegue y demo + [roadmap a mainnet](docs/roadmap-mainnet.md)**
 
 ---
 
@@ -590,50 +590,50 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 
 ### 14.2 Preguntas para todo el equipo
 
-| ID       | Pregunta                                                                                                                                                                   | Recomendación por defecto                                                                                          |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Q-01     | ¿Nombre del proyecto, licencia e idioma del código y la documentación?                                                                                                     | Nombre por definir · MIT · docs en español, código en inglés                                                       |
-| Q-02     | ¿Fecha real de inicio, fecha límite y horas/semana y zona horaria de cada persona?                                                                                         | Inicio 2026-09-21 · 6 semanas                                                                                      |
-| Q-03     | ¿Canal de comunicación y horario de la sincronización semanal?                                                                                                             | Discord o WhatsApp + 1 sync semanal                                                                                |
-| ~~Q-04~~ | **Respondida** en [ADR 0012](docs/adr/0012-hackathon-track-agentes.md): hackathon de Stellar, track Agentes. Entregables: URL pública y video de 3 min con demo en testnet | —                                                                                                                  |
-| Q-05     | ¿Qué es un "objetivo" en la cadena?                                                                                                                                        | Cuenta Stellar de destino etiquetada, propia del usuario, con meta opcional; "Emergencias" es un objetivo especial |
-| Q-06     | ¿Qué activo usamos además de XLM?                                                                                                                                          | `USDC_TEST` con emisor propio de testnet                                                                           |
-| Q-07     | ¿Autenticación con wallet o con email? ¿Un solo usuario de demo o varios?                                                                                                  | Inicio de sesión con wallet, demo con pocos usuarios                                                               |
-| Q-08     | ¿Idioma del agente?                                                                                                                                                        | Español (con opción a inglés)                                                                                      |
-| Q-09     | ¿Dónde se despliega la demo?                                                                                                                                               | Local con Docker + despliegue simple (Vercel/Render)                                                               |
-| Q-10     | ¿Presupuesto y claves de API para el LLM? ¿Quién las administra?                                                                                                           | Una clave de equipo con límite de gasto                                                                            |
+| ID       | Pregunta                                                                                                                                                                                         | Recomendación por defecto               |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
+| ~~Q-01~~ | **Respondida** en [ADR 0001](docs/adr/0001-nombre-y-licencia.md): Aegis · MIT · documentación en español, identificadores en inglés                                                              | —                                       |
+| Q-02     | ¿Fecha real de inicio, fecha límite y horas/semana y zona horaria de cada persona?                                                                                                               | Inicio 2026-09-21 · 6 semanas           |
+| Q-03     | ¿Canal de comunicación y horario de la sincronización semanal?                                                                                                                                   | Discord o WhatsApp + 1 sync semanal     |
+| ~~Q-04~~ | **Respondida** en [ADR 0012](docs/adr/0012-hackathon-track-agentes.md): hackathon de Stellar, track Agentes. Entregables: URL pública y video de 3 min con demo en testnet                       | —                                       |
+| ~~Q-05~~ | **Respondida.** Un `Destination` con `kind: GOAL`: cuenta Stellar propia del usuario con etiqueta legible. `EMERGENCY_FUND` es el objetivo especial que protege P-06                             | —                                       |
+| ~~Q-06~~ | **Respondida.** `USDC_TEST`, que **en la red se llama `USDCTEST`** (Stellar no admite guiones bajos). Alternativa sin emisor propio: el USDC canónico de testnet con `USDC_TEST_ASSET_CODE=USDC` | —                                       |
+| ~~Q-07~~ | **Respondida.** Inicio de sesión firmando un reto con la wallet, multiusuario real. `/auth/dev-login` solo en desarrollo                                                                         | —                                       |
+| ~~Q-08~~ | **Respondida.** Español, en el agente y en las explicaciones del Guardian                                                                                                                        | —                                       |
+| ~~Q-09~~ | **Respondida.** Ver [deploy.md](docs/runbooks/deploy.md): Vercel el frontend, Render/Railway/Fly la API, Neon la base de datos                                                                   | —                                       |
+| Q-10     | ¿Presupuesto y claves de API para el LLM? ¿Quién las administra?                                                                                                                                 | Una clave de equipo con límite de gasto |
 
 ### 14.3 Preguntas por rol
 
 **Frontend (FE)**
 
-| ID    | Pregunta                                                                                             |
-| ----- | ---------------------------------------------------------------------------------------------------- |
-| FE-Q1 | ¿Hay branding o diseños en Figma? ¿Preferencia de librería de UI?                                    |
-| FE-Q2 | ¿Solo Freighter o también xBull/Albedo?                                                              |
-| FE-Q3 | ¿Desktop primero o mobile-first? ¿PWA?                                                               |
-| FE-Q4 | ¿El chat es la interfaz principal o un panel lateral junto a un dashboard? ¿Respuestas en streaming? |
-| FE-Q5 | ¿Hace falta i18n desde el inicio?                                                                    |
+| ID        | Pregunta                                                                                             |
+| --------- | ---------------------------------------------------------------------------------------------------- |
+| FE-Q1     | ¿Hay branding o diseños en Figma? ¿Preferencia de librería de UI?                                    |
+| ~~FE-Q2~~ | **Respondida.** Todas: Stellar Wallets Kit cubre Freighter, xBull, Albedo, Rabet, Lobstr y Hana      |
+| FE-Q3     | ¿Desktop primero o mobile-first? ¿PWA?                                                               |
+| FE-Q4     | ¿El chat es la interfaz principal o un panel lateral junto a un dashboard? ¿Respuestas en streaming? |
+| FE-Q5     | ¿Hace falta i18n desde el inicio?                                                                    |
 
 **Backend 1 — Stellar (BE1)**
 
 | ID         | Pregunta                                                                                                                       |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| BE1-Q1     | ¿Horizon o Stellar RPC para lectura de historial? (verificar soporte vigente en la documentación oficial)                      |
+| ~~BE1-Q1~~ | **Respondida.** Horizon. `HorizonStellarReader` cubre saldos, historial, antigüedad de cuentas y simulación                    |
 | ~~BE1-Q2~~ | **Respondida (asumida)** en [ADR 0013](docs/adr/0013-custodia-del-signer.md): gestor de secretos del proveedor, no KMS todavía |
 | ~~BE1-Q3~~ | **Respondida** en [ADR 0013](docs/adr/0013-custodia-del-signer.md): un signer global del servicio, con peso 1                  |
-| BE1-Q4     | ¿Quién paga las comisiones? ¿Se usa fee-bump o sponsorship?                                                                    |
+| ~~BE1-Q4~~ | **Respondida.** Paga la cuenta del usuario, que es el origen de la transacción. Sin fee-bump ni patrocinio                     |
 | BE1-Q5     | Resultado del spike `SP-1`: ¿signer en la cuenta principal o cuenta-bolsillo del agente?                                       |
 
 **Backend 2 — API y reglas (BE2)**
 
-| ID         | Pregunta                                                                                                                |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------- |
-| ~~BE2-Q1~~ | **Respondida** en [ADR 0002](docs/adr/0002-stack-backend.md): Fastify + Drizzle + Postgres                              |
-| BE2-Q2     | ¿Necesitamos cola de trabajos (BullMQ/Redis) o basta con procesamiento síncrono?                                        |
-| BE2-Q3     | ¿Valores por defecto de P-01…P-09 y umbrales del score? ¿Configurables por usuario?                                     |
-| ~~BE2-Q4~~ | **Respondida** en [ADR 0004](docs/adr/0004-auditoria-encadenada.md): sí, con hash encadenado y verificación por ventana |
-| BE2-Q5     | ¿Qué nivel de observabilidad necesitamos (logs, métricas, trazas)?                                                      |
+| ID         | Pregunta                                                                                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| ~~BE2-Q1~~ | **Respondida** en [ADR 0002](docs/adr/0002-stack-backend.md): Fastify + Drizzle + Postgres                                                 |
+| ~~BE2-Q2~~ | **Respondida.** No hace falta cola: un barrido en el propio proceso basta para el MVP ([ADR 0008](docs/adr/0008-barrido-de-propuestas.md)) |
+| BE2-Q3     | ¿Valores por defecto de P-01…P-09 y umbrales del score? ¿Configurables por usuario?                                                        |
+| ~~BE2-Q4~~ | **Respondida** en [ADR 0004](docs/adr/0004-auditoria-encadenada.md): sí, con hash encadenado y verificación por ventana                    |
+| BE2-Q5     | ¿Qué nivel de observabilidad necesitamos (logs, métricas, trazas)?                                                                         |
 
 **AI Agent (AI)**
 

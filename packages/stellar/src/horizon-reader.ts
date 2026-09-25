@@ -36,6 +36,8 @@ export interface HorizonStellarReaderOptions {
   server?: Horizon.Server;
   /** Cuántos pagos se leen para calcular las estadísticas. */
   historyLimit?: number;
+  /** Código del activo de crédito en la red. Por defecto `USDCTEST`. */
+  usdcTestAssetCode?: string;
 }
 
 const DEFAULT_HISTORY_LIMIT = 100;
@@ -47,6 +49,7 @@ export class HorizonStellarReader implements StellarReader {
   private readonly accounts: HorizonAccountClient;
   private readonly server: Horizon.Server;
   private readonly historyLimit: number;
+  private readonly usdcTestAssetCode: string | undefined;
 
   constructor(options: HorizonStellarReaderOptions) {
     this.accounts = new HorizonAccountClient({
@@ -89,7 +92,9 @@ export class HorizonStellarReader implements StellarReader {
         .limit(limit)
         .call();
 
-      return page.records.flatMap((record) => toTxSummary(record, accountId));
+      return page.records.flatMap((record) =>
+        toTxSummary(record, accountId, this.usdcTestAssetCode),
+      );
     } catch (error) {
       throw mapHorizonError(error, 'read');
     }
@@ -235,10 +240,14 @@ type PaymentsRecord = Awaited<
  * pagos de activos que no soportamos se descartan en silencio, porque incluirlos
  * con un código de activo inventado ensuciaría las estadísticas.
  */
-function toTxSummary(record: PaymentsRecord, accountId: string): TxSummary[] {
+function toTxSummary(
+  record: PaymentsRecord,
+  accountId: string,
+  usdcTestAssetCode?: string,
+): TxSummary[] {
   if (record.type !== 'payment') return [];
 
-  const asset = toAssetCode(record);
+  const asset = toAssetCode(record, usdcTestAssetCode);
   if (!asset) return [];
 
   const outgoing = record.from === accountId;
@@ -261,9 +270,16 @@ function toTxSummary(record: PaymentsRecord, accountId: string): TxSummary[] {
   ];
 }
 
-function toAssetCode(record: Horizon.ServerApi.PaymentOperationRecord): AssetCode | null {
+function toAssetCode(
+  record: Horizon.ServerApi.PaymentOperationRecord,
+  usdcTestAssetCode?: string,
+): AssetCode | null {
   if (record.asset_type === 'native') return 'XLM';
-  return record.asset_code ? toInternalAssetCode(record.asset_code) : null;
+  if (!record.asset_code) return null;
+
+  return usdcTestAssetCode
+    ? toInternalAssetCode(record.asset_code, usdcTestAssetCode)
+    : toInternalAssetCode(record.asset_code);
 }
 
 function primaryAsset(actions: ResolvedAction[]): AssetCode | undefined {

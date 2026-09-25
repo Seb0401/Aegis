@@ -126,7 +126,10 @@ function providerOrder(value: string): string[] {
 function defaultReader(env: Env): StellarReader {
   if (env.USE_FAKE_STELLAR) return new FakeStellarReader();
 
-  return new HorizonStellarReader({ horizonUrl: env.STELLAR_HORIZON_URL });
+  return new HorizonStellarReader({
+    horizonUrl: env.STELLAR_HORIZON_URL,
+    ...(env.USDC_TEST_ASSET_CODE ? { usdcTestAssetCode: env.USDC_TEST_ASSET_CODE } : {}),
+  });
 }
 
 /**
@@ -144,6 +147,7 @@ function defaultExecutor(env: Env): StellarExecutor {
     allowedSourceAccount: env.STELLAR_DEMO_ACCOUNT_ADDRESS!,
     transactionTimeoutSeconds: env.STELLAR_TRANSACTION_TIMEOUT_SECONDS,
     ...(env.USDC_TEST_ISSUER ? { usdcTestIssuer: env.USDC_TEST_ISSUER } : {}),
+    ...(env.USDC_TEST_ASSET_CODE ? { usdcTestAssetCode: env.USDC_TEST_ASSET_CODE } : {}),
   });
 }
 

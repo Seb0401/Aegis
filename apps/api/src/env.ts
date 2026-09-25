@@ -53,6 +53,12 @@ const EnvSchema = z
      * En la red el activo se llama `USDCTEST`: Stellar no admite guiones bajos.
      */
     USDC_TEST_ISSUER: z.string().optional(),
+    /**
+     * Código del activo en la red. Por defecto `USDCTEST`, el que emitimos.
+     * Ponlo a `USDC` para usar el USDC canónico de testnet, que ya existe y no
+     * hay que mantener.
+     */
+    USDC_TEST_ASSET_CODE: z.string().optional(),
 
     // ── Precios (ADR 0011) ──────────────────────────────────────────
     // `fixed` no sale a la red y es determinista: es lo que usan los tests y
