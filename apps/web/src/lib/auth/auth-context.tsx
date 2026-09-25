@@ -13,7 +13,17 @@ import {
 } from 'react';
 import { ApiClient } from '../api/client';
 import { clearSession, readSession, writeSession, type Session } from './session';
-import { freighterAdapter, type WalletAdapter } from './wallet';
+import { type WalletAdapter } from './wallet';
+import { resetSelectedWallet, walletsKitAdapter } from './wallets-kit';
+
+/**
+ * Wallet que usa la aplicación.
+ *
+ * Stellar Wallets Kit cubre Freighter, xBull, Albedo, Rabet y Lobstr con un
+ * solo selector. El adaptador de Freighter sigue en `wallet.ts` y cumple la
+ * misma interfaz: cambiar de uno a otro es cambiar esta línea.
+ */
+const walletAdapter: WalletAdapter = walletsKitAdapter;
 
 /**
  * Sesión de la aplicación (FE-03).
@@ -66,6 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('anonymous');
     // Los datos en caché son del usuario que se acaba de ir.
     queryClient.clear();
+    // Y la wallet elegida también: al volver a entrar puede ser otra persona.
+    resetSelectedWallet();
   }, [queryClient]);
 
   const client = useMemo(
@@ -93,9 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const connectWallet = useCallback(async () => {
-    const account = await freighterAdapter.connect();
+    const account = await walletAdapter.connect();
     const challenge = await client.requestChallenge(account.address);
-    const signature = await freighterAdapter.signChallenge(challenge.challenge, account.address);
+    const signature = await walletAdapter.signChallenge(challenge.challenge, account.address);
     const verified = await client.verifyChallenge(challenge.challengeId, signature);
 
     applySession(verified);
@@ -116,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       session,
       client,
-      wallet: freighterAdapter,
+      wallet: walletAdapter,
       connectWallet,
       devLogin,
       logout,
