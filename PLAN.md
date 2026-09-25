@@ -472,7 +472,7 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [x] BE1-03 · Construcción, firma y envío de transacciones · S1
 - [x] BE1-04 · `FakeStellarReader` con fixtures para BE2 y AI · S1
 - [ ] BE1-05 · Preparación de XDR de delegación · S2 · **XDR listo en M1; falta integración API/UI**
-- [ ] BE1-06 · Pagos en lote (multi-operación) y manejo de trustlines · S2
+- [x] BE1-06 · Pagos en lote (multi-operación) y manejo de trustlines · S2 · **hecho por BE2, revisar: lote multi-operación y activos de crédito**
 - [x] BE1-07 · Historial y estadísticas (mediana, direcciones conocidas, edad de cuenta) · S3 · **hecho por BE2, revisar**
 - [x] BE1-08 · Simulación previa (fee, saldo posterior, errores) · S3 · **hecho por BE2, revisar**
 - [x] BE1-09 · Seguimiento de confirmación y reintentos · S4 · **parcial: reconcilia SUBMITTED con hash**

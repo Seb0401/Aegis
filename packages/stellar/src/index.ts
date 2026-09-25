@@ -9,6 +9,7 @@
  */
 
 export { isValidStellarAddress, verifyChallengeSignature } from './signature.js';
+export { ON_CHAIN_ASSET_CODE, toInternalAssetCode } from './assets.js';
 export { StellarClientError, type StellarClientErrorCode } from './errors.js';
 export {
   HorizonAccountClient,

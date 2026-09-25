@@ -14,6 +14,7 @@ import {
 } from '@aegis/contracts';
 import { NotFoundError, type Horizon } from '@stellar/stellar-sdk';
 import { stroopsToAmount } from './amounts.js';
+import { toInternalAssetCode } from './assets.js';
 import { HorizonAccountClient, validateAddress } from './horizon-account-client.js';
 import { mapHorizonError } from './errors.js';
 
@@ -262,7 +263,7 @@ function toTxSummary(record: PaymentsRecord, accountId: string): TxSummary[] {
 
 function toAssetCode(record: Horizon.ServerApi.PaymentOperationRecord): AssetCode | null {
   if (record.asset_type === 'native') return 'XLM';
-  return record.asset_code === 'USDC_TEST' ? 'USDC_TEST' : null;
+  return record.asset_code ? toInternalAssetCode(record.asset_code) : null;
 }
 
 function primaryAsset(actions: ResolvedAction[]): AssetCode | undefined {

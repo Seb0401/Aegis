@@ -115,9 +115,10 @@ describe('getHistory', () => {
     expect(await reader.getHistory(CUENTA)).toEqual([]);
   });
 
-  it('reconoce el activo de prueba', async () => {
+  it('reconoce el activo de prueba por su código de la red', async () => {
+    // En la cadena se llama USDCTEST: Stellar no admite guiones bajos.
     const reader = lector({
-      payments: [pago({ asset_type: 'credit_alphanum12', asset_code: 'USDC_TEST' })],
+      payments: [pago({ asset_type: 'credit_alphanum12', asset_code: 'USDCTEST' })],
     });
 
     expect((await reader.getHistory(CUENTA))[0]?.asset).toBe('USDC_TEST');

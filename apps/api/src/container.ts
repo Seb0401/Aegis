@@ -143,6 +143,7 @@ function defaultExecutor(env: Env): StellarExecutor {
     agentSignerSecret: env.STELLAR_AGENT_SIGNER_SECRET!,
     allowedSourceAccount: env.STELLAR_DEMO_ACCOUNT_ADDRESS!,
     transactionTimeoutSeconds: env.STELLAR_TRANSACTION_TIMEOUT_SECONDS,
+    ...(env.USDC_TEST_ISSUER ? { usdcTestIssuer: env.USDC_TEST_ISSUER } : {}),
   });
 }
 

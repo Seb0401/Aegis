@@ -1,4 +1,4 @@
-import type { ResolvedAction, StellarExecutor } from '@aegis/contracts';
+import type { AssetCode, ResolvedAction, StellarExecutor } from '@aegis/contracts';
 import {
   Asset,
   Horizon,
@@ -12,6 +12,7 @@ import {
   type FeeBumpTransaction,
 } from '@stellar/stellar-sdk';
 import { amountToStroops } from './amounts.js';
+import { ON_CHAIN_ASSET_CODE } from './assets.js';
 import { mapHorizonError, StellarClientError } from './errors.js';
 import { validateAddress, validateHorizonUrl } from './horizon-account-client.js';
 
@@ -20,16 +21,41 @@ export interface HorizonStellarExecutorOptions {
   agentSignerSecret: string;
   allowedSourceAccount: string;
   transactionTimeoutSeconds?: number;
+  /**
+   * Emisor del activo de prueba `USDC_TEST` (BE1-11).
+   *
+   * Sin él, el ejecutor rechaza cualquier pago que no sea XLM. Es a propósito:
+   * firmar un activo con un emisor desconocido sería firmar un token que puede
+   * haber creado cualquiera.
+   */
+  usdcTestIssuer?: string;
   server?: Horizon.Server;
 }
 
-/** Ejecutor testnet limitado deliberadamente al alcance de M1. */
+/**
+ * Máximo de pagos por transacción.
+ *
+ * Coincide con el tope de `ProposalInputSchema`. Stellar admite hasta 100
+ * operaciones, pero una propuesta que el usuario no puede leer de un vistazo no
+ * es una propuesta que pueda aprobar con criterio.
+ */
+const MAX_PAYMENTS_PER_TRANSACTION = 10;
+
+/**
+ * Ejecutor de transacciones en testnet.
+ *
+ * Construye, firma y envía pagos en lote: el caso central del producto
+ * ("reparte 50 entre tus objetivos") son varios pagos que deben ejecutarse
+ * juntos o no ejecutarse. Stellar lo resuelve con varias operaciones en una
+ * sola transacción, que es atómica: o entran todas o no entra ninguna.
+ */
 export class HorizonStellarExecutor implements StellarExecutor {
   readonly server: Horizon.Server;
   readonly agentPublicKey: string;
   private readonly signer: Keypair;
   private readonly allowedSourceAccount: string;
   private readonly timeoutSeconds: number;
+  private readonly usdcTestIssuer: string | undefined;
 
   constructor(options: HorizonStellarExecutorOptions) {
     validateHorizonUrl(options.horizonUrl);
@@ -54,32 +80,96 @@ export class HorizonStellarExecutor implements StellarExecutor {
     this.signer = Keypair.fromSecret(options.agentSignerSecret);
     this.agentPublicKey = this.signer.publicKey();
     this.allowedSourceAccount = options.allowedSourceAccount;
+
+    if (options.usdcTestIssuer) validateAddress(options.usdcTestIssuer);
+    this.usdcTestIssuer = options.usdcTestIssuer;
+  }
+
+  /**
+   * Traduce nuestro código de activo al de Stellar.
+   *
+   * Un activo de crédito son dos cosas: el código y **quién lo emite**.
+   * Quedarse solo con el código permitiría pagar con un `USDC_TEST` emitido por
+   * cualquiera, que no vale nada.
+   */
+  /**
+   * Rechaza cualquier activo que no sea XLM o nuestro `USDC_TEST`.
+   *
+   * Comprobar solo el código dejaría pasar un `USDC_TEST` emitido por otra
+   * cuenta: mismo nombre, valor ninguno. El emisor es la mitad del activo.
+   */
+  private assertAllowedAsset(asset: Asset): void {
+    if (asset.isNative()) return;
+
+    if (!this.usdcTestIssuer) {
+      throw new StellarClientError(
+        'UNSUPPORTED_ASSET',
+        'Falta USDC_TEST_ISSUER: sin emisor configurado solo se pueden enviar XLM.',
+      );
+    }
+
+    if (
+      asset.getCode() !== ON_CHAIN_ASSET_CODE.USDC_TEST ||
+      asset.getIssuer() !== this.usdcTestIssuer
+    ) {
+      throw new StellarClientError(
+        'UNSUPPORTED_ASSET',
+        'El activo no es XLM ni el USDC_TEST del emisor configurado.',
+      );
+    }
+  }
+
+  private assetFor(code: AssetCode): Asset {
+    if (code === 'XLM') return Asset.native();
+
+    if (!this.usdcTestIssuer) {
+      throw new StellarClientError(
+        'UNSUPPORTED_ASSET',
+        'Falta USDC_TEST_ISSUER: sin emisor configurado solo se pueden enviar XLM.',
+      );
+    }
+
+    return new Asset(ON_CHAIN_ASSET_CODE.USDC_TEST, this.usdcTestIssuer);
   }
 
   async buildUnsigned(accountId: string, actions: ResolvedAction[]): Promise<{ xdr: string }> {
     this.assertAllowedSource(accountId);
-    const action = validateM1Action(actions);
+    validatePaymentActions(actions);
 
     try {
-      const [account, fee] = await Promise.all([
+      // La cuenta se carga JUSTO antes de construir: el número de secuencia
+      // sube con cada transacción, y reutilizar uno viejo da `tx_bad_seq`.
+      const [account, baseFee] = await Promise.all([
         this.server.loadAccount(accountId),
         this.server.fetchBaseFee(),
       ]);
-      const builder = new TransactionBuilder(account, {
-        fee: String(fee),
-        networkPassphrase: Networks.TESTNET,
-      }).addOperation(
-        Operation.payment({
-          destination: action.destinationAddress,
-          asset: Asset.native(),
-          amount: action.amount,
-        }),
-      );
 
-      if (action.memo) builder.addMemo(Memo.text(action.memo));
+      // `fee` es la comisión POR OPERACIÓN: el SDK la multiplica por el número
+      // de operaciones al construir. Multiplicarla aquí la cobraría dos veces.
+      const builder = new TransactionBuilder(account, {
+        fee: String(baseFee),
+        networkPassphrase: Networks.TESTNET,
+      });
+
+      for (const action of actions) {
+        builder.addOperation(
+          Operation.payment({
+            destination: action.destinationAddress,
+            asset: this.assetFor(action.asset),
+            amount: action.amount,
+          }),
+        );
+      }
+
+      const memo = singleMemoFor(actions);
+      if (memo) builder.addMemo(Memo.text(memo));
+
       const transaction = builder.setTimeout(this.timeoutSeconds).build();
       return { xdr: transaction.toXDR() };
     } catch (error) {
+      // Un activo sin emisor no es un fallo de Horizon: se deja pasar tal cual
+      // para que el mensaje siga siendo el útil.
+      if (error instanceof StellarClientError) throw error;
       throw mapHorizonError(error, 'build');
     }
   }
@@ -104,27 +194,40 @@ export class HorizonStellarExecutor implements StellarExecutor {
       );
     }
 
-    if (transaction.operations.length !== 1 || transaction.operations[0]?.type !== 'payment') {
+    if (
+      transaction.operations.length === 0 ||
+      transaction.operations.length > MAX_PAYMENTS_PER_TRANSACTION
+    ) {
       throw new StellarClientError(
         'INVALID_TRANSACTION',
-        'M1 solo permite firmar transacciones con un pago.',
+        `Una transacción debe llevar entre 1 y ${MAX_PAYMENTS_PER_TRANSACTION} pagos.`,
       );
     }
 
-    const operation = transaction.operations[0];
-    if (operation.source && operation.source !== this.allowedSourceAccount) {
-      throw new StellarClientError(
-        'INVALID_TRANSACTION',
-        'La operación debe usar la cuenta demo como origen.',
-      );
-    }
-    if (!operation.asset.isNative()) {
-      throw new StellarClientError('UNSUPPORTED_ASSET', 'M1 solo permite pagos en XLM.');
-    }
+    // Se comprueba CADA operación, no solo la primera. El agente firma la
+    // transacción entera: basta con que una operación sea otra cosa para que
+    // esté autorizando algo que nadie revisó.
+    for (const operation of transaction.operations) {
+      if (operation.type !== 'payment') {
+        throw new StellarClientError(
+          'INVALID_TRANSACTION',
+          'El agente solo firma transacciones compuestas de pagos.',
+        );
+      }
 
-    validateAddress(operation.destination);
-    if (amountToStroops(operation.amount) <= 0n) {
-      throw new StellarClientError('INVALID_TRANSACTION', 'El monto debe ser mayor que cero.');
+      if (operation.source && operation.source !== this.allowedSourceAccount) {
+        throw new StellarClientError(
+          'INVALID_TRANSACTION',
+          'Cada operación debe usar la cuenta permitida como origen.',
+        );
+      }
+
+      this.assertAllowedAsset(operation.asset);
+
+      validateAddress(operation.destination);
+      if (amountToStroops(operation.amount) <= 0n) {
+        throw new StellarClientError('INVALID_TRANSACTION', 'El monto debe ser mayor que cero.');
+      }
     }
 
     transaction.sign(this.signer);
@@ -192,40 +295,65 @@ export class HorizonStellarExecutor implements StellarExecutor {
   }
 }
 
-function validateM1Action(actions: ResolvedAction[]): ResolvedAction {
-  if (actions.length !== 1) {
+/**
+ * Valida el lote de pagos antes de construir nada.
+ *
+ * Se comprueba aquí y no solo al firmar porque un error de forma debe salir
+ * inmediatamente, con un mensaje que diga qué acción falla, y no después de
+ * haber ido a la red a cargar la cuenta.
+ */
+function validatePaymentActions(actions: ResolvedAction[]): void {
+  if (actions.length === 0) {
+    throw new StellarClientError('INVALID_TRANSACTION', 'No hay ninguna acción que ejecutar.');
+  }
+
+  if (actions.length > MAX_PAYMENTS_PER_TRANSACTION) {
     throw new StellarClientError(
       'INVALID_TRANSACTION',
-      'M1 exige exactamente una acción; los pagos en lote llegan en BE1-06.',
+      `Una transacción admite como mucho ${MAX_PAYMENTS_PER_TRANSACTION} pagos.`,
     );
   }
 
-  const action = actions[0];
-  if (!action) {
-    throw new StellarClientError('INVALID_TRANSACTION', 'Falta la acción de pago.');
-  }
-  if (action.type !== 'PAYMENT') {
-    throw new StellarClientError('INVALID_TRANSACTION', 'M1 solo admite acciones PAYMENT.');
-  }
-  if (action.asset !== 'XLM') {
-    throw new StellarClientError('UNSUPPORTED_ASSET', 'M1 solo permite pagos en XLM.');
-  }
-  validateAddress(action.destinationAddress);
+  actions.forEach((action, index) => {
+    const cual = `La acción ${index + 1}`;
 
-  try {
-    if (amountToStroops(action.amount) <= 0n) throw new Error('zero');
-  } catch {
-    throw new StellarClientError(
-      'INVALID_TRANSACTION',
-      'El monto debe ser positivo y tener como máximo 7 decimales.',
-    );
-  }
+    if (action.type !== 'PAYMENT') {
+      throw new StellarClientError('INVALID_TRANSACTION', `${cual} no es un pago.`);
+    }
 
-  if (action.memo && Buffer.byteLength(action.memo, 'utf8') > 28) {
-    throw new StellarClientError('INVALID_TRANSACTION', 'El memo supera 28 bytes.');
-  }
+    validateAddress(action.destinationAddress);
 
-  return action;
+    try {
+      if (amountToStroops(action.amount) <= 0n) throw new Error('zero');
+    } catch {
+      throw new StellarClientError(
+        'INVALID_TRANSACTION',
+        `${cual} debe tener un monto positivo con hasta 7 decimales.`,
+      );
+    }
+
+    // El memo de Stellar se mide en bytes, no en caracteres: una tilde ocupa
+    // dos y un emoji cuatro.
+    if (action.memo && Buffer.byteLength(action.memo, 'utf8') > 28) {
+      throw new StellarClientError(
+        'INVALID_TRANSACTION',
+        `${cual} tiene un memo de más de 28 bytes.`,
+      );
+    }
+  });
+}
+
+/**
+ * Memo de la transacción, si hay uno solo.
+ *
+ * En Stellar el memo es de la **transacción**, no de cada operación. Con varios
+ * pagos distintos no se puede conservar el memo de cada uno, así que solo se
+ * pone cuando todos coinciden. Elegir uno al azar sería etiquetar cuatro pagos
+ * con el motivo de uno.
+ */
+function singleMemoFor(actions: ResolvedAction[]): string | null {
+  const memos = new Set(actions.map((a) => a.memo).filter((memo): memo is string => Boolean(memo)));
+  return memos.size === 1 ? [...memos][0]! : null;
 }
 
 function parseTransaction(xdr: string): Transaction {

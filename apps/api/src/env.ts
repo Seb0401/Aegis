@@ -48,6 +48,11 @@ const EnvSchema = z
      * que llega vencida falla con `tx_too_late`.
      */
     STELLAR_TRANSACTION_TIMEOUT_SECONDS: z.coerce.number().int().positive().default(180),
+    /**
+     * Emisor del activo de prueba (BE1-11). Sin él solo se pueden enviar XLM.
+     * En la red el activo se llama `USDCTEST`: Stellar no admite guiones bajos.
+     */
+    USDC_TEST_ISSUER: z.string().optional(),
 
     // ── Precios (ADR 0011) ──────────────────────────────────────────
     // `fixed` no sale a la red y es determinista: es lo que usan los tests y
