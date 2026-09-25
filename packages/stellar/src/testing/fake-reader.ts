@@ -11,6 +11,7 @@ import {
   type ResolvedAction,
   type SimulationResult,
   type StellarReader,
+  type TransactionStatus,
   type TxSummary,
 } from '@aegis/contracts';
 
@@ -23,6 +24,8 @@ export interface FakeStellarReaderOptions {
   nonExistentAddresses?: string[];
   /** Comisión fija que devuelve la simulación. */
   fee?: string;
+  /** Estado que devuelve `getTransactionStatus`, por hash. */
+  transactionStatuses?: Record<string, TransactionStatus>;
 }
 
 /**
@@ -41,6 +44,7 @@ export class FakeStellarReader implements StellarReader {
   private readonly accounts: Record<string, AccountInfo>;
   private readonly nonExistent: Set<string>;
   private readonly fee: string;
+  private readonly transactionStatuses: Record<string, TransactionStatus>;
 
   constructor(options: FakeStellarReaderOptions = {}) {
     this.balances = options.balances ?? FIXTURE_BALANCES;
@@ -48,6 +52,7 @@ export class FakeStellarReader implements StellarReader {
     this.accounts = options.accounts ?? defaultAccounts();
     this.nonExistent = new Set(options.nonExistentAddresses ?? []);
     this.fee = options.fee ?? '0.0000100';
+    this.transactionStatuses = options.transactionStatuses ?? {};
   }
 
   async getBalances(_accountId: string): Promise<Balance[]> {
@@ -84,6 +89,11 @@ export class FakeStellarReader implements StellarReader {
         .length,
       usedAssets: [...new Set(outgoing.map((tx) => tx.asset))],
     };
+  }
+
+  /** Por defecto toda transacción existe y tuvo éxito, que es el camino feliz. */
+  async getTransactionStatus(hash: string): Promise<TransactionStatus> {
+    return this.transactionStatuses[hash] ?? { found: true, successful: true };
   }
 
   async simulatePayments(_accountId: string, actions: ResolvedAction[]): Promise<SimulationResult> {

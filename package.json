@@ -21,7 +21,9 @@
     "db:down": "docker compose -f infra/docker-compose.yml down",
     "db:generate": "pnpm --filter @aegis/api db:generate",
     "db:migrate": "pnpm --filter @aegis/api db:migrate",
-    "db:seed": "pnpm --filter @aegis/api db:seed"
+    "db:seed": "pnpm --filter @aegis/api db:seed",
+    "dev:mcp": "pnpm --filter @aegis/mcp dev",
+    "build:mcp": "pnpm --filter @aegis/mcp build"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

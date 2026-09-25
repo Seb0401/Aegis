@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { proposals } from '../db/schema.js';
+import { FakeStellarReader } from '@aegis/stellar/testing';
 import { createDestination, createTestApp, login, setPolicy, type TestApp } from '../test/app.js';
 import { createScriptedAgent } from '../test/scripted-agent.js';
 import { NEEDS_NETWORK_RECONCILIATION, SWEEP_TARGETS } from './sweeper.js';
@@ -220,5 +221,122 @@ describe('configuración del barrido', () => {
       sweeper.stop();
       sweeper.stop();
     }).not.toThrow();
+  });
+});
+
+describe('reconciliación de envíos sin desenlace (BE1-09)', () => {
+  /** Deja una propuesta como si el proceso hubiera muerto tras enviarla. */
+  async function dejarEnviada(hash: string | null): Promise<string> {
+    const proposal = await proponer();
+
+    await harness.db
+      .update(proposals)
+      .set({
+        status: 'SUBMITTED',
+        txHash: hash,
+        updatedAt: new Date(Date.now() - 10 * 60_000),
+      })
+      .where(eq(proposals.id, proposal.id));
+
+    return proposal.id;
+  }
+
+  async function estado(id: string) {
+    const [row] = await harness.db
+      .select({ status: proposals.status, failureReason: proposals.failureReason })
+      .from(proposals)
+      .where(eq(proposals.id, id));
+    return row;
+  }
+
+  it('confirma la que el ledger dice que tuvo éxito', async () => {
+    const id = await dejarEnviada('a'.repeat(64));
+
+    const resultado = await harness.app.services.sweeper.sweep();
+
+    expect(resultado.reconciled).toBeGreaterThanOrEqual(1);
+    expect((await estado(id))?.status).toBe('CONFIRMED');
+    expect(await auditoriaDe(id)).toContain('TX_CONFIRMED');
+  });
+
+  it('marca como fallida la que el ledger rechazó', async () => {
+    const hash = 'b'.repeat(64);
+    const harnessFallido = await createTestApp({
+      overrides: {
+        agent: createScriptedAgent(),
+        reader: new FakeStellarReader({
+          transactionStatuses: { [hash]: { found: true, successful: false } },
+        }),
+      },
+    });
+
+    try {
+      const sesion = await login(harnessFallido.app, ADDRESS);
+      const destino = await createDestination(harnessFallido.app, sesion.headers, {
+        kind: 'GOAL',
+        label: VIAJE.label,
+        address: VIAJE.address,
+      });
+      await setPolicy(harnessFallido.app, sesion.headers, { mode: 'MANUAL' });
+
+      const respuesta = await harnessFallido.app.inject({
+        method: 'POST',
+        url: '/proposals',
+        headers: sesion.headers,
+        payload: {
+          summary: 'Propuesta que la red rechaza',
+          actions: [
+            {
+              type: 'PAYMENT',
+              destinationId: destino.id,
+              asset: 'USDC_TEST',
+              amount: '2',
+              memo: null,
+              label: 'Pago',
+            },
+          ],
+        },
+      });
+      const creada = JSON.parse(respuesta.body).proposal;
+
+      await harnessFallido.db
+        .update(proposals)
+        .set({ status: 'SUBMITTED', txHash: hash, updatedAt: new Date(Date.now() - 10 * 60_000) })
+        .where(eq(proposals.id, creada.id));
+
+      await harnessFallido.app.services.sweeper.sweep();
+
+      const [row] = await harnessFallido.db
+        .select({ status: proposals.status, failureReason: proposals.failureReason })
+        .from(proposals)
+        .where(eq(proposals.id, creada.id));
+
+      expect(row?.status).toBe('FAILED');
+      expect(row?.failureReason).toContain('rechazó');
+    } finally {
+      await harnessFallido.close();
+    }
+  });
+
+  it('NO toca la que no tiene hash: no sabríamos por cuál preguntar', async () => {
+    // Marcarla como fallida sería mentir sobre dinero que quizá se movió.
+    const id = await dejarEnviada(null);
+
+    await harness.app.services.sweeper.sweep();
+
+    expect((await estado(id))?.status).toBe('SUBMITTED');
+  });
+
+  it('respeta el margen antes de preguntarle al ledger', async () => {
+    const proposal = await proponer();
+    await harness.db
+      .update(proposals)
+      .set({ status: 'SUBMITTED', txHash: 'c'.repeat(64), updatedAt: new Date() })
+      .where(eq(proposals.id, proposal.id));
+
+    // Recién enviada, una transacción puede no ser visible todavía en Horizon.
+    await harness.app.services.sweeper.sweep();
+
+    expect((await estado(proposal.id))?.status).toBe('SUBMITTED');
   });
 });

@@ -163,8 +163,11 @@ En los tests los límites se desactivan (`NODE_ENV=test`).
 - [x] Saneado del texto libre y edición de destinos (ADR 0007)
 - [x] **M2** · Cableado con Horizon real: lector, ejecutor y validación de
       credenciales al arrancar
-- [ ] **BE1-09** · Reconciliación de `SIGNED`/`SUBMITTED` consultando la red.
-      El envío ya es real, pero la confirmación se da por buena al enviar
+- [x] **BE1-09 (parcial)** · El barrido reconcilia contra el ledger las
+      propuestas que quedaron en `SUBMITTED` **con hash**
+- [ ] **BE1-09 (resto)** · `SUBMITTED` sin hash sigue sin tocarse: no sabríamos
+      por qué transacción preguntar. Se resolvería guardando el hash calculado
+      del XDR firmado **antes** de enviarlo
 - [ ] **BE1-Q3** · `/account/delegation/prepare` recibe hoy la clave pública del
       agente en el cuerpo. El cliente no debería decidir con qué clave firma
 - [ ] **Pendiente de `FE-Q4`** · Respuestas en streaming con SSE

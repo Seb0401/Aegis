@@ -253,3 +253,46 @@ describe('simulatePayments', () => {
     expect(result.balanceAfter).toBe('88.9999900');
   });
 });
+
+describe('getTransactionStatus', () => {
+  function servidorConTransaccion(respuesta: unknown | Error): HorizonStellarReader {
+    const server = servidor();
+    vi.spyOn(server, 'transactions').mockReturnValue({
+      transaction: () => ({
+        call: async () => {
+          if (respuesta instanceof Error) throw respuesta;
+          return respuesta;
+        },
+      }),
+    } as unknown as ReturnType<Horizon.Server['transactions']>);
+
+    return new HorizonStellarReader({ horizonUrl: HORIZON_URL, server });
+  }
+
+  it('distingue una transacción con éxito de una rechazada', async () => {
+    await expect(
+      servidorConTransaccion({ successful: true }).getTransactionStatus('a'.repeat(64)),
+    ).resolves.toEqual({ found: true, successful: true });
+
+    await expect(
+      servidorConTransaccion({ successful: false }).getTransactionStatus('a'.repeat(64)),
+    ).resolves.toEqual({ found: true, successful: false });
+  });
+
+  it('distingue "no existe" de "falló"', async () => {
+    // Son cosas distintas: una transacción que la red no conoce puede seguir
+    // propagándose, y darla por fallida sería mentir sobre dinero.
+    const reader = servidorConTransaccion(new NotFoundError('missing', { status: 404 }));
+
+    await expect(reader.getTransactionStatus('a'.repeat(64))).resolves.toEqual({
+      found: false,
+      successful: false,
+    });
+  });
+
+  it('propaga un fallo de red en vez de fingir que no existe', async () => {
+    const reader = servidorConTransaccion(new Error('ECONNRESET'));
+
+    await expect(reader.getTransactionStatus('a'.repeat(64))).rejects.toThrow();
+  });
+});

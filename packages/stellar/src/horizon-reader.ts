@@ -9,9 +9,10 @@ import {
   type ResolvedAction,
   type SimulationResult,
   type StellarReader,
+  type TransactionStatus,
   type TxSummary,
 } from '@aegis/contracts';
-import { type Horizon } from '@stellar/stellar-sdk';
+import { NotFoundError, type Horizon } from '@stellar/stellar-sdk';
 import { stroopsToAmount } from './amounts.js';
 import { HorizonAccountClient, validateAddress } from './horizon-account-client.js';
 import { mapHorizonError } from './errors.js';
@@ -114,6 +115,23 @@ export class HorizonStellarReader implements StellarReader {
         .length,
       usedAssets: [...new Set(outgoing.map((tx) => tx.asset))],
     };
+  }
+
+  /**
+   * Estado de una transacción ya enviada (BE1-09).
+   *
+   * Que la red no la conozca no significa que haya fallado: puede que nunca
+   * llegara, o que todavía esté propagándose. Por eso `found` y `successful`
+   * son dos cosas distintas y quien llama decide qué hacer con cada una.
+   */
+  async getTransactionStatus(hash: string): Promise<TransactionStatus> {
+    try {
+      const record = await this.server.transactions().transaction(hash).call();
+      return { found: true, successful: record.successful === true };
+    } catch (error) {
+      if (error instanceof NotFoundError) return { found: false, successful: false };
+      throw mapHorizonError(error, 'read');
+    }
   }
 
   /**

@@ -464,9 +464,9 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [x] BE1-04 · `FakeStellarReader` con fixtures para BE2 y AI · S1
 - [ ] BE1-05 · Preparación de XDR de delegación · S2 · **XDR listo en M1; falta integración API/UI**
 - [ ] BE1-06 · Pagos en lote (multi-operación) y manejo de trustlines · S2
-- [ ] BE1-07 · Historial y estadísticas (mediana, direcciones conocidas, edad de cuenta) · S3
-- [ ] BE1-08 · Simulación previa (fee, saldo posterior, errores) · S3
-- [ ] BE1-09 · Seguimiento de confirmación y reintentos · S4
+- [x] BE1-07 · Historial y estadísticas (mediana, direcciones conocidas, edad de cuenta) · S3 · **hecho por BE2, revisar**
+- [x] BE1-08 · Simulación previa (fee, saldo posterior, errores) · S3 · **hecho por BE2, revisar**
+- [x] BE1-09 · Seguimiento de confirmación y reintentos · S4 · **parcial: reconcilia SUBMITTED con hash**
 - [ ] BE1-10 · Custodia y rotación de la clave del signer · S4
 - [ ] BE1-11 · Activo de prueba `USDC_TEST` (emisor y trustlines) · S2
 
@@ -503,7 +503,7 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [x] ALL-02 · `contracts` v0 y contract freeze · S1–S2 · **contracts v0 publicado; freeze pendiente de acordar**
 - [x] ALL-03 · CI, `CODEOWNERS`, plantillas de PR/issues · S1 · **CI con 3 jobs; CODEOWNERS pendiente de repartir**
 - [x] ALL-04 · Pruebas E2E del flujo completo · S4–S5 — frontend hecho (`apps/web/e2e`); falta la firma real con wallet
-- [ ] ALL-05 · README, guía de demo y roadmap a mainnet · S6
+- [ ] ALL-05 · README, guía de demo y roadmap a mainnet · S6 · **runbooks de despliegue y demo hechos; falta el roadmap a mainnet**
 
 ---
 

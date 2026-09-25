@@ -1,5 +1,5 @@
-import type { ProposalStatus } from '@aegis/contracts';
-import { and, inArray, lt } from 'drizzle-orm';
+import type { ProposalStatus, StellarReader } from '@aegis/contracts';
+import { and, eq, inArray, isNotNull, lt } from 'drizzle-orm';
 import type { Database } from '../db/client.js';
 import { proposals } from '../db/schema.js';
 import type { AuditLog } from './audit.js';
@@ -17,7 +17,12 @@ import type { AuditLog } from './audit.js';
  *    `GUARDIAN_REVIEW`, nadie las rescataba: no son estados terminales y la
  *    caducidad perezosa no los miraba.
  *
- * Ambos casos escriben en la bitácora. Un cambio de estado sin evento de
+ * 3. **Envíos sin desenlace** (BE1-09). Si el proceso muere entre que la red
+ *    acepta un pago y que lo anotamos, la propuesta se queda en `SUBMITTED` y
+ *    nadie sabe si el dinero se movió. Aquí se le pregunta al ledger, que es la
+ *    única respuesta honesta.
+ *
+ * Los tres casos escriben en la bitácora. Un cambio de estado sin evento de
  * auditoría es justo el agujero que el principio nº 6 no permite.
  */
 
@@ -37,6 +42,7 @@ const ABANDONABLE: ProposalStatus[] = ['DRAFT', 'POLICY_CHECK', 'GUARDIAN_REVIEW
 export interface SweepResult {
   expired: number;
   abandoned: number;
+  reconciled: number;
 }
 
 export interface ProposalSweeperOptions {
@@ -46,9 +52,25 @@ export interface ProposalSweeperOptions {
   staleAfterMs?: number;
   /** Se invoca con los errores del barrido en segundo plano. */
   onError?: (error: unknown) => void;
+  /**
+   * Lector de la red, para reconciliar los envíos sin desenlace.
+   * Sin él, el barrido hace lo demás y deja `SUBMITTED` intacto.
+   */
+  reader?: StellarReader;
+  /** Margen antes de ir a preguntarle al ledger por un envío. */
+  reconcileAfterMs?: number;
 }
 
 const DEFAULT_STALE_AFTER_MS = 5 * 60 * 1000;
+
+/**
+ * Margen antes de preguntar por una transacción enviada.
+ *
+ * Dos minutos, no dos segundos: una transacción recién enviada puede tardar en
+ * ser visible en Horizon, y preguntar demasiado pronto daría `found: false` y
+ * llevaría a marcar como fallido algo que sí se ejecutó.
+ */
+const DEFAULT_RECONCILE_AFTER_MS = 2 * 60 * 1000;
 const DEFAULT_INTERVAL_MS = 60 * 1000;
 
 export class ProposalSweeper {
@@ -65,8 +87,79 @@ export class ProposalSweeper {
   async sweep(now = new Date()): Promise<SweepResult> {
     const expired = await this.expireOverdue(now);
     const abandoned = await this.abandonStale(now);
+    const reconciled = await this.reconcileSubmitted(now);
 
-    return { expired, abandoned };
+    return { expired, abandoned, reconciled };
+  }
+
+  /**
+   * Cierra las propuestas que se enviaron pero se quedaron sin desenlace.
+   *
+   * Solo mira las que tienen hash: si no lo hay, no sabemos por qué
+   * transacción preguntar y **no se toca nada**. Marcar como fallido algo que
+   * quizá se ejecutó sería mentir sobre dinero, que es justo lo que este
+   * barrido existe para evitar.
+   */
+  private async reconcileSubmitted(now: Date): Promise<number> {
+    const reader = this.options.reader;
+    if (!reader) return 0;
+
+    const threshold = new Date(
+      now.getTime() - (this.options.reconcileAfterMs ?? DEFAULT_RECONCILE_AFTER_MS),
+    );
+
+    const pendientes = await this.options.db
+      .select({
+        id: proposals.id,
+        userId: proposals.userId,
+        txHash: proposals.txHash,
+      })
+      .from(proposals)
+      .where(
+        and(
+          eq(proposals.status, 'SUBMITTED'),
+          isNotNull(proposals.txHash),
+          lt(proposals.updatedAt, threshold),
+        ),
+      );
+
+    let cerradas = 0;
+
+    for (const row of pendientes) {
+      const hash = row.txHash;
+      if (!hash) continue;
+
+      const status = await reader.getTransactionStatus(hash);
+
+      // Que el ledger no la conozca no basta para darla por perdida: puede
+      // seguir propagándose. Se deja para la siguiente pasada.
+      if (!status.found) continue;
+
+      const siguiente: ProposalStatus = status.successful ? 'CONFIRMED' : 'FAILED';
+
+      const actualizadas = await this.options.db
+        .update(proposals)
+        .set({
+          status: siguiente,
+          updatedAt: now,
+          ...(status.successful ? {} : { failureReason: 'La red rechazó la transacción.' }),
+        })
+        .where(and(eq(proposals.id, row.id), eq(proposals.status, 'SUBMITTED')))
+        .returning({ id: proposals.id });
+
+      if (actualizadas.length === 0) continue;
+
+      await this.options.audit.append({
+        userId: row.userId,
+        proposalId: row.id,
+        type: status.successful ? 'TX_CONFIRMED' : 'TX_FAILED',
+        payload: { hash, reconciledAt: now.toISOString(), source: 'barrido' },
+      });
+
+      cerradas += 1;
+    }
+
+    return cerradas;
   }
 
   private async expireOverdue(now: Date): Promise<number> {

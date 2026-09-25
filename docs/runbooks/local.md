@@ -87,14 +87,14 @@ A partir de ahí, cualquier propuesta nueva sale `DENIED` con la razón P-08.
 
 ## Problemas frecuentes
 
-| Síntoma                                   | Causa                                             | Solución                                |
-| ----------------------------------------- | ------------------------------------------------- | --------------------------------------- |
-| `Configuración inválida` al arrancar      | Falta `JWT_SECRET` o tiene menos de 32 caracteres | Genera uno nuevo y ponlo en `.env`      |
-| `ECONNREFUSED 5432`                       | Postgres no está levantado                        | `pnpm db:up` y espera al healthcheck    |
-| `relation "users" does not exist`         | Faltan migraciones                                | `pnpm db:migrate`                       |
-| `NotImplementedError` de `@aegis/stellar` | `USE_FAKE_STELLAR=false` sin integración real     | Ponlo en `true` hasta que BE1 entregue  |
-| `DEV_LOGIN_DISABLED`                      | `ALLOW_DEV_LOGIN=false`                           | Actívalo en `.env` (solo en desarrollo) |
-| Cambié una ruta y la CI falla             | `docs/api/openapi.json` desactualizado            | `pnpm --filter @aegis/api openapi`      |
+| Síntoma                                                          | Causa                                             | Solución                                                                        |
+| ---------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `Configuración inválida` al arrancar                             | Falta `JWT_SECRET` o tiene menos de 32 caracteres | Genera uno nuevo y ponlo en `.env`                                              |
+| `ECONNREFUSED 5432`                                              | Postgres no está levantado                        | `pnpm db:up` y espera al healthcheck                                            |
+| `relation "users" does not exist`                                | Faltan migraciones                                | `pnpm db:migrate`                                                               |
+| `Configuración inválida` nombrando `STELLAR_AGENT_SIGNER_SECRET` | `USE_FAKE_STELLAR=false` sin credenciales         | Ponlo en `true` para desarrollar, o completa las credenciales (ver `deploy.md`) |
+| `DEV_LOGIN_DISABLED`                                             | `ALLOW_DEV_LOGIN=false`                           | Actívalo en `.env` (solo en desarrollo)                                         |
+| Cambié una ruta y la CI falla                                    | `docs/api/openapi.json` desactualizado            | `pnpm --filter @aegis/api openapi`                                              |
 
 ## Reiniciar desde cero
 

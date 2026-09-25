@@ -185,6 +185,7 @@ Nadie está bloqueado: cada consumidor tiene un mock del que depende
 | `pnpm test`                        | Todos los tests (los de la API necesitan Docker levantado) |
 | `pnpm lint` / `pnpm format`        | ESLint / Prettier                                          |
 | `pnpm dev:api`                     | API en modo watch                                          |
+| `pnpm build:mcp`                   | Compila el servidor MCP para conectarlo a Claude Desktop   |
 | `pnpm db:up` / `db:down`           | Postgres en Docker                                         |
 | `pnpm db:generate`                 | Genera una migración desde el esquema                      |
 | `pnpm db:migrate` / `db:seed`      | Aplica migraciones / datos de demo                         |

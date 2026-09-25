@@ -40,6 +40,20 @@ export interface HistoryStats {
   usedAssets: string[];
 }
 
+/**
+ * Estado de una transacción ya enviada (BE1-09).
+ *
+ * Existe para reconciliar: si el proceso muere entre que la red acepta un pago
+ * y que lo anotamos, la propuesta se queda en SUBMITTED sin que nadie sepa si
+ * el dinero se movió. Preguntarle al ledger es la única respuesta honesta.
+ */
+export interface TransactionStatus {
+  /** `false` si la red no conoce esa transacción. */
+  found: boolean;
+  /** Solo tiene sentido si `found` es `true`. */
+  successful: boolean;
+}
+
 /** Lectura de la red. Lo implementa BE1; lo consumen BE2 y AI. */
 export interface StellarReader {
   getBalances(accountId: string): Promise<Balance[]>;
@@ -47,6 +61,8 @@ export interface StellarReader {
   getAccountInfo(address: string): Promise<AccountInfo>;
   getHistoryStats(accountId: string): Promise<HistoryStats>;
   simulatePayments(accountId: string, actions: ResolvedAction[]): Promise<SimulationResult>;
+  /** Consulta si una transacción llegó al ledger y si tuvo éxito (BE1-09). */
+  getTransactionStatus(hash: string): Promise<TransactionStatus>;
 }
 
 /** Escritura en la red. Lo implementa BE1; lo consume el orquestador (BE2). */

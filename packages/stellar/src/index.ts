@@ -1,13 +1,13 @@
 /**
  * @aegis/stellar — punto de entrada del cliente Stellar (BE1).
  *
- * M1 expone el cliente Horizon de cuenta y el ejecutor testnet real. La API
- * conserva los fakes de `@aegis/stellar/testing` hasta el cableado M2.
+ * Expone el cliente Horizon de cuenta, el lector completo y el ejecutor real de
+ * testnet. La API los usa con `USE_FAKE_STELLAR=false`; con `true` se queda con
+ * los fakes de `@aegis/stellar/testing`, que no tocan la red.
  *
  * Regla del proyecto: este es el ÚNICO paquete que importa `@stellar/stellar-sdk`.
  */
 
-export { NotImplementedStellarReader, NotImplementedStellarExecutor } from './not-implemented.js';
 export { isValidStellarAddress, verifyChallengeSignature } from './signature.js';
 export { StellarClientError, type StellarClientErrorCode } from './errors.js';
 export {

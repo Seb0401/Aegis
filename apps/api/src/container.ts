@@ -80,7 +80,7 @@ export function buildServices({
     prices,
     ...(aiExplainer ? { explain: aiExplainer.explain } : {}),
   });
-  const sweeper = new ProposalSweeper({ db, audit });
+  const sweeper = new ProposalSweeper({ db, audit, reader });
 
   return {
     db,
