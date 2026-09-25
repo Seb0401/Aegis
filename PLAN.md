@@ -475,7 +475,7 @@ Formato: `ID · tarea · sprint`. Convertir cada línea en un issue de GitHub co
 - [x] BE1-06 · Pagos en lote (multi-operación) y manejo de trustlines · S2 · **hecho por BE2, revisar: lote multi-operación y activos de crédito**
 - [x] BE1-07 · Historial y estadísticas (mediana, direcciones conocidas, edad de cuenta) · S3 · **hecho por BE2, revisar**
 - [x] BE1-08 · Simulación previa (fee, saldo posterior, errores) · S3 · **hecho por BE2, revisar**
-- [x] BE1-09 · Seguimiento de confirmación y reintentos · S4 · **parcial: reconcilia SUBMITTED con hash**
+- [x] BE1-09 · Seguimiento de confirmación y reintentos · S4 · el hash se guarda antes de enviar, así que ninguna queda sin hash
 - [x] BE1-10 · Custodia y rotación de la clave del signer · S4 · **custodia en el gestor de secretos + `demo:signer verify|rotate` ([ADR 0013](docs/adr/0013-custodia-del-signer.md))**
 - [x] BE1-11 · Activo de prueba `USDC_TEST` (emisor y trustlines) · S2 · **comandos `demo:usdc` + [runbook](docs/runbooks/usdc-test.md); falta ejecutarlos en testnet**
 

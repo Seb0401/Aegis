@@ -373,12 +373,19 @@ export class ProposalService {
     try {
       await this.transition(id, 'SIGNED', 'SUBMITTED');
 
-      const { hash } = await this.deps.executor.submit(signedXdr);
+      // El hash se guarda ANTES de enviar. El de una transacción de Stellar es
+      // función de su contenido firmado, así que ya se conoce, y si el envío
+      // se queda sin respuesta es lo único que permite preguntarle al ledger
+      // qué pasó de verdad. Guardarlo después dejaría propuestas enviadas de
+      // las que no sabríamos ni por dónde empezar a preguntar.
+      const hash = this.deps.executor.hashOf(signedXdr);
 
       await this.deps.db
         .update(proposals)
         .set({ txHash: hash, updatedAt: new Date() })
         .where(eq(proposals.id, id));
+
+      await this.deps.executor.submit(signedXdr);
 
       await this.deps.audit.append({
         userId,
@@ -398,8 +405,35 @@ export class ProposalService {
 
       return this.get(userId, id);
     } catch (error) {
+      // Si la red no dijo si la aceptó o no, darla por fallida sería mentir:
+      // el pago puede estar hecho. Se queda en SUBMITTED con su hash y el
+      // barrido le pregunta al ledger, que es el único que lo sabe.
+      if (isUnknownOutcome(error)) return this.leaveForReconciliation(userId, id, error);
+
       return this.fail(userId, id, error);
     }
+  }
+
+  /**
+   * Deja la propuesta enviada, a la espera de que el ledger la resuelva.
+   *
+   * No cambia el estado: ya está en `SUBMITTED` y ahí se queda. Lo que sí hace
+   * es dejar constancia de por qué no hay desenlace todavía, para que quien
+   * mire la bitácora no interprete el silencio como que algo se perdió.
+   */
+  private async leaveForReconciliation(
+    userId: string,
+    id: string,
+    error: unknown,
+  ): Promise<Proposal> {
+    await this.deps.audit.append({
+      userId,
+      proposalId: id,
+      type: 'TX_STATUS_UNKNOWN',
+      payload: { reason: error instanceof Error ? error.message : 'Error desconocido' },
+    });
+
+    return this.get(userId, id);
   }
 
   private async fail(userId: string, id: string, error: unknown): Promise<Proposal> {
@@ -568,4 +602,21 @@ function parseOrNull<T>(schema: z.ZodType<T>, value: unknown): T | null {
   if (value === null || value === undefined) return null;
   const parsed = schema.safeParse(value);
   return parsed.success ? parsed.data : null;
+}
+
+/**
+ * ¿La red se quedó sin contestar?
+ *
+ * Se mira el `code` en vez de usar `instanceof`: el error llega desde
+ * `@aegis/stellar`, pero el orquestador solo se relaciona con la red a través
+ * del puerto. Atar esto a una clase concreta rompería esa separación —y el
+ * `instanceof` tampoco es de fiar cruzando límites de módulo.
+ */
+function isUnknownOutcome(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'TX_STATUS_UNKNOWN'
+  );
 }

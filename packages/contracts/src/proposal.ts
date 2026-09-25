@@ -154,6 +154,9 @@ export const AuditEventTypeSchema = z.enum([
   'TX_SUBMITTED',
   'TX_CONFIRMED',
   'TX_FAILED',
+  // Se envió y la red no dijo si la aceptó. El barrido lo resolverá contra el
+  // ledger: no es un fallo, es un desenlace que todavía no se conoce.
+  'TX_STATUS_UNKNOWN',
   'POLICY_UPDATED',
   'KILL_SWITCH_TOGGLED',
   'DESTINATION_CREATED',

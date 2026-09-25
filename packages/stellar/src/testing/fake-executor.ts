@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import type { ResolvedAction, StellarExecutor } from '@aegis/contracts';
 
 /**
@@ -14,8 +14,6 @@ import type { ResolvedAction, StellarExecutor } from '@aegis/contracts';
 export const FAKE_AGENT_PUBLIC_KEY = 'GBH5AQXXYIHEUMGEHOQZTPM7P3JOQFVEGQU3TUX6PVSXL5SBIVGYF4DO';
 
 export class FakeStellarExecutor implements StellarExecutor {
-  private readonly submitted = new Map<string, string>();
-
   /** Dirección fija y válida: los tests necesitan que sea estable. */
   getAgentPublicKey(): string {
     return FAKE_AGENT_PUBLIC_KEY;
@@ -29,16 +27,19 @@ export class FakeStellarExecutor implements StellarExecutor {
     return { xdr: encode({ kind: 'agent-signed', inner: xdr }) };
   }
 
-  async submit(xdr: string): Promise<{ hash: string }> {
-    const existing = this.submitted.get(xdr);
-    if (existing) {
-      // Idempotencia: reenviar el mismo XDR no produce un pago nuevo (§12).
-      return { hash: existing };
-    }
+  /**
+   * En Stellar el hash sale del contenido firmado, no del envío. Aquí se imita
+   * con un sha256 del XDR: lo que importa no es el valor sino que sea el mismo
+   * antes y después de enviar, que es de lo que depende la reconciliación.
+   */
+  hashOf(signedXdr: string): string {
+    return createHash('sha256').update(signedXdr).digest('hex');
+  }
 
-    const hash = randomBytes(32).toString('hex');
-    this.submitted.set(xdr, hash);
-    return { hash };
+  async submit(xdr: string): Promise<{ hash: string }> {
+    // Idempotencia: reenviar el mismo XDR no produce un pago nuevo (§12), y
+    // por eso mismo devuelve el mismo hash.
+    return { hash: this.hashOf(xdr) };
   }
 
   async buildDelegationXdr(accountId: string, agentPublicKey: string): Promise<{ xdr: string }> {

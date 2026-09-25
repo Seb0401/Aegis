@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { proposals } from '../db/schema.js';
-import { FakeStellarReader } from '@aegis/stellar/testing';
+import { FakeStellarExecutor, FakeStellarReader } from '@aegis/stellar/testing';
 import { createDestination, createTestApp, login, setPolicy, type TestApp } from '../test/app.js';
 import { createScriptedAgent } from '../test/scripted-agent.js';
 import { NEEDS_NETWORK_RECONCILIATION, SWEEP_TARGETS } from './sweeper.js';
@@ -338,5 +338,91 @@ describe('reconciliación de envíos sin desenlace (BE1-09)', () => {
     await harness.app.services.sweeper.sweep();
 
     expect((await estado(proposal.id))?.status).toBe('SUBMITTED');
+  });
+});
+
+describe('un envío sin respuesta no se da por fallido', () => {
+  /**
+   * Ejecutor al que la red le cuelga el teléfono.
+   *
+   * Es el caso feo de verdad: el pago puede haber entrado en el ledger o no, y
+   * desde aquí no hay forma de saberlo. Horizon lo distingue con un 504 y
+   * `@aegis/stellar` lo traduce a `TX_STATUS_UNKNOWN`.
+   */
+  class EjecutorMudo extends FakeStellarExecutor {
+    override async submit(): Promise<{ hash: string }> {
+      throw Object.assign(new Error('Horizon agotó el tiempo de espera'), {
+        code: 'TX_STATUS_UNKNOWN',
+      });
+    }
+  }
+
+  it('queda en SUBMITTED con su hash, y el barrido lo resuelve contra el ledger', async () => {
+    const mudo = await createTestApp({
+      overrides: { agent: createScriptedAgent(), executor: new EjecutorMudo() },
+    });
+
+    try {
+      const sesion = await login(mudo.app, ADDRESS);
+      const destino = await createDestination(mudo.app, sesion.headers, {
+        kind: 'GOAL',
+        label: VIAJE.label,
+        address: VIAJE.address,
+      });
+      // Autónomo: la API firma y envía sola, sin pasar por la wallet.
+      await setPolicy(mudo.app, sesion.headers, { mode: 'AUTONOMOUS', paused: false });
+
+      const respuesta = await mudo.app.inject({
+        method: 'POST',
+        url: '/agent/messages',
+        headers: sesion.headers,
+        payload: {
+          message: JSON.stringify({
+            summary: 'Pago que se queda sin respuesta',
+            actions: [
+              {
+                type: 'PAYMENT',
+                destinationId: destino.id,
+                asset: 'USDC_TEST',
+                amount: '2',
+                memo: null,
+                label: 'Pago',
+              },
+            ],
+          }),
+        },
+      });
+
+      const creada = (JSON.parse(respuesta.body) as { proposals: Proposal[] }).proposals[0]!;
+
+      // Lo importante: NO es FAILED. Decir que falló un pago que quizá se hizo
+      // es la peor respuesta posible, porque invita a reintentarlo.
+      expect(creada.status).toBe('SUBMITTED');
+      // Y tiene hash, que es lo que hace que el barrido pueda preguntar.
+      expect(creada.txHash).toMatch(/^[0-9a-f]{64}$/);
+
+      const eventos = (await mudo.app.services.audit.list(sesion.userId, 200))
+        .filter((e) => e.proposalId === creada.id)
+        .map((e) => e.type);
+      expect(eventos).toContain('TX_STATUS_UNKNOWN');
+      expect(eventos).not.toContain('TX_FAILED');
+
+      // Pasado el margen, el ledger tiene la última palabra.
+      await mudo.db
+        .update(proposals)
+        .set({ updatedAt: new Date(Date.now() - 10 * 60_000) })
+        .where(eq(proposals.id, creada.id));
+
+      await mudo.app.services.sweeper.sweep();
+
+      const [row] = await mudo.db
+        .select({ status: proposals.status })
+        .from(proposals)
+        .where(eq(proposals.id, creada.id));
+
+      expect(row?.status).toBe('CONFIRMED');
+    } finally {
+      await mudo.close();
+    }
   });
 });

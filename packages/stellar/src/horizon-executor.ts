@@ -243,6 +243,17 @@ export class HorizonStellarExecutor implements StellarExecutor {
     return { xdr: transaction.toXDR() };
   }
 
+  /**
+   * Hash de la transacción sin enviarla.
+   *
+   * El hash es función del contenido firmado y de la red, así que Stellar lo
+   * deja calcular en local. Es lo que permite preguntar por una transacción
+   * cuyo envío se quedó sin respuesta.
+   */
+  hashOf(signedXdr: string): string {
+    return parseTransaction(signedXdr).hash().toString('hex');
+  }
+
   async submit(xdr: string): Promise<{ hash: string }> {
     const transaction = parseTransaction(xdr);
     this.assertAllowedSource(transaction.source);

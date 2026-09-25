@@ -3761,6 +3761,7 @@
                               "TX_SUBMITTED",
                               "TX_CONFIRMED",
                               "TX_FAILED",
+                              "TX_STATUS_UNKNOWN",
                               "POLICY_UPDATED",
                               "KILL_SWITCH_TOGGLED",
                               "DESTINATION_CREATED",

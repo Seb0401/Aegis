@@ -425,3 +425,39 @@ describe('firmar un lote (BE1-06)', () => {
     ).rejects.toMatchObject({ code: 'INVALID_TRANSACTION' });
   });
 });
+
+describe('hash antes de enviar', () => {
+  /**
+   * El hash de una transacción de Stellar sale de su contenido firmado y de la
+   * red, no del envío. Poder calcularlo antes es lo que permite preguntarle al
+   * ledger qué pasó cuando el envío se queda sin respuesta.
+   */
+  it('coincide con el que calcula el SDK para esa misma transacción', async () => {
+    const { executor } = setup();
+
+    const { xdr } = await executor.buildUnsigned(source.publicKey(), [action()]);
+    const { xdr: firmado } = await executor.signWithAgent(xdr);
+
+    const esperado = new Transaction(firmado, Networks.TESTNET).hash().toString('hex');
+
+    expect(executor.hashOf(firmado)).toBe(esperado);
+    expect(executor.hashOf(firmado)).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('firmar no cambia el hash: es el de la transacción, no el del sobre', async () => {
+    // Importa porque el usuario firma con su wallet un XDR que construimos
+    // nosotros: si el hash cambiara al firmar, el que guardamos no serviría.
+    const { executor } = setup();
+
+    const { xdr } = await executor.buildUnsigned(source.publicKey(), [action()]);
+    const { xdr: firmado } = await executor.signWithAgent(xdr);
+
+    expect(executor.hashOf(firmado)).toBe(executor.hashOf(xdr));
+  });
+
+  it('rechaza lo que no es una transacción', () => {
+    const { executor } = setup();
+
+    expect(() => executor.hashOf('esto no es un XDR')).toThrow(StellarClientError);
+  });
+});

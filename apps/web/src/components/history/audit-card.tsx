@@ -27,6 +27,7 @@ const EVENT_LABEL: Record<AuditEventType, string> = {
   TX_SUBMITTED: 'Enviada a la red',
   TX_CONFIRMED: 'Confirmada en la red',
   TX_FAILED: 'Falló en la red',
+  TX_STATUS_UNKNOWN: 'Enviada, sin respuesta de la red',
   POLICY_UPDATED: 'Límites modificados',
   KILL_SWITCH_TOGGLED: 'Kill switch',
   DESTINATION_CREATED: 'Destino registrado',

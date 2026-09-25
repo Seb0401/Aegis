@@ -73,6 +73,16 @@ export interface StellarExecutor {
   signWithAgent(xdr: string): Promise<{ xdr: string }>;
   /** Envía a la red y devuelve el hash. */
   submit(xdr: string): Promise<{ hash: string }>;
+  /**
+   * Hash que tendrá la transacción, calculado **antes** de enviarla.
+   *
+   * El hash de una transacción de Stellar es función de su contenido firmado,
+   * así que se conoce sin haber tocado la red. Importa porque si `submit`
+   * corta a media conexión, el pago puede haber entrado igualmente: guardando
+   * el hash antes, queda por dónde preguntarle al ledger qué pasó. Sin él, la
+   * única salida sería darla por fallida y cruzar los dedos.
+   */
+  hashOf(signedXdr: string): string;
   /** XDR para que el usuario añada el signer del agente a su cuenta (BE1-05). */
   buildDelegationXdr(accountId: string, agentPublicKey: string): Promise<{ xdr: string }>;
   /**

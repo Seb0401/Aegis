@@ -66,9 +66,6 @@ contra el esquema.
 - **Observabilidad de verdad** (`BE2-Q5`, abierta). Hoy: id por petición, logs
   redactados y `/health` con sonda de base de datos. Falta saber, sin entrar a
   la máquina, cuántas propuestas se deniegan y por qué regla.
-- **Reconciliar `SUBMITTED` sin hash.** El barrido ya cierra las que tienen
-  hash; las que no, se quedan. Se arregla guardando el hash calculado del XDR
-  firmado **antes** de enviarlo.
 - **Concurrencia de la bitácora.** El [ADR 0004](adr/0004-auditoria-encadenada.md)
   documenta que dos escrituras simultáneas del mismo usuario podrían encadenarse
   al mismo padre. Con una cola de trabajos hay que añadir `SELECT … FOR UPDATE`.
@@ -106,6 +103,10 @@ No todo hay que rehacerlo. Lo siguiente se diseñó pensando en esto:
 - **Kill switch** que corta antes de evaluar nada más.
 - **Saneado del texto libre** y validación de esquema en toda entrada.
 - **Transiciones de estado atómicas**, condicionadas al estado esperado.
+- **Ningún pago se da por fallido sin preguntarle al ledger.** El hash se
+  calcula y se guarda antes de enviar, así que un envío que se queda sin
+  respuesta queda en `SUBMITTED` con por dónde preguntar, y lo resuelve el
+  barrido.
 
 ---
 
