@@ -166,3 +166,43 @@ describe('GET /audit', () => {
     expect(body.events.every((e) => e.userId === userId)).toBe(true);
   });
 });
+
+describe('escrituras simultáneas', () => {
+  /**
+   * Dos eventos a la vez del mismo usuario.
+   *
+   * Sin cerrojo, los dos leerían el mismo último evento y los dos apuntarían
+   * al mismo padre: la cadena se bifurca y deja de demostrar nada, porque un
+   * evento se podría borrar sin que ningún hash dejara de cuadrar.
+   *
+   * Pasa por una sesión propia para no competir con el resto del fichero.
+   */
+  it('no bifurcan la cadena', async () => {
+    const sesion = await login(app, 'GCIILO6TPWVNNS5O6Q762TJOAE2SNT37SL76JEDPELKJFODGRFXMTE6T');
+
+    const eventos = await Promise.all(
+      Array.from({ length: 8 }, (_, i) =>
+        harness.app.services.audit.append({
+          userId: sesion.userId,
+          type: 'POLICY_UPDATED',
+          payload: { paso: i },
+        }),
+      ),
+    );
+
+    const filas = await harness.db
+      .select({ hash: auditEvents.hash, previousHash: auditEvents.previousHash })
+      .from(auditEvents)
+      .where(eq(auditEvents.userId, sesion.userId));
+
+    // Cada evento enlaza con un padre distinto: ninguno comparte el suyo.
+    const padres = filas.map((f) => f.previousHash);
+    expect(new Set(padres).size).toBe(padres.length);
+
+    // Y la cadena sigue cuadrando de principio a fin.
+    const verificacion = await harness.app.services.audit.verifyChain(sesion.userId, { limit: 0 });
+    expect(verificacion.valid).toBe(true);
+    expect(verificacion.complete).toBe(true);
+    expect(eventos).toHaveLength(8);
+  });
+});

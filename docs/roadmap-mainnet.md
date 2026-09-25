@@ -66,9 +66,6 @@ contra el esquema.
 - **Observabilidad de verdad** (`BE2-Q5`, abierta). Hoy: id por petición, logs
   redactados y `/health` con sonda de base de datos. Falta saber, sin entrar a
   la máquina, cuántas propuestas se deniegan y por qué regla.
-- **Concurrencia de la bitácora.** El [ADR 0004](adr/0004-auditoria-encadenada.md)
-  documenta que dos escrituras simultáneas del mismo usuario podrían encadenarse
-  al mismo padre. Con una cola de trabajos hay que añadir `SELECT … FOR UPDATE`.
 - **Umbrales del Guardian con datos reales** (`BE2-Q3`). Los pesos de las
   señales son provisionales y nadie los ha contrastado con comportamiento real.
 - **Límites por usuario, no globales.** Hoy hay un signer global (ADR 0013). El
@@ -96,7 +93,8 @@ Nada de esto es código, y todo puede parar un lanzamiento:
 No todo hay que rehacerlo. Lo siguiente se diseñó pensando en esto:
 
 - **Aritmética de dinero con enteros**, nunca coma flotante.
-- **Auditoría append-only con hash encadenado** y verificación de integridad.
+- **Auditoría append-only con hash encadenado**, verificación de integridad y
+  un cerrojo por usuario que impide que la cadena se bifurque bajo carga.
 - **Motores deterministas**: ni el Policy Engine ni el Guardian llaman a un LLM,
   así que una decisión de autorización es reproducible y explicable.
 - **El agente nunca escribe direcciones**: solo referencia destinos registrados.

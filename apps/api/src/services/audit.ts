@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { AuditEventType } from '@aegis/contracts';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import type { Database } from '../db/client.js';
 import { auditEvents } from '../db/schema.js';
 import { newAuditId } from '../lib/ids.js';
@@ -12,13 +12,15 @@ import { newAuditId } from '../lib/ids.js';
  * una fila pasada directamente en la base de datos, todos los hashes siguientes
  * dejan de cuadrar y `verifyChain` lo detecta.
  *
- * Límite conocido: el encadenado es por usuario y la lectura del último evento
- * más la inserción ocurren dentro de una transacción, pero sin bloqueo
- * explícito. Con escrituras concurrentes del mismo usuario dos eventos podrían
- * apuntar al mismo padre. Para el MVP es aceptable (un usuario no opera en
- * paralelo consigo mismo); si aparece una cola de trabajos (BE2-Q2) habrá que
- * añadir un `SELECT … FOR UPDATE` sobre el usuario.
+ * Leer el último evento y escribir el siguiente ocurre dentro de una
+ * transacción y **tomando un cerrojo por usuario**: si no, dos escrituras
+ * simultáneas del mismo usuario podrían leer el mismo padre y la cadena se
+ * bifurcaría. Una bitácora que se bifurca deja de demostrar nada, que es lo
+ * único que aporta.
  */
+/** La transacción que entrega Drizzle, sin tener que nombrar su tipo entero. */
+type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
+
 /** Cuántos eventos verifica `verifyChain` cuando no se le dice otra cosa. */
 const DEFAULT_VERIFY_LIMIT = 200;
 
@@ -44,6 +46,8 @@ export class AuditLog {
 
   async append(entry: AuditEntry): Promise<{ id: string; hash: string }> {
     return this.db.transaction(async (tx) => {
+      await lockChain(tx, entry.userId);
+
       const [previous] = await tx
         .select({ hash: auditEvents.hash })
         .from(auditEvents)
@@ -148,6 +152,22 @@ export class AuditLog {
 
     return { valid: true, verifiedEvents: events.length, complete };
   }
+}
+
+/**
+ * Serializa las escrituras de la bitácora de un usuario.
+ *
+ * Es un cerrojo consultivo de Postgres, atado a la transacción: se suelta solo
+ * al terminar, pase lo que pase. Se prefiere a un `SELECT … FOR UPDATE` sobre
+ * la fila del usuario porque no compite con nada más que toque esa fila: lo
+ * que hay que serializar es la cadena, no el usuario.
+ *
+ * Dos usuarios distintos pueden coincidir en el mismo número —`hashtext` tiene
+ * colisiones— y entonces uno espera al otro. Da igual: es raro, dura lo que
+ * dura una inserción, y el resultado sigue siendo correcto.
+ */
+async function lockChain(tx: Transaction, userId: string): Promise<void> {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`audit:${userId}`})::bigint)`);
 }
 
 interface HashInput {

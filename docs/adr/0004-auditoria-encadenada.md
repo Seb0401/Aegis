@@ -34,10 +34,17 @@ verificación no valdría nada.
 
 ## Consecuencias
 
-- Límite conocido: la lectura del último evento y la inserción ocurren en una
-  transacción pero **sin bloqueo explícito**. Con escrituras concurrentes del
-  mismo usuario, dos eventos podrían encadenarse al mismo padre. Aceptable
-  mientras un usuario no opere en paralelo consigo mismo; si aparece una cola de
-  trabajos (`BE2-Q2`) habrá que añadir `SELECT … FOR UPDATE`.
+- La lectura del último evento y la inserción ocurren en una transacción y
+  **bajo un cerrojo consultivo por usuario** (`pg_advisory_xact_lock`). Sin él,
+  dos escrituras simultáneas del mismo usuario leen el mismo padre y la cadena
+  se bifurca: a partir de ahí se podría borrar un evento sin que ningún hash
+  dejara de cuadrar, que es exactamente lo que esta decisión existe para
+  impedir. Medido: ocho escrituras a la vez producían cuatro padres repetidos.
+  Se eligió el cerrojo consultivo antes que un `SELECT … FOR UPDATE` sobre la
+  fila del usuario porque lo que hay que serializar es la cadena, no el
+  usuario, y así no compite con nada más que toque esa fila.
+- Se paga con serialización: las escrituras de la bitácora de un mismo usuario
+  van en fila. Duran lo que una inserción, y ese usuario no tiene nada que
+  ganar escribiendo dos a la vez.
 - Los `payload` pasan por un filtro que redacta cualquier clave que suene a
   secreto antes de persistirse.
