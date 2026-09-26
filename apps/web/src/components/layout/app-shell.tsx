@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { MobileTabBar } from '@/components/layout/mobile-tab-bar';
 import { Sidebar } from '@/components/layout/sidebar';
 import { TopBar } from '@/components/layout/top-bar';
+import { usePolicy } from '@/lib/api/hooks';
 import { cn } from '@/lib/utils';
 
 /**
@@ -25,8 +26,21 @@ export function AppShell({
   title?: string;
   subtitle?: string;
 }) {
+  const policy = usePolicy();
+  const paused = policy.data?.config.paused ?? false;
+
   return (
-    <div className="flex min-h-dvh">
+    /*
+      Con el agente en pausa, la interfaz entera pierde color y se apaga.
+      Parar al agente es la decisión más grave que se puede tomar aquí, y
+      leerlo en una etiqueta pequeña no está a la altura: quien mire de reojo
+      tiene que darse cuenta antes de leer nada.
+
+      Los controles marcados con `not-paused` —el propio kill switch— se
+      quedan fuera del velo: apagar el botón que resucita al agente sería
+      justo lo contrario de lo que hace falta en ese momento.
+    */
+    <div className={cn('flex min-h-dvh', paused && 'paused-veil')}>
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col">

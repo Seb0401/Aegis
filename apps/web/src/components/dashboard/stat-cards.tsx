@@ -5,11 +5,13 @@ import { ChevronRight, Gauge as GaugeIcon, Lock, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { QueryState } from '@/components/dashboard/query-state';
+import { Amount } from '@/components/ui/amount';
 import { Card } from '@/components/ui/card';
 import { Gauge } from '@/components/ui/gauge';
 import { OrbitMark } from '@/components/ui/marks';
 import { Sparkline } from '@/components/ui/sparkline';
 import { useBalances, usePolicy, useTransactions } from '@/lib/api/hooks';
+import { riseDelay } from '@/lib/motion';
 import { cumulativeFlow, dailyLimitUsage, reservedAmount } from '@/lib/stats';
 import { formatAmount } from '@/lib/utils';
 
@@ -36,15 +38,18 @@ function StatShell({
   icon,
   label,
   action,
+  orden,
   children,
 }: {
   icon: ReactNode;
   label: string;
   action?: ReactNode;
+  /** Posición en la fila, solo para escalonar la entrada. */
+  orden: number;
   children: ReactNode;
 }) {
   return (
-    <Card className="flex flex-col gap-4 p-5">
+    <Card className="rise-in flex flex-col gap-4 p-5" style={riseDelay(orden, 70)}>
       <div className="flex items-center gap-2.5">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
           {icon}
@@ -71,16 +76,16 @@ function BalanceStat() {
   const flow = main ? cumulativeFlow(transactions.data?.transactions ?? [], main.asset) : [];
 
   return (
-    <StatShell icon={<Wallet className="size-4" />} label="Saldo disponible">
+    <StatShell icon={<Wallet className="size-4" />} label="Saldo disponible" orden={0}>
       <QueryState isLoading={balances.isLoading} error={balances.error} rows={2}>
         {main ? (
           <div className="flex flex-col gap-3">
-            <p className="flex items-baseline gap-2">
-              <span className="font-display text-4xl leading-none font-semibold tabular-nums">
-                {formatAmount(main.available)}
-              </span>
-              <span className="text-sm text-muted-foreground">{main.asset}</span>
-            </p>
+            <Amount
+              value={main.available}
+              asset={main.asset}
+              className="font-display block text-[2.75rem] leading-none font-semibold"
+              assetClassName="text-sm font-normal text-muted-foreground"
+            />
 
             {flow.length >= 2 ? (
               <div>
@@ -128,7 +133,7 @@ function DailyLimitStat() {
   const percent = Math.round(used * 100);
 
   return (
-    <StatShell icon={<GaugeIcon className="size-4" />} label="Límite diario">
+    <StatShell icon={<GaugeIcon className="size-4" />} label="Límite diario" orden={1}>
       <QueryState isLoading={isLoading} error={error} rows={2}>
         {data ? (
           <div className="flex flex-col gap-3">
@@ -141,9 +146,10 @@ function DailyLimitStat() {
                 size={104}
               />
               <div className="min-w-0">
-                <p className="font-display text-3xl leading-none font-semibold tabular-nums">
-                  {formatAmount(remaining)}
-                </p>
+                <Amount
+                  value={remaining}
+                  className="font-display block text-3xl leading-none font-semibold"
+                />
                 <p className="mt-1.5 text-xs text-muted-foreground">
                   disponibles hoy,
                   <br />
@@ -170,6 +176,7 @@ function ModeStat() {
     <StatShell
       icon={<OrbitMark className="size-4" />}
       label="Modo"
+      orden={2}
       action={
         <Link
           href="/limites"
