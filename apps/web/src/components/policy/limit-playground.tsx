@@ -72,8 +72,17 @@ export function LimitPlayground() {
   const simulacion = useSimulation(peticion);
   const resultado = simulacion.data;
 
-  const tope = policy.data?.config.maxDailyAmount ?? '100';
-  const maximoDeslizador = Math.max(Number(tope) * 1.5, 10);
+  /*
+    El recorrido se calcula sobre el tope POR OPERACIÓN, no sobre el diario.
+    Con el diario en 1000 y el de operación en 5, un deslizador de 0 a 1500
+    dejaba toda la zona interesante aplastada en el primer milímetro: se podía
+    arrastrar entero sin ver nunca cambiar el veredicto. Cuatro veces el tope
+    por operación deja el punto en el que salta P-01 aproximadamente a un
+    cuarto del recorrido, con sitio de sobra a los dos lados.
+  */
+  const topeOperacion = Number(policy.data?.config.maxAmountPerOperation ?? '5');
+  const maximoDeslizador = Math.max(topeOperacion * 4, 10);
+  const marcaTope = topeOperacion > 0 ? (topeOperacion / maximoDeslizador) * 100 : null;
 
   return (
     <Card>
@@ -114,16 +123,37 @@ export function LimitPlayground() {
           </div>
         </div>
 
-        <input
-          type="range"
-          min={0}
-          max={maximoDeslizador}
-          step={maximoDeslizador > 100 ? 1 : 0.5}
-          value={Number(importe || 0)}
-          onChange={(evento) => setImporte(evento.target.value)}
-          aria-label="Importe a probar"
-          className="w-full accent-[var(--primary)]"
-        />
+        <div className="relative">
+          <input
+            type="range"
+            min={0}
+            max={maximoDeslizador}
+            step={maximoDeslizador > 100 ? 1 : 0.25}
+            value={Number(importe || 0)}
+            onChange={(evento) => setImporte(evento.target.value)}
+            aria-label="Importe a probar"
+            className="deslizador w-full"
+          />
+
+          {/*
+            Dónde está el tope por operación, marcado sobre la propia barra.
+            Sin esto hay que descubrirlo arrastrando a ciegas; con esto se ve
+            de antemano hacia dónde hay que ir para romperlo, que es
+            justamente lo que se quiere enseñar.
+          */}
+          {marcaTope !== null && marcaTope < 100 ? (
+            <div
+              className="pointer-events-none absolute top-0 flex -translate-x-1/2 flex-col items-center"
+              style={{ left: `${marcaTope}%` }}
+              aria-hidden
+            >
+              <span className="h-6 w-px bg-risk-medium/70" />
+              <span className="mt-0.5 text-[10px] whitespace-nowrap text-muted-foreground tabular-nums">
+                tope {formatAmount(String(topeOperacion))}
+              </span>
+            </div>
+          ) : null}
+        </div>
 
         <Veredicto
           cargando={simulacion.isFetching}

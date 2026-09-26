@@ -16,10 +16,21 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * nada —que es exactamente lo que le pasa a las notificaciones que avisan de
  * todo—.
  *
- * Funciona igual para los dos caminos: el pago que el usuario firma y el que
- * el agente ejecuta solo en modo autónomo. A los dos se llega por el mismo
- * sitio, que es la propuesta cambiando de estado.
+ * Cubre los dos caminos, que no son el mismo: el pago que el usuario firma
+ * pasa por varios estados delante de él, y el que el agente ejecuta solo nace
+ * ya confirmado —la API firma y envía en la misma petición—. Si solo se
+ * mirasen los cambios de estado, el pago más vistoso del producto sería justo
+ * el que no se celebra.
  */
+/** Cuánto puede llevar confirmada una propuesta y seguir siendo «recién». */
+const MARGEN = 30_000;
+
+/** Fecha tolerante: una cadena rara no debe disparar una celebración. */
+function fecha(iso: string): number {
+  const valor = new Date(iso).getTime();
+  return Number.isNaN(valor) ? 0 : valor;
+}
+
 export function useJustConfirmed(proposals: Proposal[]): {
   confirmed: Proposal | null;
   dismiss: () => void;
@@ -34,14 +45,29 @@ export function useJustConfirmed(proposals: Proposal[]): {
     for (const propuesta of proposals) {
       const antes = estadoPrevio.current.get(propuesta.id);
 
-      // Que estuviera en otro estado es la prueba de que el cambio ocurrió
-      // con la página abierta. Una propuesta que aparece ya confirmada pudo
-      // confirmarse en cualquier momento.
+      // Caso 1: la vimos en otro estado y ahora está confirmada. Es el camino
+      // del pago que el usuario firma.
+      const cambioDelante = Boolean(antes) && antes !== 'CONFIRMED';
+
+      /*
+        Caso 2: aparece nueva y ya confirmada. Es el camino autónomo, donde la
+        API firma y ejecuta en la misma petición: la propuesta nace confirmada
+        y nunca se la ve en otro estado. Sin esto, el pago más vistoso del
+        producto —el que Aegis hace solo— era justo el que no se celebraba.
+
+        Para no volver a celebrar lo viejo, se exige que se haya confirmado
+        hace nada. Y sigue valiendo la primera vuelta en blanco: al recargar,
+        todo lo que ya estaba se apunta sin celebrar, por reciente que sea.
+      */
+      const recienNacida =
+        !antes &&
+        propuesta.status === 'CONFIRMED' &&
+        Date.now() - fecha(propuesta.updatedAt) < MARGEN;
+
       if (
         yaObservado.current &&
-        antes &&
-        antes !== 'CONFIRMED' &&
-        propuesta.status === 'CONFIRMED'
+        propuesta.status === 'CONFIRMED' &&
+        (cambioDelante || recienNacida)
       ) {
         recien = propuesta;
       }

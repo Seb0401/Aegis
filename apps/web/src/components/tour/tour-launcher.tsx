@@ -37,6 +37,14 @@ export function TourLauncher() {
 
     if (yaVioElTour()) return;
 
+    /*
+      Solo en el panel. Los pasos de la bienvenida señalan tarjetas que solo
+      existen ahí, y en otra pantalla se saltaban casi todos: salía un tour de
+      dos pasos que no explicaba nada. Quien entre directo a otra ruta lo verá
+      cuando pase por el panel, o pulsando el botón.
+    */
+    if (!window.location.pathname.startsWith('/dashboard')) return;
+
     const temporizador = window.setTimeout(() => setActivo('onboarding'), 900);
     return () => window.clearTimeout(temporizador);
   }, []);

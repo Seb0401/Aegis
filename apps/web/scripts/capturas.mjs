@@ -73,6 +73,18 @@ async function main() {
 
   console.log('Entrando…');
   await page.goto(WEB);
+
+  // El tour de bienvenida salta en la primera visita y taparía las capturas.
+  // Se marca como visto en el propio navegador de Playwright, que arranca con
+  // el almacenamiento vacío en cada tanda.
+  await page.evaluate(() => {
+    try {
+      window.localStorage.setItem('aegis.tour.visto', 'si');
+    } catch {
+      // Sin almacenamiento el tour tampoco se enseña.
+    }
+  });
+
   await page.getByRole('button', { name: /entrar sin wallet/i }).click();
   await page.waitForURL('**/dashboard');
   await page.getByRole('heading', { name: 'Jupi' }).waitFor();

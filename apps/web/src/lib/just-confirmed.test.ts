@@ -51,14 +51,33 @@ describe('useJustConfirmed', () => {
     expect(result.current.confirmed?.id).toBe('p1');
   });
 
-  it('no celebra una propuesta que aparece ya confirmada', () => {
-    // Llega nueva a la lista y en estado final: pudo confirmarse en cualquier
-    // momento, así que no hay acontecimiento que celebrar.
+  it('celebra la que nace ya confirmada: es el camino autónomo', () => {
+    // En modo autónomo la API firma y envía en la misma petición, así que la
+    // propuesta nunca se ve en otro estado. Si solo se miraran los cambios de
+    // estado, el pago que el agente hace solo —el más vistoso— sería justo el
+    // único que no se celebraría.
     const { result, rerender } = renderHook(({ lista }) => useJustConfirmed(lista), {
       initialProps: { lista: [propuesta('p1', 'PENDING_USER')] },
     });
 
     rerender({ lista: [propuesta('p1', 'PENDING_USER'), propuesta('p2', 'CONFIRMED')] });
+
+    expect(result.current.confirmed?.id).toBe('p2');
+  });
+
+  it('pero no si se confirmó hace rato', () => {
+    // La que aparece confirmada y vieja pudo confirmarse en cualquier momento:
+    // no hay acontecimiento que celebrar.
+    const antigua = {
+      ...propuesta('p2', 'CONFIRMED'),
+      updatedAt: new Date(Date.now() - 10 * 60_000).toISOString(),
+    };
+
+    const { result, rerender } = renderHook(({ lista }) => useJustConfirmed(lista), {
+      initialProps: { lista: [propuesta('p1', 'PENDING_USER')] },
+    });
+
+    rerender({ lista: [propuesta('p1', 'PENDING_USER'), antigua] });
 
     expect(result.current.confirmed).toBeNull();
   });

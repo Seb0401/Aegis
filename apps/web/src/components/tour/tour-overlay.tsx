@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { TOURS, marcarTourVisto, type TourId, type TourStep } from '@/lib/tour';
 
@@ -25,6 +26,11 @@ interface Recuadro {
  * El elemento resaltado **se sigue viendo y se puede leer**: esto explica la
  * interfaz, no la sustituye. Por eso tampoco bloquea el desplazamiento; si el
  * objetivo queda fuera de la vista, se lleva hasta él.
+ *
+ * Todo sale por un portal a `body`, y no es un capricho: un antepasado con
+ * `filter` o `backdrop-filter` —la cabecera lleva `backdrop-blur`— se convierte
+ * en el bloque contenedor de sus descendientes `fixed`, y el cartel acababa
+ * pegado a la cabecera en vez de a la ventana. El portal lo saca de ahí.
  */
 export function TourOverlay({ id, onClose }: { id: TourId; onClose: () => void }) {
   const pasos = TOURS[id];
@@ -99,7 +105,7 @@ export function TourOverlay({ id, onClose }: { id: TourId; onClose: () => void }
 
   const ultimo = indice === visibles.length - 1;
 
-  return (
+  return createPortal(
     <>
       {recuadro ? (
         <div
@@ -119,7 +125,7 @@ export function TourOverlay({ id, onClose }: { id: TourId; onClose: () => void }
         role="dialog"
         aria-modal="false"
         aria-labelledby="tour-titulo"
-        className="fixed inset-x-0 bottom-0 z-50 p-4 sm:bottom-6 sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:p-0"
+        className="fixed inset-x-0 bottom-0 z-50 p-4 sm:right-auto sm:bottom-6 sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:p-0"
       >
         <div className="rise-in flex flex-col gap-3 rounded-[var(--radius)] border border-primary/40 bg-card p-5 shadow-2xl">
           <div className="flex items-start gap-3">
@@ -154,6 +160,7 @@ export function TourOverlay({ id, onClose }: { id: TourId; onClose: () => void }
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
