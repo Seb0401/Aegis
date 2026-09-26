@@ -1,8 +1,9 @@
 'use client';
 
-import { ShieldCheck, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LogoMark } from '@/components/brand/logo';
 import { useAuth } from '@/lib/auth/auth-context';
 import { NAV_LINKS } from '@/lib/navigation';
 import { cn, shortAddress } from '@/lib/utils';
@@ -22,9 +23,7 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-6 border-r border-border bg-sidebar p-4 lg:flex">
       <Link href="/dashboard" className="flex items-center gap-2.5 px-2 py-1.5">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
-          <ShieldCheck className="size-5" />
-        </span>
+        <LogoMark size={36} />
         <span className="text-lg font-semibold tracking-tight">Aegis</span>
       </Link>
 

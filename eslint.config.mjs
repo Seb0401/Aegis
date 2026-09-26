@@ -38,9 +38,11 @@ export default tseslint.config(
         console: 'readonly',
         process: 'readonly',
         fetch: 'readonly',
+        Buffer: 'readonly',
         // El código que va dentro de `page.evaluate` corre en el navegador.
         window: 'readonly',
         document: 'readonly',
+        Image: 'readonly',
       },
     },
     rules: { 'no-console': 'off' },
