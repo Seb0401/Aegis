@@ -1,6 +1,6 @@
 import type { TxSummary } from '@aegis/contracts';
 import { describe, expect, it } from 'vitest';
-import { cumulativeFlow, dailyLimitUsage, reservedAmount } from './stats';
+import { cumulativeFlow, dailyLimitUsage, goalProgress, reservedAmount, sentTo } from './stats';
 
 const ADDRESS = 'GA4NUZKMEFCS7ZDVMAWSUXHK6NJTURAKV2RMA673ZTOOGIE2VTAGK3XP';
 
@@ -84,5 +84,66 @@ describe('reservedAmount', () => {
   it('nunca es negativo', () => {
     expect(reservedAmount('100', '100')).toBe('0');
     expect(reservedAmount('100', '120')).toBe('0');
+  });
+});
+
+describe('sentTo', () => {
+  const DESTINO = 'GB7G7EXAMPLEADDRESSFORTESTINGONLY00000000000000000RVVZJ4';
+  const OTRO = 'GCWECUEXAMPLEADDRESSFORTESTINGONLY0000000000000000IA5VIS';
+
+  function pago(overrides: Partial<TxSummary>): TxSummary {
+    return {
+      hash: 'h',
+      createdAt: '2026-09-20T10:00:00.000Z',
+      direction: 'OUT',
+      counterparty: DESTINO,
+      asset: 'USDC_TEST',
+      amount: '10',
+      memo: null,
+      successful: true,
+      ...overrides,
+    } as TxSummary;
+  }
+
+  it('suma lo enviado a ese destino', () => {
+    expect(sentTo([pago({ amount: '10' }), pago({ amount: '5.5' })], DESTINO, 'USDC_TEST')).toBe(
+      '15.5000000',
+    );
+  });
+
+  it('no cuenta lo que fue a otro sitio', () => {
+    expect(sentTo([pago({ counterparty: OTRO })], DESTINO, 'USDC_TEST')).toBe('0.0000000');
+  });
+
+  it('no cuenta lo que entró', () => {
+    expect(sentTo([pago({ direction: 'IN' })], DESTINO, 'USDC_TEST')).toBe('0.0000000');
+  });
+
+  it('no cuenta lo que falló', () => {
+    // Una transacción fallida no movió nada. Sumarla haría creer que vas más
+    // adelantado de lo que estás, que es justo lo que una barra de progreso
+    // hacia una meta de ahorro no puede hacer.
+    expect(sentTo([pago({ successful: false })], DESTINO, 'USDC_TEST')).toBe('0.0000000');
+  });
+
+  it('no mezcla activos', () => {
+    expect(sentTo([pago({ asset: 'XLM' })], DESTINO, 'USDC_TEST')).toBe('0.0000000');
+  });
+});
+
+describe('goalProgress', () => {
+  it('devuelve la fracción cubierta', () => {
+    expect(goalProgress('25', '100')).toBeCloseTo(0.25);
+  });
+
+  it('se recorta al llegar a la meta', () => {
+    // Pasarse es buena noticia, pero una barra que se sale de su caja es un
+    // fallo visual. El exceso lo cuenta la cifra de al lado.
+    expect(goalProgress('150', '100')).toBe(1);
+  });
+
+  it('sin meta no hay progreso que enseñar', () => {
+    expect(goalProgress('25', null)).toBeNull();
+    expect(goalProgress('25', '0')).toBeNull();
   });
 });

@@ -20,14 +20,32 @@ test.describe('navegación móvil', () => {
     await expect(page.getByText(/tu agente de ia ya está listo/i)).toBeHidden();
   });
 
-  test('las cuatro secciones están abajo y el agente en el centro', async ({ page }) => {
+  test('las secciones más usadas están abajo y el agente en el centro', async ({ page }) => {
     const barra = page.getByRole('navigation', { name: 'Secciones' });
 
-    for (const seccion of ['Panel', 'Límites', 'Destinos', 'Historial']) {
+    // Solo tres: la barra tiene cinco huecos y dos se los llevan el agente y
+    // «Más». Apretar las siete daría objetivos de pulsación que no se aciertan.
+    for (const seccion of ['Panel', 'Objetivos', 'Actividad']) {
       await expect(barra.getByRole('link', { name: seccion })).toBeVisible();
     }
 
     await expect(page.getByRole('button', { name: /abrir el chat con el agente/i })).toBeVisible();
+  });
+
+  test('el resto de secciones están detrás de «Más»', async ({ page }) => {
+    await page.getByRole('button', { name: 'Más' }).click();
+
+    const hoja = page.getByRole('dialog', { name: /más secciones/i });
+    await expect(hoja).toBeVisible();
+
+    for (const seccion of ['Destinos', 'Límites', 'Seguridad', 'Historial']) {
+      await expect(hoja.getByRole('link', { name: seccion })).toBeVisible();
+    }
+
+    // Navegar cierra la hoja: dejarla abierta encima de la pantalla nueva
+    // obligaría a un gesto de más para ver a dónde has llegado.
+    await hoja.getByRole('link', { name: 'Límites' }).click();
+    await expect(hoja).toBeHidden();
   });
 
   test('el botón central abre el chat y se cierra con Escape', async ({ page }) => {

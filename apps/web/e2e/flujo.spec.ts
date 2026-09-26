@@ -165,15 +165,22 @@ test.describe('destinos', () => {
 });
 
 test.describe('navegación', () => {
-  test('las cuatro secciones cargan y el título de la pestaña cambia', async ({ page }) => {
+  test('todas las secciones cargan y el título de la pestaña cambia', async ({ page }) => {
     await entrar(page);
 
+    // Por el lateral: hay pantallas que enlazan a otras desde su texto, y sin
+    // acotar la búsqueda el nombre casaría con los dos enlaces.
+    const lateral = page.getByRole('complementary', { name: 'Navegación principal' });
+
     for (const [seccion, titulo] of [
-      ['Límites', 'Límites y modo · Aegis'],
+      ['Objetivos', 'Objetivos · Aegis'],
       ['Destinos', 'Objetivos y contactos · Aegis'],
+      ['Límites', 'Límites y modo · Aegis'],
+      ['Seguridad', 'Seguridad · Aegis'],
+      ['Actividad', 'Actividad · Aegis'],
       ['Historial', 'Historial · Aegis'],
     ] as const) {
-      await page.getByRole('link', { name: seccion }).click();
+      await lateral.getByRole('link', { name: seccion, exact: true }).click();
       await expect(page).toHaveTitle(titulo);
     }
   });

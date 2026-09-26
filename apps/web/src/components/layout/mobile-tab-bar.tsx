@@ -1,5 +1,6 @@
 'use client';
 
+import { MoreHorizontal, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRef, useState } from 'react';
@@ -7,7 +8,7 @@ import { ChatSheet } from '@/components/chat/chat-sheet';
 import { Jupi } from '@/components/jupi/jupi';
 import { useAgentThinking, usePolicy, useProposals } from '@/lib/api/hooks';
 import { moodForAgent } from '@/lib/jupi';
-import { NAV_LINKS } from '@/lib/navigation';
+import { MOBILE_PRIMARY, MOBILE_SECONDARY, type NavLink } from '@/lib/navigation';
 import { isActionable } from '@/lib/proposals';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,7 @@ import { cn } from '@/lib/utils';
 export function MobileTabBar() {
   const pathname = usePathname();
   const [chatOpen, setChatOpen] = useState(false);
+  const [masOpen, setMasOpen] = useState(false);
   const fabRef = useRef<HTMLButtonElement>(null);
 
   const policy = usePolicy();
@@ -33,7 +35,14 @@ export function MobileTabBar() {
   const pending = proposals.data?.proposals.find(isActionable);
   const mood = moodForAgent({ paused, thinking, ...(pending ? { pending } : {}) });
 
-  const [left, right] = [NAV_LINKS.slice(0, 2), NAV_LINKS.slice(2)];
+  /*
+    Dos a la izquierda, el agente en el centro, una más «Más» a la derecha.
+    Son cinco huecos y no dan para siete secciones: apretarlas daría objetivos
+    de pulsación de menos de treinta píxeles, que en un teléfono no se
+    aciertan.
+  */
+  const [left, right] = [MOBILE_PRIMARY.slice(0, 2), MOBILE_PRIMARY.slice(2)];
+  const enMas = MOBILE_SECONDARY.some((link) => link.href === pathname);
 
   return (
     <>
@@ -82,8 +91,74 @@ export function MobileTabBar() {
           {right.map((link) => (
             <TabLink key={link.href} link={link} active={pathname === link.href} />
           ))}
+
+          <button
+            type="button"
+            onClick={() => setMasOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={masOpen}
+            className={cn(
+              'flex flex-col items-center gap-1 px-1 py-2.5 text-[11px] transition-colors',
+              // Se marca también cuando estás en una sección que vive dentro:
+              // si no, la barra diría que no estás en ninguna parte.
+              enMas ? 'text-primary' : 'text-muted-foreground',
+            )}
+          >
+            <MoreHorizontal className={cn('size-5', enMas && 'stroke-[2.5]')} />
+            Más
+          </button>
         </div>
       </nav>
+
+      {masOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end bg-background/80 backdrop-blur-sm lg:hidden"
+          onClick={(evento) => {
+            if (evento.target === evento.currentTarget) setMasOpen(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Más secciones"
+            className="rise-in w-full rounded-t-[var(--radius)] border-t border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Más secciones</h2>
+              <button
+                type="button"
+                onClick={() => setMasOpen(false)}
+                aria-label="Cerrar"
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <nav aria-label="Más secciones" className="flex flex-col">
+              {MOBILE_SECONDARY.map((link) => {
+                const Icon = link.icon;
+                const active = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMasOpen(false)}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition-colors',
+                      active ? 'bg-primary font-medium text-primary-foreground' : 'hover:bg-accent',
+                    )}
+                  >
+                    <Icon className="size-4.5 shrink-0" />
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+      ) : null}
 
       {/* Hueco para que la barra fija no tape el final del contenido. */}
       <div aria-hidden className="h-20 lg:hidden" />
@@ -91,7 +166,7 @@ export function MobileTabBar() {
   );
 }
 
-function TabLink({ link, active }: { link: (typeof NAV_LINKS)[number]; active: boolean }) {
+function TabLink({ link, active }: { link: NavLink; active: boolean }) {
   const Icon = link.icon;
   return (
     <Link

@@ -1,4 +1,10 @@
-import { subtractAmounts, toStroops, type AssetCode, type TxSummary } from '@aegis/contracts';
+import {
+  fromStroops,
+  subtractAmounts,
+  toStroops,
+  type AssetCode,
+  type TxSummary,
+} from '@aegis/contracts';
 
 /**
  * Cálculos de las tarjetas de estadísticas.
@@ -54,4 +60,49 @@ export function dailyLimitUsage(maxDaily: string, remaining: string): number {
 export function reservedAmount(total: string, available: string): string {
   const reserved = subtractAmounts(total, available);
   return toStroops(reserved) > 0n ? reserved : '0';
+}
+
+/**
+ * Cuánto se ha enviado ya a un destino, en su activo.
+ *
+ * Solo cuenta lo que **salió** hacia esa dirección y llegó a confirmarse. Una
+ * transacción fallida no movió nada, y sumarla haría creer que vas más
+ * adelantado de lo que estás — en una barra de progreso hacia una meta de
+ * ahorro, eso es exactamente la mentira que no puede contar.
+ *
+ * En BigInt, como todo el dinero de la aplicación.
+ */
+export function sentTo(transactions: TxSummary[], address: string, asset: AssetCode): string {
+  const stroops = transactions
+    .filter(
+      (tx) =>
+        tx.successful &&
+        tx.direction === 'OUT' &&
+        tx.counterparty === address &&
+        tx.asset === asset,
+    )
+    .reduce((suma, tx) => suma + toStroops(tx.amount), 0n);
+
+  return fromStroops(stroops);
+}
+
+/**
+ * Fracción de una meta ya cubierta, entre 0 y 1.
+ *
+ * Se recorta arriba: pasarse de la meta es una buena noticia, pero una barra
+ * que se sale de su caja es un fallo visual. El exceso se cuenta con la cifra
+ * de al lado, no estirando la barra.
+ *
+ * Devuelve `null` cuando no hay meta contra la que medir, para que quien lo
+ * use enseñe otra cosa en vez de un 0% que parecería un fracaso.
+ */
+export function goalProgress(sent: string, target: string | null): number | null {
+  if (!target) return null;
+
+  const meta = toStroops(target);
+  if (meta <= 0n) return null;
+
+  // A número solo para la anchura de la barra: la cifra exacta se enseña
+  // aparte y sale de las cadenas, no de esto.
+  return Math.min(1, Number(toStroops(sent)) / Number(meta));
 }

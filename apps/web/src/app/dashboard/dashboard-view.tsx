@@ -1,7 +1,6 @@
 'use client';
 
 import { RequireSession } from '@/components/auth/require-session';
-import { ChatPanel } from '@/components/chat/chat-panel';
 import { DestinationsCard } from '@/components/dashboard/destinations-card';
 import { JupiCard } from '@/components/dashboard/jupi-card';
 import { ProposalsCard } from '@/components/dashboard/proposals-card';
@@ -23,7 +22,7 @@ export function DashboardView() {
 
   return (
     <RequireSession>
-      <AppShell aside={<ChatPanel />}>
+      <AppShell>
         <JupiCard />
         <StatCards />
         <PendingProposals />

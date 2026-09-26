@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2, RotateCw, SendHorizonal } from 'lucide-react';
+import { Loader2, PanelRightClose, RotateCw, SendHorizonal } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { Jupi } from '@/components/jupi/jupi';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,14 @@ import { cn } from '@/lib/utils';
  * conversación se ve en la columna del panel y en la hoja que abre el botón
  * central en móvil.
  */
-export function ChatPanel({ bare = false }: { bare?: boolean }) {
+export function ChatPanel({
+  bare = false,
+  onHide,
+}: {
+  bare?: boolean;
+  /** Si se pasa, la cabecera ofrece cerrar la columna. */
+  onHide?: () => void;
+}) {
   const { turns, send, retry, isPending, error, canRetry } = useChat();
   const [draft, setDraft] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
@@ -143,9 +150,27 @@ export function ChatPanel({ bare = false }: { bare?: boolean }) {
   if (bare) return <div className="flex min-h-0 flex-1 flex-col gap-4">{body}</div>;
 
   return (
-    <Card className="flex min-h-[30rem] flex-col xl:sticky xl:top-28">
+    <Card className="flex min-h-[30rem] flex-col">
       <CardHeader>
-        <CardTitle>Agente</CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle>Agente</CardTitle>
+          {/*
+            El control de cerrar va aquí y no suelto encima de la columna:
+            pertenece a esta tarjeta, y flotando fuera parecía de la pantalla
+            que tiene al lado.
+          */}
+          {onHide ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onHide}
+              aria-label="Ocultar la columna del agente"
+              className="-mt-1 -mr-2 shrink-0 text-muted-foreground"
+            >
+              <PanelRightClose />
+            </Button>
+          ) : null}
+        </div>
         <CardDescription>
           Pídele algo en lenguaje normal. Propone; deciden tus límites y el Guardian.
         </CardDescription>
