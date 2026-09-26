@@ -11,7 +11,9 @@ enseñar, en qué orden y por qué cada cosa está ahí.
 ## Antes de grabar
 
 - [ ] La cuenta demo existe en [Stellar Expert testnet](https://stellar.expert/explorer/testnet)
-      — **testnet se reinicia cada ~3 meses**
+      — **testnet se reinicia cada ~3 meses**. Hoy es
+      [`GAU3RPMY…TIKF5`](https://stellar.expert/explorer/testnet/account/GAU3RPMY62XGDYDEYJ75XTXZXXVFFCRDT5AUQHC72XLR3GUM7RVTIKF5)
+      y el agente ya está delegado en ella
 - [ ] Tiene saldo de sobra para los pagos del guion
 - [ ] `curl https://TU-API/health` → `status: ok`, `database: ok`, **`fakeStellar: false`**
 - [ ] `PRICE_SOURCE=fixed` en el entorno de la demo, para no depender de CoinGecko

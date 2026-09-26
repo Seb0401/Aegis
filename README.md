@@ -1,4 +1,19 @@
-# Aegis
+<p align="center">
+  <img src="docs/images/logo.png" alt="Aegis" width="560">
+</p>
+
+<p align="center">
+  <strong>Un agente de IA que reparte tu dinero en Stellar dentro de los límites que tú le pones, y un Guardian que analiza y explica cada operación antes de ejecutarla.</strong>
+</p>
+
+<p align="center">
+  <a href="https://stellar.expert/explorer/testnet/tx/d379a163e28c801977da80e683286624507cadfc8354435e88d199fbd0b2e146">Transacción en testnet</a> ·
+  <a href="docs/guion-presentacion.md">Guion de la demo</a> ·
+  <a href="PLAN.md">Plan</a> ·
+  <a href="docs/adr/README.md">Decisiones</a>
+</p>
+
+---
 
 **Cobras cuando cobras, y nunca sabes cuánto apartar.**
 
@@ -35,6 +50,77 @@ tres minutos en [`docs/guion-presentacion.md`](docs/guion-presentacion.md).
 
 > **Solo testnet.** Mainnet queda fuera del MVP (§15 del PLAN). La API se niega
 > a arrancar en producción con `STELLAR_NETWORK=mainnet`.
+
+---
+
+## Evidencia on-chain · Stellar testnet
+
+Todo lo que sigue ocurrió de verdad en la red, ejecutado por Aegis con
+`USE_FAKE_STELLAR=false`. Cualquiera puede comprobarlo sin pedirnos nada.
+
+**Pago ejecutado por el agente, de punta a punta:**
+
+> [`d379a163e28c801977da80e683286624507cadfc8354435e88d199fbd0b2e146`](https://stellar.expert/explorer/testnet/tx/d379a163e28c801977da80e683286624507cadfc8354435e88d199fbd0b2e146)
+
+Esa transacción es el flujo completo: el agente propuso, el Policy Engine la
+aprobó por la regla **P-07** (cabe en los límites), el Guardian la puntuó con
+**riesgo bajo (15/100)** y el signer delegado la firmó y la envió. Ledger
+4 871 403. Comisión: **0,00001 XLM**.
+
+| Qué                   | Enlace                                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Pago del agente       | [d379a163…b2e146](https://stellar.expert/explorer/testnet/tx/d379a163e28c801977da80e683286624507cadfc8354435e88d199fbd0b2e146) |
+| Delegación del signer | [63fcef48…bd0b0c](https://stellar.expert/explorer/testnet/tx/63fcef48bc625bb6269da67311ccb98d7773458ca278eedc612aacfdb2bd0b0c) |
+| Cuenta demo           | [GAU3RPMY…TIKF5](https://stellar.expert/explorer/testnet/account/GAU3RPMY62XGDYDEYJ75XTXZXXVFFCRDT5AUQHC72XLR3GUM7RVTIKF5)     |
+
+La **delegación** es la que explica el modelo de custodia: con `setOptions`, la
+cuenta del usuario añade al agente como firmante con peso limitado y sube el
+umbral alto por encima de ese peso. El agente puede pagar; no puede cambiar
+quién firma, ni vaciar la cuenta, ni quitarse a sí mismo el límite. Y el usuario
+lo revoca cuando quiera sin pedir permiso a nadie.
+
+**Y los límites atan.** La misma cuenta, la misma sesión, pidiendo 8 XLM con el
+tope por operación en 5:
+
+```json
+{
+  "estado": "PENDING_USER",
+  "politica": "REQUIRE_USER",
+  "motivos": ["P-01: \"Objetivo: Viaje\" es de 8 XLM y tu límite por operación es 5."],
+  "hash": null
+}
+```
+
+Sin hash, porque no se envió nada: se quedó esperando la firma del usuario. Es
+la diferencia entre un agente con límites y un agente al que se le piden
+límites por favor.
+
+---
+
+## Así se ve
+
+<p align="center">
+  <img src="docs/images/propuesta.png" alt="El agente propone un reparto y el Guardian lo analiza antes de que el usuario apruebe">
+</p>
+
+Le hablas en lenguaje normal y responde con una propuesta que todavía no ha
+hecho nada: el reparto, el valor en dólares, el riesgo y la explicación. Nada se
+mueve hasta que tú lo apruebas —o, en modo autónomo, hasta que cabe en tus
+límites **y** el Guardian ve riesgo bajo.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/limites.png" alt="Pantalla de límites"><br><sub><b>Límites.</b> Por operación, por día y reserva mínima, en el activo o en dólares.</sub></td>
+    <td width="50%"><img src="docs/images/historial.png" alt="Historial y bitácora encadenada"><br><sub><b>Historial.</b> Cada operación con su bitácora encadenada por hashes y su verificación.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/destinos.png" alt="Destinos registrados"><br><sub><b>Destinos.</b> El agente no escribe direcciones: solo referencia las que registraste.</sub></td>
+    <td align="center"><img src="docs/images/movil.png" alt="Aegis en móvil" width="300"><br><sub><b>Móvil.</b> La misma aplicación, con el kill switch a un toque.</sub></td>
+  </tr>
+</table>
+
+Las capturas se rehacen con `node apps/web/scripts/capturas.mjs`, para que no
+envejezcan en silencio.
 
 ---
 

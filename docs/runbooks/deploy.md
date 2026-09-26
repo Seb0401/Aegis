@@ -40,6 +40,16 @@ Apunta la dirección que imprime el `seed`: es con la que entrará el jurado.
 
 ## 2. Cuenta de Stellar para la demo
 
+> **Ya está hecho.** Las cuentas existen en testnet y la delegación está
+> firmada: [`GAU3RPMY…TIKF5`](https://stellar.expert/explorer/testnet/account/GAU3RPMY62XGDYDEYJ75XTXZXXVFFCRDT5AUQHC72XLR3GUM7RVTIKF5),
+> con ~9 985 XLM. Las claves están en el `.env` local de Sebastian
+> (`STELLAR_AGENT_SIGNER_SECRET`, `STELLAR_DEMO_ACCOUNT_SECRET`), que git ignora
+> y que no ha pasado por ningún chat. Para desplegar, cópialas de ahí a las
+> variables del proveedor.
+>
+> Rehacerlo desde cero solo hace falta si testnet se reinicia. Entonces, los
+> pasos son estos:
+
 1. Crea una cuenta en Freighter, **en testnet**, y fondéala con
    [Friendbot](https://friendbot.stellar.org/).
 2. Genera una seed aparte para el signer del agente. **No reutilices la seed de
