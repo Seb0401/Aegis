@@ -28,4 +28,21 @@ export default tseslint.config(
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
+  {
+    // Utilidades que se lanzan a mano con node (capturas, logo). Imprimir por
+    // consola no es un descuido: es toda su interfaz. Y como no pasan por
+    // TypeScript, hay que decirle a ESLint qué globales existen.
+    files: ['**/scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        fetch: 'readonly',
+        // El código que va dentro de `page.evaluate` corre en el navegador.
+        window: 'readonly',
+        document: 'readonly',
+      },
+    },
+    rules: { 'no-console': 'off' },
+  },
 );
