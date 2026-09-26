@@ -54,6 +54,16 @@ vi.mock('@/lib/api/hooks', () => ({
   }),
   useApproveProposal: () => ({ mutate: approveMutate, isPending: false, error: null }),
   useRejectProposal: () => ({ mutate: rejectMutate, isPending: false, error: null }),
+  // Lo usa el panel de «cómo te deja» para saber qué queda del límite diario
+  // y cuál es la reserva intocable.
+  usePolicy: () => ({
+    data: {
+      summary: {
+        remainingDailyAmount: '20.0000000',
+        minimumReserve: '10.0000000',
+      },
+    },
+  }),
 }));
 
 const { ProposalCard } = await import('./proposal-card');

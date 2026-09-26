@@ -9,6 +9,7 @@ import {
   addAmounts,
   compareAmounts,
   formatAmount,
+  type AssetCode,
   type Balance,
   type Destination,
   type Explanation,
@@ -20,6 +21,7 @@ import {
   type ProposalStatus,
   type ProposedAction,
   type ResolvedAction,
+  type Simulation,
   type RiskReport,
   type StellarExecutor,
   type StellarReader,
@@ -102,6 +104,81 @@ export class ProposalService {
     });
 
     return this.runPipeline({ id, userId, userAddress, input, resolved, registered, config, now });
+  }
+
+  /**
+   * Evalúa una propuesta sin crearla (BE2-12).
+   *
+   * Responde a «¿y si muevo este importe?» con **exactamente el mismo
+   * veredicto** que daría crearla: las mismas reglas, el mismo Guardian, los
+   * mismos precios y los mismos contadores del día. Eso es lo que la hace
+   * valer: una simulación que usara otra lógica sería una mentira educada, y
+   * quien la creyera se llevaría la sorpresa al aprobar de verdad.
+   *
+   * No escribe en la base de datos ni añade nada a la bitácora. No hay
+   * propuesta, así que no hay nada que auditar: lo único que ha pasado es que
+   * alguien preguntó.
+   *
+   * Sí sale a la red —saldos, historial, simulación de comisión—, así que no
+   * es gratis. Quien la llame en respuesta a un control que se arrastra tiene
+   * que esperar a que la persona pare de moverlo.
+   */
+  async simulate(
+    userId: string,
+    userAddress: string,
+    rawInput: ProposalInput,
+  ): Promise<Simulation> {
+    const input = ProposalInputSchema.parse(rawInput);
+
+    const config = await this.deps.policies.getConfig(userId);
+    const now = new Date();
+
+    const registered = await this.deps.destinations.list(userId);
+    const resolved = this.resolveActions(input.actions, registered);
+
+    this.assertRequestedTotalRespected(input);
+
+    const [balances, stats, dailySpentByAsset, dailySpentUsd, operationsLastHour] =
+      await Promise.all([
+        this.deps.reader.getBalances(userAddress),
+        this.deps.reader.getHistoryStats(userAddress),
+        this.deps.policies.getDailySpentByAsset(userId, now),
+        this.deps.policies.getDailySpentUsd(userId, now),
+        this.deps.policies.getOperationsLastHour(userId, now),
+      ]);
+
+    const assets = [
+      ...new Set([...input.actions.map((a) => a.asset), ...balances.map((b) => b.asset)]),
+    ];
+    const prices = await this.deps.prices.getPrices(assets);
+
+    const policy = evaluatePolicy({
+      config,
+      actions: input.actions,
+      destinations: registered,
+      balances,
+      dailySpentByAsset,
+      dailySpentUsd,
+      operationsLastHour,
+      knownCounterparties: stats.knownCounterparties,
+      prices,
+      now,
+    });
+
+    // A diferencia del camino real, el Guardian corre aunque la política haya
+    // denegado: quien simula quiere ver las dos cosas a la vez para saber cuál
+    // de ellas le está frenando.
+    const risk = await this.runGuardian({
+      userAddress,
+      resolved,
+      registered,
+      balances,
+      config,
+      stats,
+      prices,
+    });
+
+    return { policy, risk, prices, totals: totalsByAsset(input.actions) };
   }
 
   async get(userId: string, id: string): Promise<Proposal> {
@@ -574,6 +651,25 @@ export function decideNextStatus(
 /** Suma de una lista de acciones, siempre normalizada a 7 decimales. */
 export function totalOf(actions: Pick<ProposedAction, 'amount'>[]): string {
   return addAmounts('0', ...actions.map((action) => action.amount));
+}
+
+/**
+ * Suma por activo, en el orden en que cada uno aparece por primera vez.
+ *
+ * Por activo y no en una sola cifra porque sumar XLM con USDC no significa
+ * nada: son dos cosas distintas y el total conjunto solo existe convertido a
+ * dólares, que es otra columna.
+ */
+export function totalsByAsset(
+  actions: Pick<ProposedAction, 'asset' | 'amount'>[],
+): Array<{ asset: AssetCode; amount: string }> {
+  const porActivo = new Map<AssetCode, string>();
+
+  for (const action of actions) {
+    porActivo.set(action.asset, addAmounts(porActivo.get(action.asset) ?? '0', action.amount));
+  }
+
+  return [...porActivo].map(([asset, amount]) => ({ asset, amount }));
 }
 
 type Row = typeof proposals.$inferSelect;

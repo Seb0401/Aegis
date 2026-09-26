@@ -439,3 +439,87 @@ describe('autenticación', () => {
     expect(response.statusCode).toBe(401);
   });
 });
+
+describe('simular sin crear (BE2-12)', () => {
+  async function simular(amount: string) {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/proposals/simulate',
+      headers,
+      payload: {
+        summary: 'Simulación',
+        actions: [
+          {
+            type: 'PAYMENT',
+            destinationId: destinations.viaje,
+            asset: 'USDC_TEST',
+            amount,
+            memo: null,
+            label: 'Objetivo: Viaje',
+          },
+        ],
+      },
+    });
+
+    if (response.statusCode !== 200) {
+      throw new Error(`simulate devolvió ${response.statusCode}: ${response.body}`);
+    }
+
+    return JSON.parse(response.body) as {
+      policy: { decision: string; reasons: Array<{ ruleId: string }> };
+      risk: { level: string; score: number };
+      totals: Array<{ asset: string; amount: string }>;
+    };
+  }
+
+  it('no deja rastro: ni propuesta ni bitácora', async () => {
+    const antes = await app.inject({ method: 'GET', url: '/proposals?limit=100', headers });
+    const propuestasAntes = JSON.parse(antes.body).proposals.length;
+
+    const auditAntes = await app.inject({ method: 'GET', url: '/audit', headers });
+    const eventosAntes = JSON.parse(auditAntes.body).events.length;
+
+    await simular('2');
+
+    const despues = await app.inject({ method: 'GET', url: '/proposals?limit=100', headers });
+    expect(JSON.parse(despues.body).proposals).toHaveLength(propuestasAntes);
+
+    // Lo que de verdad hay que fijar: preguntar no es un hecho auditable. Si
+    // simular escribiera en la bitácora, arrastrar un control la llenaría de
+    // ruido y el registro dejaría de servir para lo que existe.
+    const auditDespues = await app.inject({ method: 'GET', url: '/audit', headers });
+    expect(JSON.parse(auditDespues.body).events).toHaveLength(eventosAntes);
+  });
+
+  it('da el mismo veredicto que crearla de verdad', async () => {
+    // Si la simulación usara otra lógica sería una mentira educada: quien la
+    // creyera se llevaría la sorpresa al aprobar.
+    await setPolicy(app, headers, { mode: 'MANUAL' });
+
+    const simulada = await simular('3');
+    const real = await propose([{ destinationId: destinations.viaje, amount: '3' }]);
+
+    expect(simulada.policy.decision).toBe(real.policy?.decision);
+    expect(simulada.risk.level).toBe(real.risk?.level);
+  });
+
+  it('señala la regla que frena, con su identificador', async () => {
+    await setPolicy(app, headers, { mode: 'MANUAL', maxAmountPerOperation: '5' });
+
+    const simulada = await simular('8');
+
+    expect(simulada.policy.decision).not.toBe('AUTO_APPROVE');
+    expect(simulada.policy.reasons.map((r) => r.ruleId)).toContain('P-01');
+  });
+
+  it('suma por activo, no en una sola cifra', async () => {
+    const simulada = await simular('4');
+
+    expect(simulada.totals).toEqual([{ asset: 'USDC_TEST', amount: '4.0000000' }]);
+  });
+
+  it('exige sesión', async () => {
+    const response = await app.inject({ method: 'POST', url: '/proposals/simulate', payload: {} });
+    expect(response.statusCode).toBe(401);
+  });
+});

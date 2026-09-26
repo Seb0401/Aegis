@@ -83,6 +83,28 @@
 
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
+
+  /*
+    Movimiento.
+
+    Tiene tokens propios por la misma razón que los tienen los colores: para
+    que toda la interfaz se mueva igual. Una pantalla donde cada cosa entra a
+    una velocidad distinta se percibe como descuidada aunque cada animación
+    suelta esté bien.
+
+    Las curvas son de salida, nunca lineales: lo que arranca rápido y frena al
+    final parece que responde: lo que va a velocidad constante parece una
+    animación reproduciéndose. `--ease-back` se pasa un poco de largo y vuelve;
+    se reserva para lo que celebra algo.
+  */
+  --motion-fast: 140ms;
+  --motion: 260ms;
+  --motion-slow: 460ms;
+  --motion-slower: 900ms;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-back: cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
 @theme inline {
@@ -151,9 +173,8 @@
 
 @layer utilities {
   /*
-    Jupi respira. Es el único movimiento de la interfaz y es deliberadamente
-    lento: la mascota acompaña, no distrae de una pantalla donde se autoriza
-    dinero. Quien prefiera no ver animaciones, no la ve.
+    Jupi respira. Es deliberadamente lento: la mascota acompaña, no distrae de
+    una pantalla donde se autoriza dinero.
   */
   @keyframes jupi-float {
     0%,
@@ -169,9 +190,110 @@
     animation: jupi-float 5s ease-in-out infinite;
   }
 
+  /*
+    Entrada escalonada.
+
+    Las tarjetas no aparecen todas de golpe: cada una entra unos milisegundos
+    después de la anterior. Es lo que separa «se cargó la página» de «la página
+    se está montando delante de ti», y cuesta una variable CSS.
+
+    El retardo lo pone quien la usa con `--rise-delay`. Se corta en seco a los
+    pocos elementos: escalonar una lista de treinta filas hace esperar a quien
+    solo quiere leer la última.
+  */
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .rise-in {
+    animation: rise-in var(--motion-slow) var(--ease-out) backwards;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+
+  /*
+    Una barra que se revela de izquierda a derecha.
+
+    Usa `clip-path` y no `width` ni `scaleX` por dos motivos. Uno: el ancho
+    final ya está en el HTML, así que sin JavaScript la barra se ve entera y
+    correcta —si dependiera de un estado de React, quien tenga el script a
+    medio cargar vería un gráfico vacío—. Dos: recortar no deforma; escalar
+    aplastaría el redondeo del extremo mientras dura la animación.
+  */
+  @keyframes reveal-x {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  .reveal-x {
+    animation: reveal-x var(--motion-slower) var(--ease-out) backwards;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+
+  /*
+    Algo que pide atención sin gritar: el halo late dos veces y se queda quieto.
+    Para la propuesta que acaba de llegar y espera una firma.
+  */
+  @keyframes attention {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgb(37 99 235 / 0);
+    }
+    50% {
+      box-shadow: 0 0 0 6px rgb(37 99 235 / 0.18);
+    }
+  }
+
+  .attention {
+    animation: attention 1.6s var(--ease-in-out) 2;
+  }
+
+  /*
+    El kill switch tiene que sentirse, no solo leerse.
+
+    Con el agente en pausa, la interfaz entera pierde color y se apaga un poco.
+    Quien mire de reojo ve que algo está detenido antes de leer ninguna
+    etiqueta. Los controles para reactivarlo se quedan fuera con `.not-paused`:
+    apagar el botón que resucita al agente sería cruel.
+  */
+  .paused-veil {
+    filter: saturate(0.45) brightness(0.82);
+    transition:
+      filter var(--motion-slow) var(--ease-out),
+      opacity var(--motion-slow) var(--ease-out);
+  }
+
+  .paused-veil .not-paused {
+    filter: saturate(2.2) brightness(1.22);
+  }
+
+  /*
+    Quien pide no ver animaciones no las ve. No es un extra de accesibilidad:
+    hay gente a la que el movimiento le provoca mareo, y aquí se aprueban
+    pagos. La interfaz tiene que seguir siendo usable sin una sola transición,
+    así que todo lo de arriba es decorativo por diseño: nada aparece *solo*
+    porque una animación termine.
+  */
   @media (prefers-reduced-motion: reduce) {
-    .jupi-float {
+    .jupi-float,
+    .rise-in,
+    .reveal-x,
+    .attention {
       animation: none;
+    }
+
+    .paused-veil {
+      transition: none;
     }
   }
 }

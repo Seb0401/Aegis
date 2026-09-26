@@ -4,6 +4,7 @@ import {
   ProposalResponseSchema,
   ProposalSchema,
   RejectProposalRequestSchema,
+  SimulationSchema,
 } from '@aegis/contracts';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -60,6 +61,37 @@ export const proposalRoutes: FastifyPluginAsyncZod = async (app) => {
 
       return reply.code(201).send({ proposal });
     },
+  );
+
+  /*
+    Simular va antes que `/proposals/:id` por costumbre de legibilidad, no por
+    necesidad: Fastify da preferencia a la ruta estática sobre la que lleva
+    parámetro, así que `simulate` nunca se confundiría con un identificador.
+  */
+  app.post(
+    '/proposals/simulate',
+    {
+      onRequest: [app.authenticate],
+      /*
+        Comparte el límite del agente, que es el más estrecho. Esta ruta sale a
+        la red varias veces por llamada —saldos, historial, comisión— y está
+        pensada para colgar de un control que el usuario arrastra: sin freno,
+        una sola persona moviendo un deslizador haría más peticiones a Horizon
+        que todo el resto de la aplicación junta.
+      */
+      preHandler: [perUserLimit(app, RATE_LIMITS.agent)],
+      schema: {
+        tags: ['proposals'],
+        summary: 'Evalúa unas acciones sin crear la propuesta (BE2-12)',
+        description:
+          'Devuelve el mismo veredicto de política y de riesgo que daría crearla, ' +
+          'sin escribir en la base de datos ni en la bitácora.',
+        body: ProposalInputSchema,
+        response: { 200: SimulationSchema },
+      },
+    },
+    async (request) =>
+      app.services.proposals.simulate(request.user.sub, request.user.address, request.body),
   );
 
   app.get(

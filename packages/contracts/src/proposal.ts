@@ -142,6 +142,28 @@ export const ProposalInputSchema = z.object({
 });
 export type ProposalInput = z.infer<typeof ProposalInputSchema>;
 
+/**
+ * Lo que devuelve simular una propuesta sin crearla (BE2-12).
+ *
+ * Es el mismo veredicto que daría `POST /proposals` —las mismas reglas, el
+ * mismo Guardian, los mismos precios— pero sin escribir en la base de datos ni
+ * dejar rastro en la bitácora. Sirve para responder «¿y si muevo este importe?»
+ * antes de comprometerse a nada.
+ *
+ * El Guardian se incluye **aunque la política deniegue**. En el camino real no
+ * hace falta: si la política dice que no, no hay nada que analizar. Aquí sí,
+ * porque quien está moviendo un control quiere ver las dos cosas cambiar a la
+ * vez y entender cuál de las dos le está frenando.
+ */
+export const SimulationSchema = z.object({
+  policy: PolicyDecisionSchema,
+  risk: RiskReportSchema,
+  prices: PriceSnapshotSchema,
+  /** Suma de las acciones, por activo. */
+  totals: z.array(z.object({ asset: AssetCodeSchema, amount: AmountSchema })),
+});
+export type Simulation = z.infer<typeof SimulationSchema>;
+
 /** Evento de auditoría append-only (BE2-06 / BE2-Q4). */
 export const AuditEventTypeSchema = z.enum([
   'PROPOSAL_CREATED',

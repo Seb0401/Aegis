@@ -4,6 +4,8 @@ import type { Destination, Proposal, ProposedAction } from '@aegis/contracts';
 import { ArrowRight, Clock, Loader2, PenLine, TriangleAlert, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { GuardianPanel } from '@/components/proposals/guardian-panel';
+import { ImpactPanel } from '@/components/proposals/impact-panel';
+import { Amount } from '@/components/ui/amount';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { describeError } from '@/lib/api/errors';
 import { useApproveProposal, useDestinations, useRejectProposal } from '@/lib/api/hooks';
 import { useAuth } from '@/lib/auth/auth-context';
+import { riseDelay } from '@/lib/motion';
 import { WalletError } from '@/lib/auth/wallet';
 import {
   RISK_LABEL,
@@ -115,9 +118,13 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
           <span className="text-sm text-muted-foreground">Total</span>
           <span className="text-right">
             {totalsByAsset(proposal.actions).map(([asset, amount]) => (
-              <span key={asset} className="font-display block text-xl font-semibold tabular-nums">
-                {formatAmount(amount, asset)}
-              </span>
+              <Amount
+                key={asset}
+                value={amount}
+                asset={asset}
+                className="font-display block text-2xl font-semibold"
+                assetClassName="text-sm font-normal text-muted-foreground"
+              />
             ))}
           </span>
         </div>
@@ -138,6 +145,14 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
               ))}
             </ul>
           </section>
+        ) : null}
+
+        {proposal.risk && actionable ? (
+          <ImpactPanel
+            risk={proposal.risk}
+            total={total}
+            asset={totalsByAsset(proposal.actions)[0]?.[0] ?? 'XLM'}
+          />
         ) : null}
 
         {proposal.risk ? (
@@ -291,29 +306,48 @@ function ActionList({
   total: string;
 }) {
   return (
-    <ul className="flex flex-col divide-y divide-border">
+    <ul className="flex flex-col gap-3.5">
       {actions.map((action, index) => {
         const destination = destinations.get(action.destinationId);
+        const share = shareOfTotal(action.amount, total);
+
         return (
-          <li key={`${action.destinationId}-${index}`} className="flex items-center gap-3 py-2.5">
-            <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{action.label}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {destination
-                  ? `${destination.label} · ${shortAddress(destination.address)}`
-                  : action.destinationId}
-                {action.memo ? ` · memo: ${action.memo}` : ''}
-              </p>
+          <li key={`${action.destinationId}-${index}`} className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-3">
+              <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{action.label}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {destination
+                    ? `${destination.label} · ${shortAddress(destination.address)}`
+                    : action.destinationId}
+                  {action.memo ? ` · memo: ${action.memo}` : ''}
+                </p>
+              </div>
+              <span className="shrink-0 text-right">
+                <Amount
+                  value={action.amount}
+                  asset={action.asset}
+                  className="block text-sm font-medium"
+                />
+                <span className="block text-xs text-muted-foreground tabular-nums">
+                  {share.toFixed(1)}%
+                </span>
+              </span>
             </div>
-            <span className="shrink-0 text-right">
-              <span className="block text-sm font-medium tabular-nums">
-                {formatAmount(action.amount, action.asset)}
-              </span>
-              <span className="block text-xs text-muted-foreground tabular-nums">
-                {shareOfTotal(action.amount, total).toFixed(1)}%
-              </span>
-            </span>
+
+            {/*
+              La barra va a escala del total, no del pago más grande: es la
+              misma escala que el porcentaje de al lado, y si no coincidieran
+              el ojo creería a la barra y la cifra parecería un error.
+              Decorativa, porque el dato ya está escrito dos veces encima.
+            */}
+            <div className="ml-7 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+              <div
+                className="reveal-x h-full rounded-r-[4px] bg-primary"
+                style={{ width: `${Math.min(100, share).toFixed(2)}%`, ...riseDelay(index, 70) }}
+              />
+            </div>
           </li>
         );
       })}
