@@ -51,6 +51,17 @@ async function limpiarPendientes(page) {
   }
 }
 
+/**
+ * Espera a que las animaciones de entrada terminen.
+ *
+ * Las tarjetas entran escalonadas, así que capturar nada más cargar pilla a
+ * las últimas a medio opacar y la imagen sale con unas más apagadas que
+ * otras. El margen cubre el escalonado más la propia animación.
+ */
+async function asentarse(page) {
+  await page.waitForTimeout(900);
+}
+
 async function capturar(page, nombre, opciones = {}) {
   const ruta = resolve(DESTINO, `${nombre}.png`);
   await page.screenshot({ path: ruta, ...opciones });
@@ -92,6 +103,7 @@ async function main() {
   await limpiarPendientes(page);
   await page.reload();
   await page.getByRole('heading', { name: 'Jupi' }).waitFor();
+  await asentarse(page);
 
   console.log('Capturando…');
   await capturar(page, 'panel');
@@ -115,7 +127,7 @@ async function main() {
   ]) {
     await page.goto(`${WEB}${ruta}`);
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(400);
+    await asentarse(page);
     await capturar(page, nombre);
   }
 
@@ -129,7 +141,7 @@ async function main() {
   const pequeña = await movil.newPage();
   await pequeña.goto(`${WEB}/dashboard`);
   await pequeña.getByRole('heading', { name: 'Jupi' }).waitFor();
-  await pequeña.waitForTimeout(400);
+  await asentarse(pequeña);
   await capturar(pequeña, 'movil');
 
   await browser.close();
