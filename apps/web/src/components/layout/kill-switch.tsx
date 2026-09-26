@@ -28,6 +28,7 @@ export function KillSwitch() {
       size="sm"
       /* Ver `paused-veil` en globals.css: este botón no se apaga con el resto. */
       className="not-paused"
+      data-tour="kill-switch"
       variant={paused ? 'secondary' : 'destructive'}
       disabled={pending}
       aria-pressed={paused}

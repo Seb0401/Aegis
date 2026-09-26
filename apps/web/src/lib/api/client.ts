@@ -10,10 +10,12 @@ import {
   PolicyResponseSchema,
   ProposalResponseSchema,
   ProposalSchema,
+  SimulationSchema,
   TransactionsResponseSchema,
   type AgentMessageRequest,
   type ApproveProposalRequest,
   type CreateDestinationRequest,
+  type ProposalInput,
   type RejectProposalRequest,
   type UpdateDestinationInput,
   type UpdatePolicyInput,
@@ -278,6 +280,23 @@ export class ApiClient {
 
   getProposal(id: string) {
     return this.request(`/proposals/${encodeURIComponent(id)}`, { schema: ProposalResponseSchema });
+  }
+
+  /**
+   * Evalúa unas acciones sin crear la propuesta (BE2-12).
+   *
+   * Acepta `signal` porque está pensado para colgar de un control que el
+   * usuario arrastra: cada valor nuevo cancela la consulta del anterior, que
+   * ya no le interesa a nadie y solo serviría para llegar tarde y pisar el
+   * resultado bueno.
+   */
+  simulateProposal(body: ProposalInput, signal?: AbortSignal) {
+    return this.request('/proposals/simulate', {
+      method: 'POST',
+      body,
+      schema: SimulationSchema,
+      ...(signal ? { signal } : {}),
+    });
   }
 
   /**

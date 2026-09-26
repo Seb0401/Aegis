@@ -4,6 +4,7 @@ import type {
   AgentMessageRequest,
   ApproveProposalRequest,
   CreateDestinationRequest,
+  ProposalInput,
   UpdateDestinationInput,
   UpdatePolicyInput,
 } from '@aegis/contracts';
@@ -27,6 +28,11 @@ export const queryKeys = {
   proposal: (id: string) => ['proposal', id] as const,
   policy: ['policy'] as const,
   audit: (limit: number) => ['audit', limit] as const,
+  /*
+    La simulación entra entera en la clave: es lo que hace que volver a un
+    importe ya probado sea instantáneo en vez de otra ida y vuelta a Horizon.
+  */
+  simulation: (body: ProposalInput | null) => ['simulation', body] as const,
 };
 
 /** Solo se consulta cuando hay sesión: sin token, la API responde 401. */
@@ -85,6 +91,35 @@ export function useProposals(limit = 20, { poll = false }: { poll?: boolean } = 
     queryFn: () => client.getProposals(limit),
     enabled: useAuthenticated(),
     ...(poll ? { refetchInterval: 5000 } : {}),
+  });
+}
+
+/**
+ * Evalúa unas acciones sin crearlas (BE2-12).
+ *
+ * Es una consulta y no una mutación aunque vaya por POST, y es deliberado:
+ * simular no cambia nada, así que se puede cachear, reintentar y —lo que más
+ * importa aquí— **cancelar**. Colgando de un control que se arrastra, React
+ * Query aborta la petición de cada valor que ya quedó atrás y garantiza que
+ * la respuesta que se pinta es la del último, no la que llegue antes.
+ *
+ * `placeholderData` mantiene en pantalla el resultado anterior mientras llega
+ * el siguiente: sin eso el panel parpadearía a vacío en cada paso del
+ * deslizador, que es justo cuando la persona está mirando.
+ */
+export function useSimulation(body: ProposalInput | null) {
+  const client = useApiClient();
+  const authenticated = useAuthenticated();
+
+  return useQuery({
+    queryKey: queryKeys.simulation(body),
+    queryFn: ({ signal }) => client.simulateProposal(body as ProposalInput, signal),
+    enabled: authenticated && body !== null,
+    placeholderData: (anterior) => anterior,
+    // Los saldos y los contadores del día cambian; un veredicto de hace un
+    // minuto podría no ser cierto ya.
+    staleTime: 30_000,
+    retry: false,
   });
 }
 

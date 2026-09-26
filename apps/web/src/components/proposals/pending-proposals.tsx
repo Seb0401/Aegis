@@ -19,7 +19,10 @@ export function PendingProposals() {
 
   if (!isLoading && !error && pending.length === 0) {
     return (
-      <p className="flex items-center gap-2 rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+      <p
+        data-tour="propuestas"
+        className="flex items-center gap-2 rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground"
+      >
         <Inbox className="size-4 shrink-0" />
         Nada pendiente de aprobar. Pídele algo al agente y aparecerá aquí.
       </p>
@@ -28,7 +31,11 @@ export function PendingProposals() {
 
   return (
     <QueryState isLoading={isLoading} error={error} rows={5}>
-      <div id="propuesta-pendiente" className="flex scroll-mt-28 flex-col gap-4">
+      <div
+        id="propuesta-pendiente"
+        data-tour="propuestas"
+        className="flex scroll-mt-28 flex-col gap-4"
+      >
         {pending.map((proposal) => (
           <ProposalCard key={proposal.id} proposal={proposal} />
         ))}

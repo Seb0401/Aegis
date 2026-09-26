@@ -2,6 +2,7 @@
 
 import { LogOut } from 'lucide-react';
 import { KillSwitch } from '@/components/layout/kill-switch';
+import { TourLauncher } from '@/components/tour/tour-launcher';
 import { Button } from '@/components/ui/button';
 import { WaveMark } from '@/components/ui/marks';
 import { useBalances, usePolicy } from '@/lib/api/hooks';
@@ -69,6 +70,13 @@ export function TopBar({ title, subtitle }: { title?: string; subtitle?: string 
                 <span className="font-medium tabular-nums">{formatAmount(xlm.available)}</span>
               </span>
             ) : null}
+
+            {/*
+              Junto al kill switch y antes que él: es lo que alguien busca
+              cuando no entiende algo, y tenerlo a mano evita que se ponga a
+              pulsar botones para averiguarlo.
+            */}
+            <TourLauncher />
 
             <KillSwitch />
 

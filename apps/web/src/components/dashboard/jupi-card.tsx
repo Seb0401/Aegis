@@ -70,7 +70,10 @@ export function JupiCard() {
   const mood = moodForAgent({ paused, thinking, ...(pending ? { pending } : {}) });
 
   return (
-    <Card className="grid grid-cols-1 gap-5 p-5 md:grid-cols-[minmax(0,1fr)_260px]">
+    <Card
+      data-tour="agente"
+      className="grid grid-cols-1 gap-5 p-5 md:grid-cols-[minmax(0,1fr)_260px]"
+    >
       <div className="flex items-center gap-4">
         <Jupi mood={mood} size={128} float={!paused} className="shrink-0" />
 

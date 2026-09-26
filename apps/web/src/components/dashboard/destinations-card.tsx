@@ -32,7 +32,7 @@ export function DestinationsCard() {
   const destinations = data?.destinations ?? [];
 
   return (
-    <Card>
+    <Card data-tour="destinos">
       <CardHeader>
         <CardTitle>Objetivos y contactos</CardTitle>
         <CardDescription>

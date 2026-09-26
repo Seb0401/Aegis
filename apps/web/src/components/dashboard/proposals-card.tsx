@@ -26,7 +26,7 @@ export function ProposalsCard() {
   const proposals = (data?.proposals ?? []).filter((proposal) => !isActionable(proposal));
 
   return (
-    <Card>
+    <Card data-tour="historial">
       <CardHeader>
         <CardTitle>Historial de propuestas</CardTitle>
         <CardDescription>

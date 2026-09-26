@@ -39,6 +39,7 @@ function StatShell({
   label,
   action,
   orden,
+  anclaTour,
   children,
 }: {
   icon: ReactNode;
@@ -46,10 +47,16 @@ function StatShell({
   action?: ReactNode;
   /** Posición en la fila, solo para escalonar la entrada. */
   orden: number;
+  /** Valor de `data-tour`, para que el tour pueda señalar esta tarjeta. */
+  anclaTour?: string;
   children: ReactNode;
 }) {
   return (
-    <Card className="rise-in flex flex-col gap-4 p-5" style={riseDelay(orden, 70)}>
+    <Card
+      className="rise-in flex flex-col gap-4 p-5"
+      style={riseDelay(orden, 70)}
+      {...(anclaTour ? { 'data-tour': anclaTour } : {})}
+    >
       <div className="flex items-center gap-2.5">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
           {icon}
@@ -133,7 +140,12 @@ function DailyLimitStat() {
   const percent = Math.round(used * 100);
 
   return (
-    <StatShell icon={<GaugeIcon className="size-4" />} label="Límite diario" orden={1}>
+    <StatShell
+      icon={<GaugeIcon className="size-4" />}
+      label="Límite diario"
+      orden={1}
+      anclaTour="limite-diario"
+    >
       <QueryState isLoading={isLoading} error={error} rows={2}>
         {data ? (
           <div className="flex flex-col gap-3">
