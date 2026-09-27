@@ -77,7 +77,7 @@ export function AuditCard() {
           isLoading={isLoading}
           error={error}
           isEmpty={events.length === 0}
-          emptyLabel="Todavía no hay eventos."
+          emptyLabel="Cada decisión del agente quedará escrita aquí, encadenada a la anterior. Pídele algo y empieza a llenarse."
         >
           <ul className="flex flex-col divide-y divide-border">
             {events.map((event) => (

@@ -38,7 +38,7 @@ export function ProposalsCard() {
           isLoading={isLoading}
           error={error}
           isEmpty={proposals.length === 0}
-          emptyLabel="Todavía no hay propuestas resueltas."
+          emptyLabel="Aquí irán quedando las propuestas ya decididas, con la regla que las permitió y su análisis de riesgo."
         >
           <ul className="flex flex-col divide-y divide-border">
             {proposals.map((proposal) => (

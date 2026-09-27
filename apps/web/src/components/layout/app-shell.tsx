@@ -9,6 +9,7 @@ import { TopBar } from '@/components/layout/top-bar';
 import { useAgentPanel } from '@/lib/agent-panel';
 import { useAgentThinking, usePolicy, useProposals } from '@/lib/api/hooks';
 import { moodForAgent } from '@/lib/jupi';
+import { useProposalNotifications } from '@/lib/notifications';
 import { isActionable } from '@/lib/proposals';
 import { cn } from '@/lib/utils';
 
@@ -42,7 +43,12 @@ export function AppShell({
   const { abierto, alternar } = useAgentPanel();
 
   const paused = policy.data?.config.paused ?? false;
-  const pendiente = proposals.data?.proposals.find(isActionable);
+  const pendientes = (proposals.data?.proposals ?? []).filter(isActionable);
+  const pendiente = pendientes[0];
+
+  // Desde aquí y no desde el panel: el reparto automático puede proponer algo
+  // mientras estás en cualquier otra pantalla, o sin ninguna abierta.
+  useProposalNotifications(pendientes);
   const mood = moodForAgent({ paused, thinking, ...(pendiente ? { pending: pendiente } : {}) });
 
   return (

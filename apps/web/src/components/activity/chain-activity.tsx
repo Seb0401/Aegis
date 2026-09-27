@@ -49,7 +49,7 @@ export function ChainActivity() {
           isLoading={isLoading}
           error={error}
           isEmpty={transactions.length === 0}
-          emptyLabel="Esta cuenta todavía no tiene movimientos en la red."
+          emptyLabel="Todavía no ha entrado ni salido nada de esta cuenta. Cuando Aegis pague algo, aparecerá aquí con su enlace al explorador."
           rows={6}
         >
           <ul className="flex flex-col divide-y divide-border">

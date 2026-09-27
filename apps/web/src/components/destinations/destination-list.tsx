@@ -51,7 +51,7 @@ export function DestinationList() {
           isLoading={isLoading}
           error={error}
           isEmpty={destinations.length === 0}
-          emptyLabel="Aún no has registrado ningún destino."
+          emptyLabel="Registra el primero con el formulario de arriba. El agente solo puede enviar dinero a lo que esté en esta lista."
         >
           <ul className="flex flex-col divide-y divide-border">
             {destinations.map((destination) => {

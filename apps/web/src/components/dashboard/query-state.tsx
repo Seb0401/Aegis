@@ -1,7 +1,9 @@
 'use client';
 
 import { TriangleAlert } from 'lucide-react';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { Jupi } from '@/components/jupi/jupi';
 import { Skeleton } from '@/components/ui/skeleton';
 import { describeError } from '@/lib/api/errors';
 
@@ -17,6 +19,7 @@ export function QueryState({
   error,
   isEmpty,
   emptyLabel,
+  emptyAction,
   rows = 3,
   children,
 }: {
@@ -24,6 +27,8 @@ export function QueryState({
   error: unknown;
   isEmpty?: boolean;
   emptyLabel?: string;
+  /** Qué hacer para que deje de estar vacío. Un sitio al que ir. */
+  emptyAction?: { label: string; href: string };
   rows?: number;
   children: ReactNode;
 }) {
@@ -47,7 +52,28 @@ export function QueryState({
   }
 
   if (isEmpty) {
-    return <p className="text-sm text-muted-foreground">{emptyLabel ?? 'Todavía no hay nada.'}</p>;
+    /*
+      Un vacío que solo dice «no hay nada» deja a quien acaba de entrar
+      mirando una caja gris sin saber si falta configurar algo o si la
+      aplicación está rota. Con Jupi y un sitio al que ir, el vacío pasa de
+      ser un callejón a ser el primer paso.
+    */
+    return (
+      <div className="flex flex-col items-center gap-3 py-6 text-center">
+        <Jupi mood="pensativo" size={72} />
+        <p className="max-w-sm text-sm text-muted-foreground">
+          {emptyLabel ?? 'Todavía no hay nada.'}
+        </p>
+        {emptyAction ? (
+          <Link
+            href={emptyAction.href}
+            className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            {emptyAction.label}
+          </Link>
+        ) : null}
+      </div>
+    );
   }
 
   return <>{children}</>;

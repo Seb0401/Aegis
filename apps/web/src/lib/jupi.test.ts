@@ -1,6 +1,13 @@
 import type { Proposal, RiskLevel } from '@aegis/contracts';
 import { describe, expect, it } from 'vitest';
-import { JUPI_ALT, JUPI_MOODS, moodForAgent, moodForProposal, moodForRisk } from './jupi';
+import {
+  JUPI_ALT,
+  JUPI_MOODS,
+  moodForAgent,
+  moodForProposal,
+  moodForRisk,
+  jupiIdleLine,
+} from './jupi';
 
 /**
  * Jupi es simpática, pero no puede contradecir al Guardian: si el riesgo es
@@ -106,5 +113,44 @@ describe('sprites', () => {
     for (const mood of JUPI_MOODS) {
       expect(JUPI_ALT[mood]).toBeTruthy();
     }
+  });
+});
+
+describe('jupiIdleLine', () => {
+  const base = { hora: 10, diasSinApartar: 1, metasCumplidas: 0, repartoActivo: false };
+
+  it('celebra una meta cumplida por encima de todo lo demás', () => {
+    const linea = jupiIdleLine({ ...base, hora: 23, metasCumplidas: 1 });
+
+    expect(linea).toContain('meta');
+    expect(linea).not.toContain('Buenas noches');
+  });
+
+  it('avisa de que llevas semanas sin apartar, sin regañar', () => {
+    // «Deberías ahorrar más» es un sermón, y de algo que administra tu dinero
+    // eso se tolera una vez. Un dato y una oferta, no un juicio.
+    const linea = jupiIdleLine({ ...base, diasSinApartar: 21 });
+
+    expect(linea).toContain('3 semanas');
+    expect(linea.toLowerCase()).not.toContain('deberías');
+  });
+
+  it('con el reparto activo, la culpa no es tuya', () => {
+    // Si el reparto está encendido y no se ha movido nada es porque no ha
+    // entrado dinero. Decirle a alguien que «lleva tres semanas sin apartar»
+    // cuando lo tiene automatizado sería culparle de algo que no hizo.
+    const linea = jupiIdleLine({ ...base, diasSinApartar: 21, repartoActivo: true });
+
+    expect(linea).toContain('no ha entrado dinero');
+  });
+
+  it('saluda según la hora cuando no hay nada que contar', () => {
+    expect(jupiIdleLine({ ...base, hora: 9 })).toContain('Buenos días');
+    expect(jupiIdleLine({ ...base, hora: 16 })).toContain('Buenas tardes');
+    expect(jupiIdleLine({ ...base, hora: 22 })).toContain('Buenas noches');
+  });
+
+  it('sin historial, invita a empezar', () => {
+    expect(jupiIdleLine({ ...base, diasSinApartar: null })).toContain('Pídeme');
   });
 });

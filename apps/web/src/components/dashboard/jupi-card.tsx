@@ -5,9 +5,17 @@ import { Bot, FileText, Rocket, ShieldCheck, SlidersHorizontal } from 'lucide-re
 import { Jupi } from '@/components/jupi/jupi';
 import { SessionControls } from '@/components/layout/session-controls';
 import { Card } from '@/components/ui/card';
-import { useAgentThinking, usePolicy, useProposals } from '@/lib/api/hooks';
-import { jupiStatusLine, moodForAgent } from '@/lib/jupi';
+import {
+  useAgentThinking,
+  useDestinations,
+  usePolicy,
+  useProposals,
+  useSplitRule,
+  useTransactions,
+} from '@/lib/api/hooks';
+import { jupiIdleLine, jupiStatusLine, moodForAgent } from '@/lib/jupi';
 import { isActionable } from '@/lib/proposals';
+import { goalProgress, sentTo } from '@/lib/stats';
 import { cn } from '@/lib/utils';
 
 /**
@@ -69,6 +77,17 @@ export function JupiCard() {
   const pending = proposals.data?.proposals.find(isActionable);
   const mood = moodForAgent({ paused, thinking, ...(pending ? { pending } : {}) });
 
+  /*
+    Cuando no pasa nada, Jupi comenta tu situación en vez de repetir siempre
+    la misma frase. Una línea fija se convierte en parte del fondo a los dos
+    días y la mascota deja de mirarse.
+  */
+  const contexto = useJupiContext();
+  const linea =
+    paused || thinking || pending
+      ? jupiStatusLine({ paused, thinking, ...(pending ? { pending } : {}) })
+      : jupiIdleLine(contexto);
+
   return (
     <Card
       data-tour="agente"
@@ -95,9 +114,7 @@ export function JupiCard() {
             Tu asistente. Analiza, propone y ejecuta operaciones dentro de los límites que tú pones.
           </p>
 
-          <p className="mt-3 text-sm">
-            {jupiStatusLine({ paused, thinking, ...(pending ? { pending } : {}) })}
-          </p>
+          <p className="mt-3 text-sm">{linea}</p>
 
           {pending ? (
             <a
@@ -144,4 +161,42 @@ export function JupiCard() {
       </ol>
     </Card>
   );
+}
+
+/**
+ * Lo que Jupi sabe de tu situación cuando no hay nada urgente.
+ *
+ * Todo sale de consultas que las demás tarjetas ya hacen, así que no cuesta
+ * ni una petición más: React Query las comparte por clave.
+ */
+function useJupiContext() {
+  const transactions = useTransactions(50);
+  const destinations = useDestinations();
+  const split = useSplitRule();
+
+  const salidas = (transactions.data?.transactions ?? []).filter(
+    (tx) => tx.direction === 'OUT' && tx.successful,
+  );
+
+  const ultima = salidas
+    .map((tx) => Date.parse(tx.createdAt))
+    .filter(Number.isFinite)
+    .sort((a, b) => b - a)[0];
+
+  const metasCumplidas = (destinations.data?.destinations ?? []).filter((destino) => {
+    if (!destino.targetAmount || !destino.targetAsset) return false;
+    const enviado = sentTo(
+      transactions.data?.transactions ?? [],
+      destino.address,
+      destino.targetAsset,
+    );
+    return (goalProgress(enviado, destino.targetAmount) ?? 0) >= 1;
+  }).length;
+
+  return {
+    hora: new Date().getHours(),
+    diasSinApartar: ultima ? Math.floor((Date.now() - ultima) / (24 * 3600_000)) : null,
+    metasCumplidas,
+    repartoActivo: split.data?.rule?.enabled ?? false,
+  };
 }

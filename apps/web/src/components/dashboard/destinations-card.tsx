@@ -44,7 +44,8 @@ export function DestinationsCard() {
           isLoading={isLoading}
           error={error}
           isEmpty={destinations.length === 0}
-          emptyLabel="Aún no has registrado ningún destino."
+          emptyLabel="El agente solo puede pagar a sitios que tú registres. Sin destinos no puede hacer nada."
+          emptyAction={{ label: 'Registrar el primero', href: '/destinos' }}
         >
           <ul className="flex flex-col divide-y divide-border">
             {destinations.map((destination) => (

@@ -1,14 +1,16 @@
 'use client';
 
-import type { Destination } from '@aegis/contracts';
-import { Target } from 'lucide-react';
+import { subtractAmounts, type Destination, type TxSummary } from '@aegis/contracts';
+import { Target, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { QueryState } from '@/components/dashboard/query-state';
 import { Amount } from '@/components/ui/amount';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { useDestinations, useTransactions } from '@/lib/api/hooks';
 import { riseDelay } from '@/lib/motion';
 import { goalProgress, sentTo } from '@/lib/stats';
+import { pace, weeksToGoal } from '@/lib/trends';
 import { formatAmount } from '@/lib/utils';
 
 /**
@@ -36,7 +38,8 @@ export function GoalList() {
       isLoading={destinations.isLoading}
       error={destinations.error}
       isEmpty={conMeta.length === 0}
-      emptyLabel="Ninguno de tus destinos tiene una meta puesta todavía."
+      emptyLabel="Ponle una meta a un destino y aquí verás cuánto llevas de ella."
+      emptyAction={{ label: 'Poner una meta', href: '/destinos' }}
       rows={3}
     >
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -44,11 +47,7 @@ export function GoalList() {
           <GoalCard
             key={destino.id}
             destino={destino}
-            enviado={sentTo(
-              transactions.data?.transactions ?? [],
-              destino.address,
-              destino.targetAsset!,
-            )}
+            movimientos={transactions.data?.transactions ?? []}
             orden={indice}
           />
         ))}
@@ -59,18 +58,28 @@ export function GoalList() {
 
 function GoalCard({
   destino,
-  enviado,
+  movimientos,
   orden,
 }: {
   destino: Destination;
-  enviado: string;
+  movimientos: TxSummary[];
   orden: number;
 }) {
   const meta = destino.targetAmount!;
   const activo = destino.targetAsset!;
+  const enviado = sentTo(movimientos, destino.address, activo);
   const avance = goalProgress(enviado, meta) ?? 0;
   const porcentaje = Math.round(avance * 100);
   const cumplida = avance >= 1;
+
+  /*
+    El ritmo de las últimas cuatro semanas y lo que falta a ese ritmo. Es lo
+    que convierte «llevas 120» en «a este paso llegas en seis semanas», que es
+    la frase sobre la que alguien decide si aprieta o se relaja.
+  */
+  const ritmo = pace(movimientos, destino.address, activo);
+  const semanas = cumplida ? 0 : weeksToGoal(subtractAmounts(meta, enviado), ritmo.porSemana);
+  const acelera = Number(ritmo.diferencia) > 0;
 
   return (
     <li>
@@ -122,7 +131,19 @@ function GoalCard({
 
         {cumplida ? (
           <p className="text-xs text-risk-low">Meta cumplida. Puedes subirla o ponerle otra.</p>
-        ) : null}
+        ) : semanas !== null ? (
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <TrendingUp className={cn('size-3.5', acelera && 'text-risk-low')} />A este ritmo llegas
+            en {semanas === 1 ? '1 semana' : `${semanas} semanas`}
+            <span className="text-muted-foreground/70">
+              · {formatAmount(ritmo.porSemana)} por semana
+            </span>
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Sin movimientos recientes: no hay ritmo con el que estimar.
+          </p>
+        )}
       </Card>
     </li>
   );

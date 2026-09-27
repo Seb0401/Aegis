@@ -122,3 +122,58 @@ export function jupiStatusLine({ paused, thinking, pending }: AgentState): strin
   if (pending) return 'Tienes una propuesta esperando tu autorización.';
   return 'Todo en orden. Pídeme algo cuando quieras.';
 }
+
+/**
+ * Contexto que Jupi puede comentar cuando no está pasando nada.
+ *
+ * El estado de reposo era siempre la misma frase, y una mascota que repite
+ * una línea fija deja de leerse a los dos días: se convierte en parte del
+ * fondo. Con algo que decir sobre tu situación, mirarla tiene sentido.
+ */
+export interface JupiContext {
+  /** Hora local, 0–23. */
+  hora: number;
+  /** Días desde el último pago que salió. `null` si nunca hubo ninguno. */
+  diasSinApartar: number | null;
+  /** Metas cumplidas que todavía no se han celebrado. */
+  metasCumplidas: number;
+  /** El reparto automático está encendido. */
+  repartoActivo: boolean;
+}
+
+/**
+ * Qué dice Jupi cuando no hay nada urgente.
+ *
+ * El orden es el de la importancia, no el de la simpatía: una meta cumplida
+ * gana al saludo, y llevar semanas sin apartar gana a todo lo demás porque es
+ * lo único que pide hacer algo.
+ *
+ * Nunca regaña. «Llevas tres semanas sin apartar» es un dato; «deberías
+ * ahorrar más» es un sermón, y de una aplicación que administra tu dinero eso
+ * se tolera una vez.
+ */
+export function jupiIdleLine(contexto: JupiContext): string {
+  if (contexto.metasCumplidas > 0) {
+    return contexto.metasCumplidas === 1
+      ? '¡Has cumplido una meta! Puedes subirla o ponerte otra.'
+      : `¡Has cumplido ${contexto.metasCumplidas} metas! Puedes subirlas o ponerte otras.`;
+  }
+
+  if (contexto.diasSinApartar !== null && contexto.diasSinApartar >= 14) {
+    const semanas = Math.floor(contexto.diasSinApartar / 7);
+    return contexto.repartoActivo
+      ? `Llevo ${semanas} semanas sin mover nada: no ha entrado dinero que repartir.`
+      : `Llevas ${semanas} semanas sin apartar nada. ¿Te preparo un reparto?`;
+  }
+
+  if (contexto.diasSinApartar === null) {
+    return contexto.repartoActivo
+      ? 'Reparto activado. En cuanto entre dinero, me pongo.'
+      : 'Todavía no hemos movido nada. Pídeme un reparto cuando quieras.';
+  }
+
+  if (contexto.hora < 6) return 'Aquí sigo. Puedes pedirme algo a cualquier hora.';
+  if (contexto.hora < 12) return 'Buenos días. Todo en orden por aquí.';
+  if (contexto.hora < 20) return 'Buenas tardes. Todo en orden, pídeme algo cuando quieras.';
+  return 'Buenas noches. Todo tranquilo por aquí.';
+}

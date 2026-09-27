@@ -3,6 +3,7 @@
 import { RequireSession } from '@/components/auth/require-session';
 import { AppShell } from '@/components/layout/app-shell';
 import { ChainIntegrity } from '@/components/security/chain-integrity';
+import { NotificationCard } from '@/components/security/notification-card';
 import { SecuritySummary } from '@/components/security/security-summary';
 import { DelegationCard } from '@/components/setup/delegation-card';
 
@@ -23,6 +24,7 @@ export function SeguridadView() {
         <SecuritySummary />
         <DelegationCard />
         <ChainIntegrity />
+        <NotificationCard />
       </AppShell>
     </RequireSession>
   );
