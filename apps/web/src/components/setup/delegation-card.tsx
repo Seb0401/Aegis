@@ -82,9 +82,9 @@ export function DelegationCard() {
         <div className="flex items-start gap-2 rounded-xl border border-risk-medium/40 bg-risk-medium/10 p-3 text-sm">
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-risk-medium" />
           <p>
-            Stellar limita por <em>tipo</em> de operación, no por monto ni por destinatario. Los
-            límites de Aegis los aplica el backend antes de firmar. Si esa llave se filtrara, en la
-            red podría firmar pagos por cualquier importe: por eso el MVP es solo testnet.
+            Stellar limita por <em>tipo</em> de operación, no por importe ni por destinatario. Tus
+            topes los comprueba Aegis antes de firmar, no la red. Si esta llave se filtrara, para
+            Stellar sería válida por cualquier importe — y por eso, de momento, solo testnet.
           </p>
         </div>
 
@@ -108,8 +108,7 @@ export function DelegationCard() {
             </span>
           ) : (
             <span className="text-xs text-muted-foreground">
-              La da el backend. Va en el cuerpo de la petición porque `BE1-Q3` sigue abierta: está
-              sin decidir si el signer es uno por usuario o uno global del servicio.
+              Te la da Aegis al desplegarlo. Es pública: se puede copiar y pegar sin riesgo.
             </span>
           )}
         </label>
@@ -176,22 +175,29 @@ export function DelegationCard() {
               Firmado
             </p>
             <p className="text-xs text-muted-foreground">
-              Falta enviarlo a la red, y eso todavía no lo hace Aegis: la API solo expone{' '}
-              <code className="rounded bg-muted px-1">/account/delegation/prepare</code>, no el
-              envío (tarea BE1-05). Mientras tanto, copia el XDR firmado y envíalo desde el Stellar
-              Laboratory.
+              Queda un paso, y ese lo das tú: Aegis prepara y firma la autorización, pero todavía no
+              la envía a la red. Copia el texto de abajo y pégalo en el{' '}
+              <a
+                href="https://lab.stellar.org"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2"
+              >
+                Stellar Laboratory
+              </a>{' '}
+              para mandarla.
             </p>
             <textarea
               readOnly
               rows={3}
               value={signedXdr}
-              aria-label="XDR firmado"
+              aria-label="Autorización firmada, lista para enviar"
               className="w-full resize-none rounded-lg border border-input bg-transparent p-2 font-mono text-[11px]"
             />
             <div>
               <Button size="sm" variant="outline" onClick={() => void onCopy()}>
                 {copied ? <Check /> : <Copy />}
-                {copied ? 'Copiado' : 'Copiar XDR firmado'}
+                {copied ? 'Copiado' : 'Copiar'}
               </Button>
             </div>
           </div>

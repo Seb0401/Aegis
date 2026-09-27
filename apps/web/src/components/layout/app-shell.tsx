@@ -1,14 +1,15 @@
 'use client';
 
-import { PanelRightOpen } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { ChatPanel } from '@/components/chat/chat-panel';
+import { Jupi } from '@/components/jupi/jupi';
 import { MobileTabBar } from '@/components/layout/mobile-tab-bar';
 import { Sidebar } from '@/components/layout/sidebar';
 import { TopBar } from '@/components/layout/top-bar';
-import { Button } from '@/components/ui/button';
 import { useAgentPanel } from '@/lib/agent-panel';
-import { usePolicy } from '@/lib/api/hooks';
+import { useAgentThinking, usePolicy, useProposals } from '@/lib/api/hooks';
+import { moodForAgent } from '@/lib/jupi';
+import { isActionable } from '@/lib/proposals';
 import { cn } from '@/lib/utils';
 
 /**
@@ -36,8 +37,13 @@ export function AppShell({
   subtitle?: string;
 }) {
   const policy = usePolicy();
-  const paused = policy.data?.config.paused ?? false;
+  const proposals = useProposals(20, { poll: true });
+  const thinking = useAgentThinking();
   const { abierto, alternar } = useAgentPanel();
+
+  const paused = policy.data?.config.paused ?? false;
+  const pendiente = proposals.data?.proposals.find(isActionable);
+  const mood = moodForAgent({ paused, thinking, ...(pendiente ? { pending: pendiente } : {}) });
 
   return (
     /*
@@ -85,15 +91,34 @@ export function AppShell({
           va a buscarla.
         */}
         {!abierto ? (
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             onClick={alternar}
-            className="fixed right-0 bottom-24 z-30 hidden rounded-r-none border-r-0 bg-card shadow-lg lg:flex"
+            aria-label={
+              pendiente
+                ? 'Abrir el agente. Tienes una propuesta esperando tu autorización.'
+                : 'Abrir el agente'
+            }
+            className="fixed right-0 bottom-24 z-30 hidden items-center gap-2 rounded-l-2xl border border-r-0 border-border bg-card py-2 pr-3 pl-2 shadow-lg transition-transform hover:-translate-x-0.5 lg:flex"
           >
-            <PanelRightOpen />
-            Agente
-          </Button>
+            {/*
+              Con la cara que toque, no un icono: cerrada, esta pestaña es lo
+              único que queda del agente en pantalla, y así sigue diciendo en
+              qué anda sin tener que abrirla. El punto solo aparece cuando hay
+              algo esperando una decisión — un aviso que está siempre no avisa
+              de nada.
+            */}
+            <span className="relative flex">
+              <Jupi mood={mood} size={28} />
+              {pendiente ? (
+                <span
+                  aria-hidden
+                  className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-card bg-risk-medium"
+                />
+              ) : null}
+            </span>
+            <span className="text-sm">Agente</span>
+          </button>
         ) : null}
 
         <MobileTabBar />

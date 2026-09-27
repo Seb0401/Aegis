@@ -10,7 +10,7 @@ export function LimitesView() {
     <RequireSession>
       <AppShell
         title="Límites y modo"
-        subtitle="Lo único que separa «el agente puede moverme dinero» de «el agente puede moverme todo el dinero»."
+        subtitle="Lo que el agente no puede pasar, decidas lo que decidas pedirle."
       >
         <PolicyForm />
         {/*

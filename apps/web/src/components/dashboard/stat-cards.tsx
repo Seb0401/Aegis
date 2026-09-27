@@ -170,7 +170,7 @@ function DailyLimitStat() {
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Regla P-02, aplicada por el backend antes de construir nada.
+              Tope diario. Se comprueba antes de preparar ningún pago.
             </p>
           </div>
         ) : null}

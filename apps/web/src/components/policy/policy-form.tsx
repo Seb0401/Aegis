@@ -8,7 +8,7 @@ import {
   type PolicySummary,
   type UpdatePolicyInput,
 } from '@aegis/contracts';
-import { Loader2, Save, TriangleAlert } from 'lucide-react';
+import { CircleAlert, CircleCheck, Loader2, Save, TriangleAlert } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { QueryState } from '@/components/dashboard/query-state';
 import { Button } from '@/components/ui/button';
@@ -149,7 +149,7 @@ function PolicyFields({ config, summary }: { config: PolicyConfig; summary: Poli
         <CardHeader>
           <CardTitle>Límites de gasto</CardTitle>
           <CardDescription>
-            Los aplica el backend antes de construir nada. Hoy te queda{' '}
+            Se comprueban antes de preparar ningún pago. Hoy te queda{' '}
             <span className="font-medium text-foreground tabular-nums">
               {formatAmount(summary.remainingDailyAmount)}
             </span>{' '}
@@ -251,13 +251,24 @@ function PolicyFields({ config, summary }: { config: PolicyConfig; summary: Poli
           Guardar cambios
         </Button>
 
+        {/*
+          Guardar aquí cambia lo que el agente puede hacer con tu dinero, así
+          que la confirmación no puede ser un «Guardado.» en gris que se pierde
+          entre el resto del texto. Va con marca, con color y en voz activa:
+          dice lo que ha pasado, no que la operación terminó.
+        */}
         {!dirty && update.isSuccess ? (
-          <span className="text-sm text-muted-foreground">Guardado.</span>
+          <span className="rise-in flex items-center gap-1.5 rounded-full bg-risk-low/15 px-3 py-1.5 text-sm text-risk-low">
+            <CircleCheck className="size-4" />
+            Tus límites están guardados
+          </span>
         ) : null}
+
         {dirty ? (
-          <span className="text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5 rounded-full bg-risk-medium/15 px-3 py-1.5 text-sm text-risk-medium">
+            <CircleAlert className="size-4" />
             {Object.keys(patch).length} cambio{Object.keys(patch).length === 1 ? '' : 's'} sin
-            guardar.
+            guardar
           </span>
         ) : null}
       </div>

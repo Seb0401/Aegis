@@ -10,7 +10,7 @@ export function DestinosView() {
     <RequireSession>
       <AppShell
         title="Objetivos y contactos"
-        subtitle="El agente solo puede enviar dinero a lo que esté en esta lista. Las direcciones entran solo por aquí."
+        subtitle="El agente solo puede enviar dinero a lo que esté en esta lista."
       >
         <DestinationForm />
         <DestinationList />

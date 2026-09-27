@@ -17,7 +17,7 @@ export function HistorialView() {
     <RequireSession>
       <AppShell
         title="Historial"
-        subtitle="Cada decisión del agente, encadenada por hashes: quién propuso qué, qué regla lo permitió y con qué riesgo."
+        subtitle="Cada decisión del agente, en un registro que no se puede reescribir."
       >
         <AuditCard />
 

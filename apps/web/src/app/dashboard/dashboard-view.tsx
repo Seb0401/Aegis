@@ -22,7 +22,7 @@ export function DashboardView() {
 
   return (
     <RequireSession>
-      <AppShell>
+      <AppShell title="Panel" subtitle="Tu dinero, tus límites y lo que espera tu decisión.">
         <JupiCard />
         <StatCards />
         <PendingProposals />

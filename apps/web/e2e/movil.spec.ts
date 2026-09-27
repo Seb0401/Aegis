@@ -14,10 +14,10 @@ test.describe('navegación móvil', () => {
   });
 
   test('la cabecera se queda solo con el título', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Hola');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Panel');
 
     // El subtítulo y los controles bajan o desaparecen: ocupaban media pantalla.
-    await expect(page.getByText(/tu agente de ia ya está listo/i)).toBeHidden();
+    await expect(page.getByText(/tus límites y lo que espera tu decisión/i)).toBeHidden();
   });
 
   test('las secciones más usadas están abajo y el agente en el centro', async ({ page }) => {

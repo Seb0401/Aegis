@@ -3,6 +3,7 @@
 import { RequireSession } from '@/components/auth/require-session';
 import { AppShell } from '@/components/layout/app-shell';
 import { ChainIntegrity } from '@/components/security/chain-integrity';
+import { SecuritySummary } from '@/components/security/security-summary';
 import { DelegationCard } from '@/components/setup/delegation-card';
 
 /**
@@ -18,10 +19,8 @@ import { DelegationCard } from '@/components/setup/delegation-card';
 export function SeguridadView() {
   return (
     <RequireSession>
-      <AppShell
-        title="Seguridad"
-        subtitle="Qué puede firmar el agente, cómo se le para y si lo que dice que hizo se puede comprobar."
-      >
+      <AppShell title="Seguridad" subtitle="Qué puede firmar el agente y cómo se le para.">
+        <SecuritySummary />
         <DelegationCard />
         <ChainIntegrity />
       </AppShell>

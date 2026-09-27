@@ -30,6 +30,19 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     locale: 'es-ES',
+    /*
+      Sin animaciones, y por dos razones.
+
+      La práctica: Playwright espera a que un elemento esté quieto antes de
+      pulsarlo, así que una tarjeta que entra deslizándose convierte cada clic
+      en una carrera. Una hoja que aparece con animación llegó a agotar los
+      treinta segundos de espera.
+
+      La de fondo, que importa más: así la suite recorre el camino de quien
+      pide no ver movimiento. Si algo de la interfaz dependiera de que una
+      animación termine para ser usable, estos tests lo descubren.
+    */
+    reducedMotion: 'reduce',
   },
 
   projects: [

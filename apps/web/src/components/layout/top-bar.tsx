@@ -36,7 +36,7 @@ export function TopBar({ title, subtitle }: { title?: string; subtitle?: string 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="min-w-0 flex-1">
             <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight sm:text-2xl">
-              {title ?? 'Hola'}
+              {title ?? 'Aegis'}
               {title ? null : <WaveMark className="size-5 text-primary sm:size-6" />}
             </h1>
             <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
