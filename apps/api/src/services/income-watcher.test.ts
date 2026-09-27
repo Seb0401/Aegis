@@ -2,7 +2,7 @@ import { FIXTURE_DESTINATIONS, type TxSummary } from '@aegis/contracts';
 import { FakeStellarReader } from '@aegis/stellar/testing';
 import { eq } from 'drizzle-orm';
 import { afterEach, describe, expect, it } from 'vitest';
-import { processedIncomes } from '../db/schema.js';
+import { processedIncomes, splitRules } from '../db/schema.js';
 import { createDestination, createTestApp, login, setPolicy, type TestApp } from '../test/app.js';
 import { createScriptedAgent } from '../test/scripted-agent.js';
 
@@ -90,6 +90,18 @@ async function montar(historial: TxSummary[], opciones: { partes?: number[] } = 
   if (respuesta.statusCode !== 200) {
     throw new Error(`No se pudo guardar la regla (${respuesta.statusCode}): ${respuesta.body}`);
   }
+
+  /*
+    La regla se retrasa una hora para que los ingresos «de ahora» caigan
+    después de encenderla, que es el orden real: se configura el reparto y
+    más tarde llega una nómina. Sin esto, la frontera `watchingSince` se
+    pondría milisegundos DESPUÉS de fabricar el historial del test y
+    descartaría todo por viejo.
+  */
+  await harness.db
+    .update(splitRules)
+    .set({ watchingSince: new Date(Date.now() - 3600_000) })
+    .where(eq(splitRules.userId, sesion.userId));
 
   return { harness, sesion, destinos: { viaje, laptop } };
 }
