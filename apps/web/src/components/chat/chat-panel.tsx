@@ -57,7 +57,8 @@ export function ChatPanel({
       <div className="flex-1 space-y-3 overflow-y-auto" aria-live="polite">
         {turns.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Por ejemplo: «reparte 50 entre mis objetivos y guarda 10 para emergencias».
+            Por ejemplo: «reparte 50 entre mis objetivos», «aparta 20 para el viaje» o «¿cuánto me
+            queda hoy?».
           </p>
         ) : (
           turns.map((turn) => (
