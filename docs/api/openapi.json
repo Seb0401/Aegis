@@ -809,6 +809,228 @@
         }
       }
     },
+    "/split-rule": {
+      "get": {
+        "summary": "La regla de reparto automático del usuario",
+        "tags": [
+          "split"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rule": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "asset": {
+                          "type": "string",
+                          "enum": [
+                            "XLM",
+                            "USDC_TEST"
+                          ]
+                        },
+                        "minimumIncome": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "1"
+                        },
+                        "shares": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "destinationId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "basisPoints": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 10000
+                              }
+                            },
+                            "required": [
+                              "destinationId",
+                              "basisPoints"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "minItems": 1,
+                          "maxItems": 8
+                        }
+                      },
+                      "required": [
+                        "asset",
+                        "shares"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "watchingSince": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "rule",
+                    "watchingSince"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Define el reparto automático",
+        "tags": [
+          "split"
+        ],
+        "description": "Las partes van en puntos básicos y no pueden sumar más de 10000. Lo que no se asigna se queda en la cuenta.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "asset": {
+                    "type": "string",
+                    "enum": [
+                      "XLM",
+                      "USDC_TEST"
+                    ]
+                  },
+                  "minimumIncome": {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d{1,7})?$",
+                    "default": "1"
+                  },
+                  "shares": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "destinationId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "basisPoints": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 10000
+                        }
+                      },
+                      "required": [
+                        "destinationId",
+                        "basisPoints"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 8
+                  }
+                },
+                "required": [
+                  "asset",
+                  "shares"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rule": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "asset": {
+                          "type": "string",
+                          "enum": [
+                            "XLM",
+                            "USDC_TEST"
+                          ]
+                        },
+                        "minimumIncome": {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d{1,7})?$",
+                          "default": "1"
+                        },
+                        "shares": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "destinationId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "basisPoints": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 10000
+                              }
+                            },
+                            "required": [
+                              "destinationId",
+                              "basisPoints"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "minItems": 1,
+                          "maxItems": 8
+                        }
+                      },
+                      "required": [
+                        "asset",
+                        "shares"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    },
+                    "watchingSince": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "rule",
+                    "watchingSince"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/proposals": {
       "get": {
         "summary": "Lista las propuestas del usuario, de la más reciente a la más antigua",

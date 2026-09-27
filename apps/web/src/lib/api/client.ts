@@ -11,11 +11,13 @@ import {
   ProposalResponseSchema,
   ProposalSchema,
   SimulationSchema,
+  SplitRuleSchema,
   TransactionsResponseSchema,
   type AgentMessageRequest,
   type ApproveProposalRequest,
   type CreateDestinationRequest,
   type ProposalInput,
+  type SplitRule,
   type RejectProposalRequest,
   type UpdateDestinationInput,
   type UpdatePolicyInput,
@@ -52,6 +54,13 @@ const AuditResponseSchema = z.object({
   }),
 });
 export type AuditResponse = z.infer<typeof AuditResponseSchema>;
+
+/** Respuesta de `/split-rule`. La regla puede no existir todavía. */
+export const SplitResponseSchema = z.object({
+  rule: SplitRuleSchema.nullable(),
+  watchingSince: z.string().datetime().nullable(),
+});
+export type SplitResponse = z.infer<typeof SplitResponseSchema>;
 
 const AgentMessageResponseSchema = z.object({
   conversationId: z.string(),
@@ -323,6 +332,18 @@ export class ApiClient {
   }
 
   // ── Política y kill switch (FE-09, FE-12) ─────────────────────────
+
+  getSplitRule() {
+    return this.request('/split-rule', { schema: SplitResponseSchema });
+  }
+
+  saveSplitRule(body: SplitRule) {
+    return this.request('/split-rule', {
+      method: 'PUT',
+      body,
+      schema: SplitResponseSchema,
+    });
+  }
 
   getPolicy() {
     return this.request('/policy', { schema: PolicyResponseSchema });

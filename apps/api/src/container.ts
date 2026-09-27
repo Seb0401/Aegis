@@ -15,6 +15,8 @@ import { AuthService } from './services/auth-service.js';
 import { DestinationStore } from './services/destination-store.js';
 import { PolicyStore } from './services/policy-store.js';
 import { ProposalService } from './services/proposal-service.js';
+import { IncomeWatcher } from './services/income-watcher.js';
+import { SplitRuleStore } from './services/split-store.js';
 import { ProposalSweeper } from './services/sweeper.js';
 
 /**
@@ -35,6 +37,8 @@ export interface Services {
   executor: StellarExecutor;
   agent: Agent;
   sweeper: ProposalSweeper;
+  splits: SplitRuleStore;
+  incomeWatcher: IncomeWatcher;
   prices: PriceProvider;
 }
 
@@ -82,6 +86,17 @@ export function buildServices({
   });
   const sweeper = new ProposalSweeper({ db, audit, reader });
 
+  const splits = new SplitRuleStore(db);
+  const incomeWatcher = new IncomeWatcher({
+    db,
+    reader,
+    splits,
+    policies,
+    destinations,
+    proposals,
+    ...(metricsLogger ? { onEvent: metricsLogger } : {}),
+  });
+
   return {
     db,
     audit,
@@ -92,6 +107,8 @@ export function buildServices({
     reader,
     executor,
     sweeper,
+    splits,
+    incomeWatcher,
     prices,
     agent:
       overrides?.agent ??

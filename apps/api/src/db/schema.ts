@@ -5,6 +5,7 @@ import {
   index,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -157,4 +158,53 @@ export const agentMessages = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index('agent_messages_conversation_idx').on(table.conversationId, table.createdAt)],
+);
+
+/**
+ * Regla de reparto automático, una por usuario (BE2-13).
+ *
+ * Mismo patrón que `policies`: un JSON validado por Zod al leerlo y al
+ * escribirlo. La alternativa —una fila por parte— repartiría en varias filas
+ * algo que siempre se lee y se escribe junto, y abriría la puerta a guardar
+ * un reparto a medias si una de las inserciones fallara.
+ */
+export const splitRules = pgTable('split_rules', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  config: jsonb('config').notNull(),
+  /**
+   * Desde cuándo vigila.
+   *
+   * Sin esto, encender la regla dispararía un reparto por cada ingreso del
+   * historial de la cuenta. Se pone al activarla y marca la frontera entre
+   * «esto ya pasó» y «esto es para mí».
+   */
+  watchingSince: timestamp('watching_since', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Ingresos que ya se repartieron.
+ *
+ * La clave primaria compuesta es la garantía de que un mismo ingreso no se
+ * reparte dos veces: da igual cuántas veces corra el vigilante, ni que dos
+ * procesos coincidan. Duplicar un reparto significaría pagar dos veces con
+ * dinero de verdad, así que la protección tiene que estar en la base de
+ * datos y no en la lógica.
+ */
+export const processedIncomes = pgTable(
+  'processed_incomes',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    txHash: text('tx_hash').notNull(),
+    proposalId: text('proposal_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.txHash] }),
+    index('processed_incomes_user_idx').on(table.userId, table.createdAt),
+  ],
 );

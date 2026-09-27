@@ -5,6 +5,7 @@ import type {
   ApproveProposalRequest,
   CreateDestinationRequest,
   ProposalInput,
+  SplitRule,
   UpdateDestinationInput,
   UpdatePolicyInput,
 } from '@aegis/contracts';
@@ -28,6 +29,7 @@ export const queryKeys = {
   proposal: (id: string) => ['proposal', id] as const,
   policy: ['policy'] as const,
   audit: (limit: number) => ['audit', limit] as const,
+  splitRule: ['split-rule'] as const,
   /*
     La simulación entra entera en la clave: es lo que hace que volver a un
     importe ya probado sea instantáneo en vez de otra ida y vuelta a Horizon.
@@ -46,6 +48,33 @@ export function useBalances() {
     queryKey: queryKeys.balances,
     queryFn: () => client.getBalances(),
     enabled: useAuthenticated(),
+  });
+}
+
+export function useSplitRule() {
+  const client = useApiClient();
+  return useQuery({
+    queryKey: queryKeys.splitRule,
+    queryFn: () => client.getSplitRule(),
+    enabled: useAuthenticated(),
+  });
+}
+
+export function useSaveSplitRule() {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (rule: SplitRule) => client.saveSplitRule(rule),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.splitRule });
+      /*
+        El reparto no cambia las propuestas que ya existen, pero sí lo que va
+        a pasar con el próximo ingreso. Refrescar las propuestas deja ver
+        enseguida el primero que caiga.
+      */
+      void queryClient.invalidateQueries({ queryKey: ['proposals'] });
+    },
   });
 }
 

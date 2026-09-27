@@ -2,6 +2,7 @@ export * from './common.js';
 export * from './destination.js';
 export * from './policy.js';
 export * from './risk.js';
+export * from './split.js';
 export * from './proposal.js';
 export * from './ports.js';
 export * from './api.js';

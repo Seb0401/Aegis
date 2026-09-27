@@ -15,6 +15,13 @@
       "when": 1790262249233,
       "tag": "0001_red_scorpion",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790531255550,
+      "tag": "0002_lying_oracle",
+      "breakpoints": true
     }
   ]
 }

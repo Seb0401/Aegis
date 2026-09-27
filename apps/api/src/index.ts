@@ -20,9 +20,18 @@ async function main(): Promise<void> {
   const sweeper = app.services.sweeper;
   sweeper.start();
 
+  /*
+    El vigilante de ingresos sondea Horizon, así que va más despacio que el
+    barrido: cada minuto es de sobra para algo que reacciona a una nómina, y
+    evita machacar la red por usuario.
+  */
+  const incomeWatcher = app.services.incomeWatcher;
+  incomeWatcher.start(60_000);
+
   const shutdown = async (signal: string) => {
     app.log.info({ signal }, 'Apagando');
     sweeper.stop();
+    incomeWatcher.stop();
     await app.close();
     await database.close();
     process.exit(0);

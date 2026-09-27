@@ -24,6 +24,7 @@ import { destinationRoutes } from './routes/destinations.routes.js';
 import { policyRoutes } from './routes/policy.routes.js';
 import { priceRoutes } from './routes/prices.routes.js';
 import { proposalRoutes } from './routes/proposals.routes.js';
+import { splitRoutes } from './routes/split.routes.js';
 
 /** Se publica en `/health` y en el OpenAPI para poder correlacionar despliegues. */
 const VERSION = '0.1.0';
@@ -186,6 +187,7 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
   await app.register(authRoutes);
   await app.register(accountRoutes);
   await app.register(destinationRoutes);
+  await app.register(splitRoutes);
   await app.register(proposalRoutes);
   await app.register(policyRoutes);
   await app.register(agentRoutes);
