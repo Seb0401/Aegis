@@ -42,28 +42,28 @@ const STAGES: Stage[] = [
     id: 'agente',
     icon: Bot,
     title: 'Agente',
-    hint: 'Propone la operación',
+    hint: 'Propone, no decide',
     done: (p) => Boolean(p),
   },
   {
     id: 'policy',
     icon: SlidersHorizontal,
-    title: 'Policy Engine',
-    hint: 'Revisa tus límites',
+    title: 'Tus límites',
+    hint: 'Comprueban que cabe',
     done: (p) => Boolean(p?.policy),
   },
   {
     id: 'guardian',
     icon: ShieldCheck,
     title: 'Guardian',
-    hint: 'Analiza riesgo y explica',
+    hint: 'Mide el riesgo y lo explica',
     done: (p) => Boolean(p?.risk),
   },
   {
     id: 'stellar',
     icon: Rocket,
     title: 'Stellar',
-    hint: 'Ejecuta la operación',
+    hint: 'Hace el pago de verdad',
     done: (p) => Boolean(p?.txHash),
   },
 ];
@@ -131,7 +131,12 @@ export function JupiCard() {
       {/* Solo en móvil: la cabecera de ahí se queda con el título y nada más. */}
       <SessionControls />
 
-      <ol className="flex flex-col gap-1.5" aria-label="Etapas de una operación">
+      {/*
+        En dos columnas por debajo de `md`: en vertical, las cuatro etapas
+        empujaban el saldo y la propuesta pendiente fuera de la primera
+        pantalla. Son contexto, no lo que vienes a hacer.
+      */}
+      <ol className="grid grid-cols-2 gap-1.5 md:grid-cols-1" aria-label="Etapas de una operación">
         {STAGES.map((stage) => {
           const done = stage.done(pending);
           const Icon = stage.icon;
@@ -139,21 +144,24 @@ export function JupiCard() {
             <li
               key={stage.id}
               className={cn(
-                'flex items-center gap-3 rounded-xl border px-3 py-2 transition-colors',
+                'flex items-center gap-2.5 rounded-xl border px-2.5 py-2 transition-colors md:gap-3 md:px-3',
                 done ? 'border-primary/40 bg-primary/10' : 'border-border bg-muted/40',
               )}
             >
               <span
                 className={cn(
-                  'flex size-8 shrink-0 items-center justify-center rounded-lg',
+                  'flex size-7 shrink-0 items-center justify-center rounded-lg md:size-8',
                   done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
                 )}
               >
                 <Icon className="size-4" />
               </span>
               <span className="min-w-0">
-                <span className="block text-sm font-medium">{stage.title}</span>
-                <span className="block truncate text-xs text-muted-foreground">{stage.hint}</span>
+                <span className="block truncate text-sm font-medium">{stage.title}</span>
+                {/* La explicación estorba en pantalla pequeña; el título basta. */}
+                <span className="hidden truncate text-xs text-muted-foreground md:block">
+                  {stage.hint}
+                </span>
               </span>
             </li>
           );
