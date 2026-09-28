@@ -71,10 +71,11 @@ export function DelegationCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Delegar el signer del agente</CardTitle>
+        <CardTitle>Dar permiso de firma al agente</CardTitle>
         <CardDescription>
-          Añade una segunda llave a tu cuenta para que el agente pueda firmar dentro de tus límites.
-          Tu llave principal sigue mandando: solo ella puede cambiar los signers.
+          Le das al agente una segunda llave de tu cuenta, para que pueda pagar dentro de tus
+          límites. La tuya sigue mandando: solo con ella se puede quitar ese permiso, y puedes
+          hacerlo cuando quieras.
         </CardDescription>
       </CardHeader>
 
@@ -89,7 +90,7 @@ export function DelegationCard() {
         </div>
 
         <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium">Clave pública del agente</span>
+          <span className="font-medium">Llave del agente</span>
           <Input
             value={agentKey}
             onChange={(event) => {

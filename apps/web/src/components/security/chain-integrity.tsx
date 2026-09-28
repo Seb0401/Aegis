@@ -28,8 +28,8 @@ export function ChainIntegrity() {
       <CardHeader>
         <CardTitle>Integridad de la bitácora</CardTitle>
         <CardDescription>
-          Cada evento va encadenado al anterior por su hash. Si alguien editara uno, los siguientes
-          dejarían de cuadrar.
+          Cada anotación va ligada a la anterior. Si alguien cambiara una de hace un mes, todas las
+          siguientes dejarían de cuadrar y se vería.
         </CardDescription>
       </CardHeader>
 
@@ -53,15 +53,15 @@ export function ChainIntegrity() {
 
             <div className="min-w-0">
               <p className="font-medium">
-                {chain.valid ? 'La cadena está intacta' : 'La cadena está rota'}
+                {chain.valid ? 'El historial está intacto' : 'Alguien tocó el historial'}
               </p>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {chain.valid
-                  ? `${chain.verifiedEvents} eventos verificados, uno a uno.`
-                  : `Se rompe en ${chain.brokenAt ?? 'un punto que no se ha podido señalar'}. Alguien tocó la bitácora por debajo.`}
+                  ? `Comprobadas una a una las ${chain.verifiedEvents} últimas anotaciones.`
+                  : 'Uno de los registros se modificó después de escribirse. Alguien tocó el historial por debajo.'}
                 {chain.complete
                   ? ''
-                  : ' Se comprobó solo la ventana más reciente, no la cadena entera.'}
+                  : ' Se han revisado las más recientes, no el historial completo.'}
               </p>
             </div>
           </div>

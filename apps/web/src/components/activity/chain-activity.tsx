@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useDestinations, useTransactions } from '@/lib/api/hooks';
 import { riseDelay } from '@/lib/motion';
 import { explorerTxUrl } from '@/lib/stellar-links';
-import { cn, formatDateTime, shortAddress } from '@/lib/utils';
+import { cn, formatDateTime, formatRelativeTime, shortAddress } from '@/lib/utils';
 
 /**
  * Lo que de verdad ocurrió en Stellar.
@@ -105,8 +105,8 @@ function Movimiento({
           {nombre ?? shortAddress(tx.counterparty)}
           {tx.memo ? <span className="text-muted-foreground"> · {tx.memo}</span> : null}
         </p>
-        <p className="text-xs text-muted-foreground">
-          {formatDateTime(tx.createdAt)}
+        <p className="text-xs text-muted-foreground" title={formatDateTime(tx.createdAt)}>
+          {formatRelativeTime(tx.createdAt)}
           {!tx.successful ? ' · la red la rechazó' : ''}
         </p>
       </div>

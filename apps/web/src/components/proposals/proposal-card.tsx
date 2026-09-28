@@ -1,7 +1,7 @@
 'use client';
 
 import type { Destination, Proposal, ProposedAction } from '@aegis/contracts';
-import { ArrowRight, Clock, Loader2, PenLine, TriangleAlert, X } from 'lucide-react';
+import { ArrowRight, Clock, ExternalLink, Loader2, PenLine, TriangleAlert, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { GuardianPanel } from '@/components/proposals/guardian-panel';
 import { ImpactPanel } from '@/components/proposals/impact-panel';
@@ -14,10 +14,12 @@ import { describeError } from '@/lib/api/errors';
 import { useApproveProposal, useDestinations, useRejectProposal } from '@/lib/api/hooks';
 import { useAuth } from '@/lib/auth/auth-context';
 import { riseDelay } from '@/lib/motion';
+import { explorerTxUrl } from '@/lib/stellar-links';
 import { WalletError } from '@/lib/auth/wallet';
 import {
   RISK_LABEL,
   RISK_VARIANT,
+  STATUS_ICON,
   RISK_WORD,
   STATUS_LABEL,
   isActionable,
@@ -53,6 +55,7 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
   const requiresConfirmation = needsTotalConfirmation(proposal);
   const confirmed = !requiresConfirmation || matchesTotal(typedTotal, total);
   const actionable = isActionable(proposal);
+  const StatusIcon = STATUS_ICON[proposal.status];
   const busy = signing || approve.isPending || reject.isPending;
 
   const byId = new Map((destinations.data?.destinations ?? []).map((d) => [d.id, d]));
@@ -64,7 +67,7 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
       setWalletError(
         new WalletError(
           'FAILED',
-          'La API no ha generado todavía la transacción a firmar. Recarga en unos segundos.',
+          'Todavía se está preparando la operación que tienes que firmar. Espera unos segundos y vuelve a intentarlo.',
         ),
       );
       return;
@@ -99,6 +102,7 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
       <CardHeader>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={actionable ? 'default' : 'outline'}>
+            <StatusIcon className="size-3.5" />
             {STATUS_LABEL[proposal.status]}
           </Badge>
           {proposal.risk ? (
@@ -165,11 +169,25 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
           </p>
         ) : null}
 
+        {/*
+          El comprobante, enlazado. Antes se enseñaba el identificador y ahí
+          se quedaba: para comprobarlo había que copiarlo y buscarlo a mano en
+          un explorador, que es pedirle trabajo a quien solo quiere ver que su
+          pago existe.
+        */}
         {proposal.txHash ? (
-          <p className="text-xs text-muted-foreground">
-            Transacción{' '}
-            <code className="rounded bg-muted px-1">{shortAddress(proposal.txHash)}</code>
-          </p>
+          <a
+            href={explorerTxUrl(proposal.txHash)}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 self-start rounded-lg border border-border px-3 py-2 text-xs transition-colors hover:bg-accent"
+          >
+            <ExternalLink className="size-3.5 shrink-0 text-muted-foreground" />
+            <span>
+              Ver el pago en Stellar
+              <code className="ml-1.5 text-muted-foreground">{shortAddress(proposal.txHash)}</code>
+            </span>
+          </a>
         ) : null}
 
         {actionable ? (

@@ -6,12 +6,13 @@ import { useProposals } from '@/lib/api/hooks';
 import {
   RISK_LABEL,
   RISK_VARIANT,
+  STATUS_ICON,
   STATUS_LABEL,
   isActionable,
   isLive,
   operationCount,
 } from '@/lib/proposals';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, formatRelativeTime } from '@/lib/utils';
 import { QueryState } from './query-state';
 
 /**
@@ -41,24 +42,32 @@ export function ProposalsCard() {
           emptyLabel="Aquí irán quedando las propuestas ya decididas, con la regla que las permitió y su análisis de riesgo."
         >
           <ul className="flex flex-col divide-y divide-border">
-            {proposals.map((proposal) => (
-              <li key={proposal.id} className="flex flex-col gap-1.5 py-3 first:pt-0">
-                <p className="text-sm">{proposal.summary}</p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={isLive(proposal) ? 'default' : 'outline'}>
-                    {STATUS_LABEL[proposal.status]}
-                  </Badge>
-                  {proposal.risk ? (
-                    <Badge variant={RISK_VARIANT[proposal.risk.level]}>
-                      {RISK_LABEL[proposal.risk.level]}
+            {proposals.map((proposal) => {
+              const StatusIcon = STATUS_ICON[proposal.status];
+
+              return (
+                <li key={proposal.id} className="flex flex-col gap-1.5 py-3 first:pt-0">
+                  <p className="text-sm">{proposal.summary}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={isLive(proposal) ? 'default' : 'outline'}>
+                      <StatusIcon className="size-3.5" />
+                      {STATUS_LABEL[proposal.status]}
                     </Badge>
-                  ) : null}
-                  <span className="text-xs text-muted-foreground">
-                    {operationCount(proposal.actions.length)} · {formatDateTime(proposal.createdAt)}
-                  </span>
-                </div>
-              </li>
-            ))}
+                    {proposal.risk ? (
+                      <Badge variant={RISK_VARIANT[proposal.risk.level]}>
+                        {RISK_LABEL[proposal.risk.level]}
+                      </Badge>
+                    ) : null}
+                    <span className="text-xs text-muted-foreground">
+                      {operationCount(proposal.actions.length)} ·{' '}
+                      <span title={formatDateTime(proposal.createdAt)}>
+                        {formatRelativeTime(proposal.createdAt)}
+                      </span>
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </QueryState>
       </CardContent>

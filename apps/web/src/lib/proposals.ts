@@ -1,4 +1,16 @@
 import {
+  CircleCheck,
+  CircleX,
+  Clock,
+  FileText,
+  Loader,
+  PenLine,
+  Send,
+  ShieldCheck,
+  TriangleAlert,
+  type LucideIcon,
+} from 'lucide-react';
+import {
   addAmounts,
   compareAmounts,
   percentageOf,
@@ -32,6 +44,32 @@ export const STATUS_LABEL: Record<ProposalStatus, string> = {
   DENIED: 'Denegada por la política',
   EXPIRED: 'Caducada',
   FAILED: 'Falló',
+};
+
+/**
+ * Un icono por estado.
+ *
+ * Una lista de propuestas con solo etiquetas de texto obliga a leerlas todas
+ * para encontrar la que espera algo de ti. Con una forma delante, «espera tu
+ * firma» se distingue de «confirmada» sin llegar a leer.
+ *
+ * «Denegada por la política» lleva escudo y no una advertencia: no es un
+ * error, es el sistema haciendo su trabajo, y pintarlo como un fallo empujaría
+ * a subir los límites para que deje de «fallar».
+ */
+export const STATUS_ICON: Record<ProposalStatus, LucideIcon> = {
+  DRAFT: FileText,
+  POLICY_CHECK: Loader,
+  GUARDIAN_REVIEW: Loader,
+  PENDING_USER: PenLine,
+  AUTO_APPROVED: CircleCheck,
+  SIGNED: PenLine,
+  SUBMITTED: Send,
+  CONFIRMED: CircleCheck,
+  REJECTED: CircleX,
+  DENIED: ShieldCheck,
+  EXPIRED: Clock,
+  FAILED: TriangleAlert,
 };
 
 export const RISK_LABEL: Record<RiskLevel, string> = {

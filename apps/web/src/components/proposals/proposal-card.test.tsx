@@ -182,7 +182,7 @@ describe('cuando la wallet falla', () => {
 
     expect(signXdr).not.toHaveBeenCalled();
     expect(approveMutate).not.toHaveBeenCalled();
-    expect(await screen.findByRole('alert')).toHaveTextContent(/no ha generado/i);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/se está preparando/i);
   });
 });
 

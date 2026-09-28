@@ -1,5 +1,6 @@
 import type { TxSummary } from '@aegis/contracts';
 import { describe, expect, it } from 'vitest';
+import { formatRelativeTime } from './utils';
 import { cumulativeFlow, dailyLimitUsage, goalProgress, reservedAmount, sentTo } from './stats';
 
 const ADDRESS = 'GA4NUZKMEFCS7ZDVMAWSUXHK6NJTURAKV2RMA673ZTOOGIE2VTAGK3XP';
@@ -145,5 +146,42 @@ describe('goalProgress', () => {
   it('sin meta no hay progreso que enseñar', () => {
     expect(goalProgress('25', null)).toBeNull();
     expect(goalProgress('25', '0')).toBeNull();
+  });
+});
+
+describe('formatRelativeTime', () => {
+  const AHORA = new Date('2026-09-28T12:00:00.000Z');
+  const hace = (ms: number) => new Date(AHORA.getTime() - ms).toISOString();
+
+  it('lo muy reciente no lleva número', () => {
+    expect(formatRelativeTime(hace(10_000), AHORA)).toBe('hace un momento');
+  });
+
+  it('minutos y horas', () => {
+    expect(formatRelativeTime(hace(5 * 60_000), AHORA)).toBe('hace 5 min');
+    expect(formatRelativeTime(hace(3 * 3600_000), AHORA)).toBe('hace 3 horas');
+    expect(formatRelativeTime(hace(3600_000), AHORA)).toBe('hace 1 hora');
+  });
+
+  it('ayer y los días de esta semana', () => {
+    expect(formatRelativeTime(hace(24 * 3600_000), AHORA)).toBe('ayer');
+    expect(formatRelativeTime(hace(3 * 24 * 3600_000), AHORA)).toBe('hace 3 días');
+  });
+
+  it('pasada una semana vuelve a la fecha', () => {
+    // «hace 23 días» obliga a hacer la cuenta para saber de qué día hablamos.
+    expect(formatRelativeTime(hace(30 * 24 * 3600_000), AHORA)).toMatch(/2026|ago|sept/);
+  });
+
+  it('nunca habla en futuro', () => {
+    // Un reloj mal puesto daría fechas por delante, y «dentro de 2 horas»
+    // junto a un pago ya hecho asusta sin motivo.
+    const futuro = new Date(AHORA.getTime() + 2 * 3600_000).toISOString();
+
+    expect(formatRelativeTime(futuro, AHORA)).toBe('hace un momento');
+  });
+
+  it('una fecha ilegible se devuelve tal cual, sin romper', () => {
+    expect(formatRelativeTime('no-es-una-fecha', AHORA)).toBe('no-es-una-fecha');
   });
 });
