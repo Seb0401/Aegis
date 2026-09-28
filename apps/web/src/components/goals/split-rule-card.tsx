@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { describeError } from '@/lib/api/errors';
-import { useDestinations, useSaveSplitRule, useSplitRule } from '@/lib/api/hooks';
-import { cn } from '@/lib/utils';
+import { usePolicy, useDestinations, useSaveSplitRule, useSplitRule } from '@/lib/api/hooks';
+import { cn, formatAmount } from '@/lib/utils';
 
 /**
  * El reparto automático (BE2-13).
@@ -30,6 +30,7 @@ export function SplitRuleCard() {
   const destinations = useDestinations();
   const guardada = useSplitRule();
   const guardar = useSaveSplitRule();
+  const policy = usePolicy();
 
   const disponibles = (destinations.data?.destinations ?? []).filter((d) => !d.blocked);
 
@@ -57,6 +58,22 @@ export function SplitRuleCard() {
   const sobrante = 100 - asignado;
   const sePasa = asignado > 100;
   const sinPartes = asignado <= 0;
+
+  /*
+    Aviso de que el reparto va a chocar con los límites.
+
+    Se mide contra el ingreso mínimo porque es el caso más favorable: si ya
+    con el ingreso más pequeño que hace actuar a la regla una parte se pasa
+    del tope por operación, con cualquier ingreso mayor se pasará también.
+
+    No es un error y no impide guardar —los límites están para frenar, y
+    frenar es lo que van a hacer—, pero sin este aviso lo que se ve es una
+    propuesta denegada que parece un fallo de la aplicación.
+  */
+  const topeOperacion = Number(policy.data?.config.maxAmountPerOperation ?? 0);
+  const mayorParte = Math.max(0, ...Object.values(partes));
+  const mayorPago = (Number(minimo) || 0) * (mayorParte / 100);
+  const chocaConLimite = topeOperacion > 0 && mayorPago > topeOperacion;
 
   function cambiar(destinationId: string, valor: string) {
     setTocado(true);
@@ -178,6 +195,18 @@ export function SplitRuleCard() {
             pequeño.
           </span>
         </label>
+
+        {chocaConLimite ? (
+          <p className="flex items-start gap-2 rounded-lg bg-risk-medium/10 p-3 text-sm">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-risk-medium" />
+            <span>
+              Con un ingreso de {formatAmount(String(Number(minimo) || 0))}, el pago más grande
+              sería de {formatAmount(String(Math.round(mayorPago * 1e7) / 1e7))} y tu tope por
+              operación es {formatAmount(String(topeOperacion))}. El reparto se preparará igual,
+              pero te lo pedirá firmar a ti en vez de ejecutarse solo.
+            </span>
+          </p>
+        ) : null}
 
         <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
           <Button onClick={enviar} disabled={guardar.isPending || sePasa || (enabled && sinPartes)}>
