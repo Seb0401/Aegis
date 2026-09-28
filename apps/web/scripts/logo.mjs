@@ -1,5 +1,5 @@
 // @ts-check
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
@@ -31,6 +31,35 @@ const APP = resolve(AQUI, '../src/app');
 const FONDO = '#0a1430';
 
 async function main() {
+  /*
+    El original ya no se versiona: es material de trabajo de 1 MB que la
+    aplicación no carga —usa los recortes de `public/`— y se sacó del
+    repositorio a propósito.
+
+    Eso deja este script dependiendo de un archivo que un clon nuevo no tiene,
+    así que más vale decirlo con todas las letras. Un `ENOENT` sobre una ruta
+    larga manda a leer código para entender que no falta un permiso sino un
+    archivo que nunca estuvo.
+  */
+  try {
+    await access(ORIGINAL);
+  } catch {
+    throw new Error(
+      [
+        `No encuentro el logo original en ${ORIGINAL}.`,
+        '',
+        'No está en el repositorio a propósito: es material de trabajo y la',
+        'aplicación no lo carga. Los archivos que sí usa —el logo recortado,',
+        'los iconos y la tarjeta social— están versionados y no hace falta',
+        'regenerarlos salvo que cambie la marca.',
+        '',
+        'Si tienes que rehacerlos, pide el original al equipo y déjalo ahí;',
+        'está en el historial de git, antes del commit que lo sacó:',
+        '  git show 582a902:images/logo-original.png > images/logo-original.png',
+      ].join('\n'),
+    );
+  }
+
   await mkdir(DOCS, { recursive: true });
 
   const base64 = (await readFile(ORIGINAL)).toString('base64');
