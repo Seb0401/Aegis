@@ -47,3 +47,9 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 data/
+
+# Material de diseño y documentos del curso: solo locales, no se publican
+# (mockup, hoja fuente de Jupi, logo original, diagramas IDEF).
+/images/
+/IDEF*.png
+/IDEF*.pdf
