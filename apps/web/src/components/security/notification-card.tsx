@@ -15,6 +15,12 @@ import { useNotificationPermission } from '@/lib/notifications';
  * El permiso se pide con un botón y nunca al cargar la página. Un navegador
  * que pregunta nada más entrar recibe un «no» reflejo, y ese «no» es difícil
  * de deshacer: hay que ir a los ajustes del sitio.
+ *
+ * **Su alcance se dice en pantalla.** Sin un service worker, un aviso solo
+ * sale si Aegis está abierto en alguna pestaña, aunque esté de fondo; con el
+ * navegador cerrado no llega nada. Prometer lo contrario sería la clase de
+ * verdad a medias que este proyecto no se puede permitir en una pantalla que
+ * se llama Seguridad.
  */
 export function NotificationCard() {
   const { permiso, pedir } = useNotificationPermission();
@@ -33,15 +39,20 @@ export function NotificationCard() {
           Avisos del navegador
         </CardTitle>
         <CardDescription>
-          Para enterarte de que hay algo esperando tu firma aunque no tengas Aegis abierto.
+          Para enterarte de que hay algo esperando tu firma sin tener que mirar la pestaña.
         </CardDescription>
       </CardHeader>
 
       <CardContent>
         {permiso === 'granted' ? (
-          <p className="text-sm text-muted-foreground">
-            Activados. Solo avisamos de propuestas nuevas, y solo si no estás mirando la pestaña.
-          </p>
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+            <p>Activados. Solo avisamos de propuestas nuevas, y solo si no estás mirando.</p>
+            <p>
+              Hace falta tener Aegis abierto en alguna pestaña, aunque esté de fondo: para que
+              lleguen con el navegador cerrado haría falta un servicio de notificaciones push, que
+              todavía no tenemos.
+            </p>
+          </div>
         ) : permiso === 'denied' ? (
           <p className="flex items-start gap-2 text-sm text-muted-foreground">
             <BellOff className="mt-0.5 size-4 shrink-0" />
