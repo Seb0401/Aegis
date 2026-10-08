@@ -122,6 +122,41 @@ Debe devolver `status: "ok"`, `database: "ok"` y `fakeStellar: false`. Si
 
 ---
 
+### El proceso tiene que seguir vivo
+
+El reparto automático (BE2-13) no se dispara con una petición: lo mueve un
+vigilante que sondea Horizon **cada 60 segundos dentro del proceso de la API**.
+
+Eso choca de frente con los planes gratuitos que duermen la instancia cuando
+no recibe tráfico, que es lo normal en Render y en Fly. Dormida, la API
+responde en cuanto alguien entra —así que `/health` sale bien y todo _parece_
+correcto— pero mientras nadie mira no hay nadie sondeando: **los ingresos que
+lleguen en ese rato no se reparten solos**. No se pierden; se quedan sin
+repartir, que para quien lo tenía configurado es lo mismo.
+
+Opciones, de menos a más trabajo:
+
+- **Para la demo, no hacer nada** y repartir a mano desde el chat. Es lo que
+  se enseña en el vídeo igualmente.
+- **Un plan que no duerma**, que en Render es el más barato de pago.
+- **Un ping externo** cada pocos minutos (UptimeRobot y similares). Mantiene
+  el proceso despierto, aunque es una solución de pega.
+- **Sacar el vigilante a un cron** fuera del proceso. Es lo correcto a medio
+  plazo y está en el roadmap, no en esto.
+
+### Las migraciones no corren solas
+
+`index.ts` no las aplica al arrancar, y es deliberado: que varias instancias
+arranquen a la vez y se pisen migrando es un problema peor que acordarse de
+lanzarlas. Pero significa que **cada despliegue que traiga una migración nueva
+hay que acompañarlo de un `db:migrate` a mano** contra la base de datos de
+producción, antes de que arranque la versión nueva.
+
+La última es `0002`, la del reparto automático. Si la API arranca sin ella,
+todo funciona salvo el reparto, que falla al leer una tabla que no existe.
+
+---
+
 ## 4. Frontend (Vercel)
 
 1. _Add New → Project_ y conecta el repositorio.
